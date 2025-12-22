@@ -1,0 +1,8 @@
+.kb-header {
+  background: var(--Navy-Gradient);
+  transition: filter 0.3s ease; /* Smooth transition for the filter effect */
+}
+
+.kb-header:hover {
+  filter: brightness(1.5); /* Increase brightness by 20% on hover */
+}

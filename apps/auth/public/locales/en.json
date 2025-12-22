@@ -1,0 +1,44 @@
+{
+  "common": {
+    "actions": {
+      "processing": "Processing",
+      "add": "Add",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "oops": "Ugh oh!",
+      "generic": "Sorry, an unexpected error occured."
+    },
+    "support": {
+      "contact": "contact support"
+    }
+  },
+  "session": {
+    "title": "Welcome",
+    "authenticate": {
+      "oops": "Ugh oh!",
+      "signingIn": "signing in",
+      "please": "Please try",
+      "again": "again or",
+      "contact": "contact support"
+    },
+    "inputs": {
+      "email": {
+        "label": "Email"
+      }
+    },
+    "signin": {
+      "title": "Sign in to your account",
+      "loginLink": "Email a Login Link"
+    },
+    "verify": {
+      "emailSent": "Email sent!",
+      "checkInbox": "Check your inbox! If we found your email address you'll have a link to login waiting for you.",
+      "spam": " Sometimes this can land in SPAM! While we hope that isn't the case if it doesn't arrive in a minute or three, please check."
+    }
+  },
+  "nav": {
+    "jobList": "Job List",
+    "goHome": "Go back home"
+  }
+}

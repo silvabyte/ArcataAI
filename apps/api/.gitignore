@@ -1,0 +1,11 @@
+# Mill output directory
+out/
+
+# IDE
+.idea/
+.bsp/
+.metals/
+.bloop/
+
+# OS
+.DS_Store

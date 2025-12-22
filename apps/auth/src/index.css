@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Source paths for Tailwind to scan for classes */
+@source "./**/*.{ts,tsx,html}";
+@source "../../../libs/components/src/**/*.{ts,tsx}";
+
+/* Import shared theme and CSS variables */
+@import "../../../libs/components/src/globals.css";

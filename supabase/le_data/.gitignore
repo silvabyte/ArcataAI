@@ -1,0 +1,6 @@
+# Backup files
+*.backup.gz
+*.backup
+
+# Generated CSV files
+companies.csv

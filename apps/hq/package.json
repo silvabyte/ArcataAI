@@ -1,0 +1,40 @@
+{
+  "name": "@arcata/hq",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@arcata/components": "workspace:*",
+    "@arcata/db": "workspace:*",
+    "@arcata/envs": "workspace:*",
+    "@arcata/translate": "workspace:*",
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "@supabase/supabase-js": "^2.39.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "6.11.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "catalog:",
+    "vite": "catalog:",
+    "vite-tsconfig-paths": "catalog:",
+    "vitest": "catalog:",
+    "typescript": "catalog:",
+    "eslint": "catalog:",
+    "@typescript-eslint/eslint-plugin": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "tailwindcss": "catalog:",
+    "postcss": "catalog:",
+    "autoprefixer": "10.4.13",
+    "@types/react": "18.2.33",
+    "@types/react-dom": "18.2.14"
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "common": {
+    "actions": {
+      "processing": "Processing",
+      "add": "Add",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "oops": "Ugh oh!",
+      "generic": "Sorry, an unexpected error occured."
+    },
+    "support": {
+      "contact": "contact support"
+    }
+  },
+  "pages": {
+    "hq": {
+      "title": "Tracker HQ",
+      "empty": {
+        "title": "No Jobs Found",
+        "description": "Your tracking board is currently empty. Start by adding new jobs from the job stream tool."
+      },
+      "actions": {
+        "addJob": "Add Job"
+      },
+      "inputs": {
+        "jobUrl": {
+          "label": "Add URL"
+        }
+      }
+    },
+    "profile": {
+      "yourProfile": "Your profile"
+    },
+    "jobStream": {
+      "title": "Job Stream",
+      "fullInfo": "Full Info",
+      "error": {
+        "title": "Unable to Load Jobs",
+        "description": "We couldn't load the job listings. Please check your connection and try again."
+      },
+      "empty": {
+        "title": "No Jobs Found",
+        "description": "Try adjusting your filters or check back later for new opportunities."
+      },
+      "filters": {
+        "title": "Filters",
+        "jobsFound": "{{count}} jobs found",
+        "clearFilters": "Clear Filters",
+        "searchPlaceholder": "What do you want to do?",
+        "locationsPlaceholder": "Which location(s) do you prefer?",
+        "skillsPlaceholder": "Search skills...",
+        "organizationsPlaceholder": "Search organizations...",
+        "jobTitle": "Your Job Title",
+        "jobTitlePlaceholder": "Software Engineer, Soft...",
+        "locations": "Locations",
+        "remoteOnly": "Remote Only",
+        "experience": {
+          "title": "Experience",
+          "intern": "Intern & Apprentice",
+          "early": "Early",
+          "mid": "Mid",
+          "senior": "Senior",
+          "advanced": "Advanced",
+          "director": "Director+",
+          "principal": "Principal"
+        },
+        "skills": "Skills & Qualifications",
+        "degree": {
+          "title": "Degree",
+          "none": "None Required",
+          "pursuing": "Pursuing Degree",
+          "bootcamp": "Bootcamp",
+          "certification": "Certification",
+          "associate": "Associate",
+          "bachelors": "Bachelor's",
+          "masters": "Master's",
+          "phd": "Ph.D."
+        },
+        "jobTypes": {
+          "title": "Job Types",
+          "fullTime": "Full-time",
+          "partTime": "Part-time",
+          "contract": "Contract",
+          "temporary": "Temporary",
+          "intern": "Intern",
+          "freelance": "Freelance"
+        },
+        "organizations": "Organizations",
+        "sortBy": "Sort By",
+        "sort": {
+          "relevance": "Relevance",
+          "date": "Date"
+        },
+        "apply": "Apply Filters",
+        "clear": "Clear All"
+      },
+      "card": {
+        "requirements": "Requirements",
+        "preferred": "Preferred",
+        "match": "Match",
+        "postedToday": "Posted today",
+        "postedDaysAgo": "Posted {{days}} days ago",
+        "postedWeeksAgo": "Posted {{weeks}} week ago",
+        "viewFullDescription": "View job full description"
+      },
+      "actions": {
+        "track": "Track"
+      },
+      "badge": {
+        "new": "New",
+        "viewed": "Viewed",
+        "fullTime": "Full-time",
+        "partTime": "Part-time",
+        "contract": "Contract",
+        "temporary": "Temporary",
+        "intern": "Intern",
+        "remote": "Remote",
+        "entry": "Entry-level",
+        "mid": "Mid-level",
+        "senior": "Senior-level",
+        "staff": "Staff-level"
+      }
+    }
+  },
+  "session": {
+    "authenticate": {
+      "oops": "Ugh oh!",
+      "signingIn": "signing in",
+      "please": "Please try",
+      "again": "again or",
+      "contact": "contact support"
+    },
+    "inputs": {
+      "email": {
+        "label": "Email"
+      }
+    },
+    "signin": {
+      "title": "helllo...",
+      "loginLink": "Email a Login Link"
+    },
+    "verify": {
+      "emailSent": "Email sent!",
+      "checkInbox": "Check your inbox! If we found your email address you'll have a link to login waiting for you.",
+      "spam": " Sometimes this can land in SPAM! While we hope that isn't the case if it doesn't arrive in a minute or three, please check."
+    }
+  },
+  "nav": {
+    "hq": "HQ",
+    "jobList": "Job Stream",
+    "trackerHQ": "Tracker HQ",
+    "rankings": "Rankings",
+    "profile": "Profile+",
+    "autoApply": "Auto Apply",
+    "autoApplication": "Auto Application",
+    "goHome": "Go back home"
+  },
+  "sidebar": {
+    "close": "Close sidebar",
+    "open": "Open sidebar"
+  },
+  "dashboard": {
+    "title": "Dashboard"
+  }
+}

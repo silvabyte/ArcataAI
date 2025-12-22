@@ -1,0 +1,26 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": false,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@arcata/components": ["libs/components/src/index.ts"],
+      "@arcata/db": ["libs/db/src/index.ts"],
+      "@arcata/envs": ["libs/envs/src/index.ts"],
+      "@arcata/translate": ["libs/translate/src/index.ts"]
+    },
+    "strictNullChecks": true
+  },
+  "exclude": ["node_modules", "tmp"]
+}

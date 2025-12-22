@@ -1,0 +1,13 @@
+# Supabase
+.branches
+.temp
+
+# Large data files (but keep ETL scripts)
+le_data/*
+!le_data/etl/
+!le_data/.gitignore
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
