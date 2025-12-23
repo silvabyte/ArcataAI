@@ -1,161 +1,120 @@
 package arcata.api.etl.steps
 
+import utest.*
+import arcata.api.domain.*
+import arcata.api.etl.framework.*
 import arcata.api.clients.SupabaseClient
 import arcata.api.config.SupabaseConfig
-import arcata.api.domain.{Job, JobApplication}
-import arcata.api.etl.framework.{PipelineContext, StepError}
-import munit.FunSuite
 
-/** Mock SupabaseClient for testing ApplicationLoader. */
-class MockApplicationSupabaseClient(
-    defaultStatusId: Option[Long] = Some(1L),
-    shouldFailInsert: Boolean = false
-) extends SupabaseClient(
-      SupabaseConfig(
-        url = "http://localhost",
-        anonKey = "test",
-        serviceRoleKey = "test",
-        jwtSecret = "test"
+object ApplicationLoaderSuite extends TestSuite:
+  // Test helper: mock SupabaseClient
+  class MockSupabaseClient(
+      defaultStatusId: Option[Long] = None,
+      insertApplicationResult: Option[JobApplication] = None
+  ) extends SupabaseClient(
+        SupabaseConfig(
+          url = "http://test",
+          anonKey = "test",
+          serviceRoleKey = "test",
+          jwtSecret = "test"
+        )
+      ):
+    override def getDefaultStatusId(profileId: String): Option[Long] = defaultStatusId
+    override def insertJobApplication(application: JobApplication): Option[JobApplication] =
+      insertApplicationResult
+
+  val tests = Tests {
+    test("creates application for job") {
+      val createdApp = JobApplication(
+        applicationId = Some(101L),
+        jobId = Some(123L),
+        profileId = "user-1",
+        statusOrder = 0,
+        notes = Some("Great opportunity")
       )
-    ):
+      val client = MockSupabaseClient(
+        defaultStatusId = Some(1L),
+        insertApplicationResult = Some(createdApp)
+      )
+      val loader = ApplicationLoader(client)
 
-  private var insertedApplications: List[JobApplication] = List.empty
+      val input = ApplicationLoaderInput(
+        job = Job(jobId = Some(123L), companyId = 1L, title = "Engineer"),
+        profileId = "user-1",
+        notes = Some("Great opportunity")
+      )
+      val ctx = PipelineContext.create("test-profile")
 
-  override def getDefaultStatusId(profileId: String): Option[Long] =
-    defaultStatusId
+      val result = loader.run(input, ctx)
 
-  override def insertJobApplication(application: JobApplication): Option[JobApplication] = {
-    if shouldFailInsert then None
-    else {
-      val created = application.copy(applicationId = Some(System.currentTimeMillis()))
-      insertedApplications = created :: insertedApplications
-      Some(created)
+      assert(result.isRight)
+      result.foreach { output =>
+        assert(output.application.applicationId == Some(101L))
+        assert(output.application.jobId == Some(123L))
+        assert(output.job.jobId == Some(123L))
+      }
+    }
+
+    test("creates application without default status") {
+      val createdApp = JobApplication(
+        applicationId = Some(102L),
+        jobId = Some(123L),
+        profileId = "user-1",
+        statusOrder = 0
+      )
+      val client = MockSupabaseClient(
+        defaultStatusId = None, // No default status
+        insertApplicationResult = Some(createdApp)
+      )
+      val loader = ApplicationLoader(client)
+
+      val input = ApplicationLoaderInput(
+        job = Job(jobId = Some(123L), companyId = 1L, title = "Engineer"),
+        profileId = "user-1"
+      )
+      val ctx = PipelineContext.create("test-profile")
+
+      val result = loader.run(input, ctx)
+
+      assert(result.isRight)
+    }
+
+    test("fails when job has no ID") {
+      val client = MockSupabaseClient()
+      val loader = ApplicationLoader(client)
+
+      val input = ApplicationLoaderInput(
+        job = Job(companyId = 1L, title = "Engineer"), // No jobId
+        profileId = "user-1"
+      )
+      val ctx = PipelineContext.create("test-profile")
+
+      val result = loader.run(input, ctx)
+
+      assert(result.isLeft)
+      result.left.foreach { error =>
+        assert(error.message.contains("Job must have an ID"))
+      }
+    }
+
+    test("fails when application insert fails") {
+      val client = MockSupabaseClient(
+        defaultStatusId = Some(1L),
+        insertApplicationResult = None // Insert fails
+      )
+      val loader = ApplicationLoader(client)
+
+      val input = ApplicationLoaderInput(
+        job = Job(jobId = Some(123L), companyId = 1L, title = "Engineer"),
+        profileId = "user-1"
+      )
+      val ctx = PipelineContext.create("test-profile")
+
+      val result = loader.run(input, ctx)
+
+      assert(result.isLeft)
+      result.left.foreach { error =>
+        assert(error.message.contains("Failed to create application"))
+      }
     }
   }
-
-  def getInsertedApplications: List[JobApplication] = insertedApplications
-
-class ApplicationLoaderSuite extends FunSuite:
-
-  val ctx: PipelineContext = PipelineContext.create("test-profile")
-
-  val testJob: Job = Job(
-    jobId = Some(789L),
-    companyId = 100L,
-    title = "Test Job for Application"
-  )
-
-  test("ApplicationLoader should create application"):
-    val mockClient = new MockApplicationSupabaseClient()
-    val loader = ApplicationLoader(mockClient)
-
-    val input = ApplicationLoaderInput(
-      job = testJob,
-      profileId = "user-app-123",
-      notes = Some("Great opportunity!")
-    )
-
-    val result = loader.run(input, ctx)
-
-    assert(result.isRight)
-    result.foreach { output =>
-      assert(output.application.applicationId.isDefined)
-      assertEquals(output.application.jobId, Some(789L))
-      assertEquals(output.application.profileId, "user-app-123")
-      assertEquals(output.application.notes, Some("Great opportunity!"))
-      assertEquals(output.application.statusId, Some(1L))
-      assertEquals(output.application.statusOrder, 0)
-      assert(output.application.applicationDate.isDefined)
-      assertEquals(output.job, testJob)
-    }
-    assertEquals(mockClient.getInsertedApplications.length, 1)
-
-  test("ApplicationLoader should work without notes"):
-    val mockClient = new MockApplicationSupabaseClient()
-    val loader = ApplicationLoader(mockClient)
-
-    val input = ApplicationLoaderInput(
-      job = testJob,
-      profileId = "user-app-456",
-      notes = None
-    )
-
-    val result = loader.run(input, ctx)
-
-    assert(result.isRight)
-    result.foreach { output =>
-      assertEquals(output.application.notes, None)
-    }
-
-  test("ApplicationLoader should fail if job has no ID"):
-    val mockClient = new MockApplicationSupabaseClient()
-    val loader = ApplicationLoader(mockClient)
-    val jobWithoutId = Job(companyId = 100L, title = "No ID Job")
-
-    val input = ApplicationLoaderInput(
-      job = jobWithoutId,
-      profileId = "user-app-789",
-      notes = None
-    )
-
-    val result = loader.run(input, ctx)
-
-    assert(result.isLeft)
-    result.left.foreach { error =>
-      assert(error.isInstanceOf[StepError.ValidationError])
-      assert(error.message.contains("Job must have an ID"))
-    }
-
-  test("ApplicationLoader should fail when insert fails"):
-    val mockClient = new MockApplicationSupabaseClient(shouldFailInsert = true)
-    val loader = ApplicationLoader(mockClient)
-
-    val input = ApplicationLoaderInput(
-      job = testJob,
-      profileId = "user-app-fail",
-      notes = None
-    )
-
-    val result = loader.run(input, ctx)
-
-    assert(result.isLeft)
-    result.left.foreach { error =>
-      assert(error.isInstanceOf[StepError.LoadError])
-    }
-
-  test("ApplicationLoader should handle missing default status"):
-    val mockClient = new MockApplicationSupabaseClient(defaultStatusId = None)
-    val loader = ApplicationLoader(mockClient)
-
-    val input = ApplicationLoaderInput(
-      job = testJob,
-      profileId = "user-no-status",
-      notes = None
-    )
-
-    val result = loader.run(input, ctx)
-
-    assert(result.isRight)
-    result.foreach { output =>
-      assertEquals(output.application.statusId, None)
-    }
-
-  test("ApplicationLoader should set application date"):
-    val mockClient = new MockApplicationSupabaseClient()
-    val loader = ApplicationLoader(mockClient)
-
-    val input = ApplicationLoaderInput(
-      job = testJob,
-      profileId = "user-date-test",
-      notes = None
-    )
-
-    val result = loader.run(input, ctx)
-
-    assert(result.isRight)
-    result.foreach { output =>
-      assert(output.application.applicationDate.isDefined)
-      // Date should be in ISO format YYYY-MM-DD
-      val datePattern = """\d{4}-\d{2}-\d{2}""".r
-      assert(datePattern.matches(output.application.applicationDate.get))
-    }

@@ -13,7 +13,7 @@ import upickle.default.*
  *
  * Uses the PostgREST API exposed by Supabase to perform CRUD operations.
  */
-final class SupabaseClient(config: SupabaseConfig) extends Logging:
+class SupabaseClient(config: SupabaseConfig) extends Logging:
   private val baseUrl = s"${config.url}/rest/v1"
 
   private def headers: Map[String, String] = Map(

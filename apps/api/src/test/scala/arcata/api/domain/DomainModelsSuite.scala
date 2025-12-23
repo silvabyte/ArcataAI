@@ -1,85 +1,136 @@
 package arcata.api.domain
 
-import munit.FunSuite
+import utest.*
 import upickle.default.*
 
-class DomainModelsSuite extends FunSuite:
+object DomainModelsSuite extends TestSuite:
+  val tests = Tests {
+    test("Company") {
+      test("serializes to JSON and back") {
+        val company = Company(
+          companyId = Some(123L),
+          companyName = Some("Acme Corp"),
+          companyDomain = Some("acme.com"),
+          industry = Some("Technology"),
+          companySize = Some("medium")
+        )
 
-  test("Company should serialize to JSON and back"):
-    val company = Company(
-      companyId = Some(123L),
-      companyName = Some("Acme Corp"),
-      companyDomain = Some("acme.com")
-    )
+        val json = write(company)
+        val parsed = read[Company](json)
 
-    val json = write(company)
-    val parsed = read[Company](json)
+        assert(parsed == company)
+      }
 
-    assertEquals(parsed, company)
+      test("fromDomain creates company with domain") {
+        val company = Company.fromDomain("example.com")
 
-  test("Company.fromDomain should create company with domain"):
-    val company = Company.fromDomain("example.com")
+        assert(company.companyDomain == Some("example.com"))
+        assert(company.companyName == None)
+        assert(company.companyId == None)
+      }
 
-    assertEquals(company.companyDomain, Some("example.com"))
-    assertEquals(company.companyName, None)
+      test("handles all optional fields as None") {
+        val company = Company()
+        val json = write(company)
+        val parsed = read[Company](json)
 
-  test("Job should serialize to JSON and back"):
-    val job = Job(
-      jobId = Some(456L),
-      companyId = 123L,
-      title = "Software Engineer",
-      description = Some("Build great things"),
-      location = Some("Remote"),
-      qualifications = Some(Seq("Scala", "TypeScript"))
-    )
+        assert(parsed == company)
+        assert(parsed.companyId == None)
+      }
+    }
 
-    val json = write(job)
-    val parsed = read[Job](json)
+    test("Job") {
+      test("serializes to JSON and back") {
+        val job = Job(
+          jobId = Some(456L),
+          companyId = 123L,
+          title = "Software Engineer",
+          description = Some("Build great things"),
+          location = Some("Remote"),
+          qualifications = Some(Seq("Scala", "TypeScript"))
+        )
 
-    assertEquals(parsed, job)
+        val json = write(job)
+        val parsed = read[Job](json)
 
-  test("ExtractedJobData should serialize to JSON and back"):
-    val data = ExtractedJobData(
-      title = "Senior Developer",
-      companyName = Some("Tech Corp"),
-      qualifications = Some(Seq("Python", "Go"))
-    )
+        assert(parsed == job)
+      }
 
-    val json = write(data)
-    val parsed = read[ExtractedJobData](json)
+      test("handles minimal required fields") {
+        val job = Job(companyId = 1L, title = "Engineer")
+        val json = write(job)
+        val parsed = read[Job](json)
 
-    assertEquals(parsed, data)
+        assert(parsed.companyId == 1L)
+        assert(parsed.title == "Engineer")
+        assert(parsed.status == Some("active")) // default value
+      }
+    }
 
-  test("ExtractedJobData.minimal should create minimal extraction"):
-    val data = ExtractedJobData.minimal("Engineer")
+    test("ExtractedJobData") {
+      test("serializes to JSON and back") {
+        val data = ExtractedJobData(
+          title = "Senior Developer",
+          companyName = Some("Tech Corp"),
+          qualifications = Some(List("Python", "Go")),
+          responsibilities = Some(List("Lead team", "Write code"))
+        )
 
-    assertEquals(data.title, "Engineer")
-    assertEquals(data.companyName, None)
+        val json = write(data)
+        val parsed = read[ExtractedJobData](json)
 
-  test("JobStreamEntry should serialize to JSON and back"):
-    val entry = JobStreamEntry(
-      streamId = Some(789L),
-      jobId = 456L,
-      profileId = "user-123",
-      source = "manual",
-      status = Some("new")
-    )
+        assert(parsed == data)
+      }
 
-    val json = write(entry)
-    val parsed = read[JobStreamEntry](json)
+      test("minimal creates extraction with just title") {
+        val data = ExtractedJobData.minimal("Engineer")
 
-    assertEquals(parsed, entry)
+        assert(data.title == "Engineer")
+        assert(data.companyName == None)
+        assert(data.qualifications == None)
+      }
+    }
 
-  test("JobApplication should serialize to JSON and back"):
-    val app = JobApplication(
-      applicationId = Some(101L),
-      jobId = Some(456L),
-      profileId = "user-123",
-      statusOrder = 5,
-      notes = Some("Great opportunity")
-    )
+    test("JobStreamEntry") {
+      test("serializes to JSON and back") {
+        val entry = JobStreamEntry(
+          streamId = Some(789L),
+          jobId = 456L,
+          profileId = "user-123",
+          source = "manual",
+          status = Some("new")
+        )
 
-    val json = write(app)
-    val parsed = read[JobApplication](json)
+        val json = write(entry)
+        val parsed = read[JobStreamEntry](json)
 
-    assertEquals(parsed, app)
+        assert(parsed == entry)
+      }
+    }
+
+    test("JobApplication") {
+      test("serializes to JSON and back") {
+        val app = JobApplication(
+          applicationId = Some(101L),
+          jobId = Some(456L),
+          profileId = "user-123",
+          statusOrder = 5,
+          notes = Some("Great opportunity")
+        )
+
+        val json = write(app)
+        val parsed = read[JobApplication](json)
+
+        assert(parsed == app)
+      }
+
+      test("handles minimal fields") {
+        val app = JobApplication(profileId = "user-1", statusOrder = 0)
+        val json = write(app)
+        val parsed = read[JobApplication](json)
+
+        assert(parsed.profileId == "user-1")
+        assert(parsed.jobId == None)
+      }
+    }
+  }

@@ -49,7 +49,7 @@ object StorageError {
  * @param tenantId
  *   Tenant identifier (e.g., "arcata")
  */
-final class ObjectStorageClient(
+class ObjectStorageClient(
     baseUrl: String,
     tenantId: String
 ) extends Logging {
