@@ -1,108 +1,56 @@
 package arcata.api.http.middleware
 
-import cask.model.{Request, Response}
-import cask.router.{RawDecorator, Result}
+import cask.model.Response
 
 /**
  * CORS configuration for the API.
- *
- * @param allowedOrigins
- *   List of allowed origins (e.g., "http://localhost:4201")
- * @param allowedMethods
- *   HTTP methods allowed for CORS requests
- * @param allowedHeaders
- *   Headers allowed in CORS requests
- * @param maxAge
- *   How long browsers should cache preflight responses (in seconds)
  */
 final case class CorsConfig(
     allowedOrigins: List[String],
-    allowedMethods: List[String] = List("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"),
-    allowedHeaders: List[String] = List("Content-Type", "Authorization", "X-Requested-With"),
-    maxAge: Int = 86400
-)
+    allowedMethods: String = "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+    allowedHeaders: String = "Content-Type, Authorization, X-Requested-With",
+    maxAge: String = "86400"
+):
+  /** Check if an origin is allowed */
+  def isAllowed(origin: String): Boolean =
+    allowedOrigins.contains(origin) || allowedOrigins.contains("*")
+
+  /** Get CORS headers for an allowed origin */
+  def headersFor(origin: String): Seq[(String, String)] =
+    if isAllowed(origin) then
+      Seq(
+        "Access-Control-Allow-Origin" -> origin,
+        "Access-Control-Allow-Methods" -> allowedMethods,
+        "Access-Control-Allow-Headers" -> allowedHeaders,
+        "Access-Control-Max-Age" -> maxAge,
+        "Access-Control-Allow-Credentials" -> "true"
+      )
+    else Seq.empty
 
 /**
- * CORS decorator that adds Cross-Origin Resource Sharing headers to responses.
- *
- * This decorator checks the Origin header against allowed origins and adds appropriate CORS
- * headers. If the origin is not allowed, no CORS headers are added.
+ * Simple CORS routes that handle OPTIONS preflight requests.
  */
-class cors(config: CorsConfig) extends RawDecorator:
+class CorsRoutes(config: CorsConfig) extends cask.Routes:
 
-  private val methodsStr = config.allowedMethods.mkString(", ")
-  private val headersStr = config.allowedHeaders.mkString(", ")
+  private def getOrigin(request: cask.Request): Option[String] =
+    request.headers.get("origin").flatMap(_.headOption)
 
-  override def wrapFunction(
-      ctx: Request,
-      delegate: Delegate
-  ): Result[Response.Raw] = {
-    val origin = ctx.headers.get("origin").flatMap(_.headOption)
+  private def preflightResponse(request: cask.Request): Response[String] =
+    getOrigin(request).filter(config.isAllowed) match
+      case Some(origin) => Response("", statusCode = 204, headers = config.headersFor(origin))
+      case None         => Response("", statusCode = 204, headers = Seq.empty)
 
-    // Check if origin is allowed
-    val allowedOrigin = origin.filter(o => config.allowedOrigins.contains(o) || config.allowedOrigins.contains("*"))
+  // Handle OPTIONS for API paths
+  @cask.route("/api/v1/jobs/ingest", methods = Seq("options"))
+  def optionsJobsIngest(request: cask.Request): Response[String] = preflightResponse(request)
 
-    // Build CORS headers
-    val corsHeaders: Seq[(String, String)] = allowedOrigin match
-      case Some(o) =>
-        Seq(
-          "Access-Control-Allow-Origin" -> o,
-          "Access-Control-Allow-Methods" -> methodsStr,
-          "Access-Control-Allow-Headers" -> headersStr,
-          "Access-Control-Max-Age" -> config.maxAge.toString,
-          "Access-Control-Allow-Credentials" -> "true"
-        )
-      case None =>
-        Seq.empty
+  @cask.route("/api/v1/ping", methods = Seq("options"))
+  def optionsPing(request: cask.Request): Response[String] = preflightResponse(request)
 
-    // Execute the delegate and add CORS headers to response
-    delegate(ctx, Map.empty) match
-      case Result.Success(response) =>
-        Result.Success(
-          response.copy(headers = response.headers ++ corsHeaders)
-        )
-      case other => other
-  }
-
-/**
- * Routes for handling CORS preflight (OPTIONS) requests.
- *
- * This should be added to allRoutes to handle preflight requests for all paths.
- */
-class CorsPreflightRoutes(config: CorsConfig) extends cask.Routes:
-
-  private val methodsStr = config.allowedMethods.mkString(", ")
-  private val headersStr = config.allowedHeaders.mkString(", ")
-
-  /**
-   * Handle OPTIONS preflight requests for any path.
-   *
-   * The subpath captures the entire request path.
-   */
-  @cask.options("/:path", subpath = true)
-  def handlePreflight(path: String, request: Request): Response[String] = {
-    val origin = request.headers.get("origin").flatMap(_.headOption)
-
-    val allowedOrigin =
-      origin.filter(o => config.allowedOrigins.contains(o) || config.allowedOrigins.contains("*"))
-
-    val corsHeaders: Seq[(String, String)] = allowedOrigin match
-      case Some(o) =>
-        Seq(
-          "Access-Control-Allow-Origin" -> o,
-          "Access-Control-Allow-Methods" -> methodsStr,
-          "Access-Control-Allow-Headers" -> headersStr,
-          "Access-Control-Max-Age" -> config.maxAge.toString,
-          "Access-Control-Allow-Credentials" -> "true"
-        )
-      case None =>
-        Seq.empty
-
-    Response("", statusCode = 204, headers = corsHeaders)
-  }
+  @cask.route("/api/v1/health", methods = Seq("options"))
+  def optionsHealth(request: cask.Request): Response[String] = preflightResponse(request)
 
   initialize()
 
-object CorsPreflightRoutes:
-  def apply(config: CorsConfig): CorsPreflightRoutes =
-    new CorsPreflightRoutes(config)
+object CorsRoutes:
+  def apply(config: CorsConfig): CorsRoutes = new CorsRoutes(config)

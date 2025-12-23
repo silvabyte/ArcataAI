@@ -1,13 +1,12 @@
 package arcata.api.http.routes
 
 import arcata.api.etl.{JobIngestionInput, JobIngestionPipeline}
-import arcata.api.http.auth.{AuthenticatedRequest, JwtClaims, JwtValidationResult, JwtValidator}
-import arcata.api.http.middleware.{CorsConfig, cors}
+import arcata.api.http.auth.{AuthenticatedRequest, authenticated}
+import arcata.api.http.middleware.CorsConfig
 import boogieloops.schema.derivation.Schematic
 import boogieloops.web.*
 import boogieloops.web.Web.ValidatedRequestReader
-import cask.model.{Request, Response}
-import cask.router.{RawDecorator, Result}
+import cask.model.Response
 import upickle.default.*
 
 /** Request body for job ingestion. */
@@ -59,52 +58,19 @@ final case class JobErrorResponse(
  *   Base path prefix for all routes
  * @param pipeline
  *   The job ingestion pipeline
- * @param jwtValidator
- *   JWT validator for authentication
  * @param corsConfig
- *   CORS configuration for cross-origin requests
+ *   CORS configuration for response headers
  */
 class JobRoutes(
     basePath: String,
     pipeline: JobIngestionPipeline,
-    jwtValidator: JwtValidator,
     corsConfig: CorsConfig
 ) extends cask.Routes {
   private val jsonHeaders = Seq("Content-Type" -> "application/json")
 
-  /** Inner decorator class that validates JWT tokens. */
-  class authenticated extends RawDecorator:
-    override def wrapFunction(
-        ctx: Request,
-        delegate: Delegate
-    ): Result[Response.Raw] = {
-      val authHeader = ctx.headers.get("authorization").flatMap(_.headOption)
-
-      authHeader match
-        case None =>
-          Result.Success(
-            Response(
-              data = """{"error": "Missing Authorization header"}""",
-              statusCode = 401,
-              headers = Seq("Content-Type" -> "application/json")
-            )
-          )
-
-        case Some(header) =>
-          jwtValidator.validateAuthHeader(header) match
-            case JwtValidationResult.Valid(profileId, claims) =>
-              val authReq = AuthenticatedRequest(profileId, claims, ctx)
-              delegate(ctx, Map("authenticatedRequest" -> authReq))
-
-            case JwtValidationResult.Invalid(reason) =>
-              Result.Success(
-                Response(
-                  data = s"""{"error": "Invalid token: $reason"}""",
-                  statusCode = 401,
-                  headers = Seq("Content-Type" -> "application/json")
-                )
-              )
-    }
+  private def withCors(request: cask.Request, headers: Seq[(String, String)]): Seq[(String, String)] =
+    val origin = request.headers.get("origin").flatMap(_.headOption).getOrElse("")
+    headers ++ corsConfig.headersFor(origin)
 
   /**
    * POST /api/v1/jobs/ingest - Ingest a job from a URL.
@@ -112,7 +78,6 @@ class JobRoutes(
    * Fetches the job posting from the provided URL, extracts job details using AI, and adds it to
    * the user's job stream.
    */
-  @cors(corsConfig)
   @authenticated()
   @Web.post(
     s"$basePath/jobs/ingest",
@@ -134,18 +99,18 @@ class JobRoutes(
   )
   def ingestJob(
       r: ValidatedRequest
-  )(authenticatedRequest: AuthenticatedRequest): Response[String] = {
+  )(authReq: AuthenticatedRequest): Response[String] = {
     val body = read[IngestJobRequest](r.original.text())
 
     val input = JobIngestionInput(
       url = body.url,
-      profileId = authenticatedRequest.profileId,
+      profileId = authReq.profileId,
       source = body.source.getOrElse("manual"),
       createApplication = body.createApplication.getOrElse(false),
       notes = body.notes
     )
 
-    val result = pipeline.run(input, authenticatedRequest.profileId)
+    val result = pipeline.run(input, authReq.profileId)
 
     if (result.isSuccess) {
       val output = result.output.get
@@ -156,7 +121,7 @@ class JobRoutes(
         applicationId = output.application.flatMap(_.applicationId),
         message = s"Successfully ingested job: ${output.job.title}"
       )
-      Response(write(response), 200, jsonHeaders)
+      Response(write(response), 200, withCors(r.original, jsonHeaders))
     } else {
       val error = result.error.get
       val response = JobErrorResponse(
@@ -164,7 +129,7 @@ class JobRoutes(
         error = error.message,
         details = error.cause.map(_.getMessage)
       )
-      Response(write(response), 500, jsonHeaders)
+      Response(write(response), 500, withCors(r.original, jsonHeaders))
     }
   }
 
@@ -175,8 +140,7 @@ object JobRoutes {
   def apply(
       basePath: String,
       pipeline: JobIngestionPipeline,
-      jwtValidator: JwtValidator,
       corsConfig: CorsConfig
   ): JobRoutes =
-    new JobRoutes(basePath, pipeline, jwtValidator, corsConfig)
+    new JobRoutes(basePath, pipeline, corsConfig)
 }
