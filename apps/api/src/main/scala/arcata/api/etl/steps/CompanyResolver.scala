@@ -1,6 +1,8 @@
 package arcata.api.etl.steps
 
+import arcata.api.ai.CompanyEnrichmentAgent
 import arcata.api.clients.SupabaseClient
+import arcata.api.config.AIConfig
 import arcata.api.domain.{Company, ExtractedJobData}
 import arcata.api.etl.framework.*
 
@@ -11,7 +13,8 @@ import scala.util.Try
 final case class CompanyResolverInput(
     extractedData: ExtractedJobData,
     url: String,
-    objectId: Option[String]
+    objectId: Option[String],
+    html: String
 )
 
 /** Output from the CompanyResolver step. */
@@ -26,11 +29,14 @@ final case class CompanyResolverOutput(
  * Resolves or creates a company based on the job URL and extracted data.
  *
  * This is a transformation step that looks up existing companies by domain or creates new ones.
+ * For new companies, uses AI enrichment to extract additional company information.
  */
-final class CompanyResolver(supabaseClient: SupabaseClient)
+final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
     extends BaseStep[CompanyResolverInput, CompanyResolverOutput]:
 
   val name = "CompanyResolver"
+  
+  private val enrichmentAgent = CompanyEnrichmentAgent(aiConfig)
 
   override def execute(
       input: CompanyResolverInput,
@@ -65,10 +71,25 @@ final class CompanyResolver(supabaseClient: SupabaseClient)
         )
 
       case None =>
-        // Create new company
+        // Enrich company data using AI before creating
+        val companyName = input.extractedData.companyName.getOrElse(domain)
+        
+        val enrichedData = enrichmentAgent.enrich(companyName, input.html, input.url) match
+          case Right(data) => 
+            logger.info(s"[${ctx.runId}] Successfully enriched company data for: $companyName")
+            Some(data)
+          case Left(error) =>
+            logger.warn(s"[${ctx.runId}] Company enrichment failed: ${error.message}, proceeding without enrichment")
+            None
+        
+        // Create company with enriched data (or basic data if enrichment failed)
         val newCompany = Company(
-          companyName = input.extractedData.companyName,
-          companyDomain = Some(domain)
+          companyName = Some(companyName),
+          companyDomain = Some(domain),
+          industry = enrichedData.flatMap(_.industry),
+          companySize = enrichedData.flatMap(_.size),
+          description = enrichedData.flatMap(_.description),
+          headquarters = enrichedData.flatMap(_.headquarters)
         )
 
         supabaseClient.insertCompany(newCompany) match
@@ -109,5 +130,5 @@ final class CompanyResolver(supabaseClient: SupabaseClient)
   }
 
 object CompanyResolver:
-  def apply(supabaseClient: SupabaseClient): CompanyResolver =
-    new CompanyResolver(supabaseClient)
+  def apply(supabaseClient: SupabaseClient, aiConfig: AIConfig): CompanyResolver =
+    new CompanyResolver(supabaseClient, aiConfig)
