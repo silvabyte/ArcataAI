@@ -100,36 +100,46 @@ class JobRoutes(
   def ingestJob(
       r: ValidatedRequest
   )(authReq: AuthenticatedRequest): Response[String] = {
-    val body = read[IngestJobRequest](r.original.text())
+    // Use getBody to access the already-validated body (stream is consumed by Web.post)
+    r.getBody[IngestJobRequest] match {
+      case Left(validationError) =>
+        val response = JobErrorResponse(
+          success = false,
+          error = s"Invalid request body: ${validationError.message}",
+          details = None
+        )
+        Response(write(response), 400, withCors(r.original, jsonHeaders))
 
-    val input = JobIngestionInput(
-      url = body.url,
-      profileId = authReq.profileId,
-      source = body.source.getOrElse("manual"),
-      createApplication = body.createApplication.getOrElse(false),
-      notes = body.notes
-    )
+      case Right(body) =>
+        val input = JobIngestionInput(
+          url = body.url,
+          profileId = authReq.profileId,
+          source = body.source.getOrElse("manual"),
+          createApplication = body.createApplication.getOrElse(false),
+          notes = body.notes
+        )
 
-    val result = pipeline.run(input, authReq.profileId)
+        val result = pipeline.run(input, authReq.profileId)
 
-    if (result.isSuccess) {
-      val output = result.output.get
-      val response = IngestJobResponse(
-        success = true,
-        jobId = output.job.jobId.getOrElse(0L),
-        streamId = output.streamEntry.flatMap(_.streamId),
-        applicationId = output.application.flatMap(_.applicationId),
-        message = s"Successfully ingested job: ${output.job.title}"
-      )
-      Response(write(response), 200, withCors(r.original, jsonHeaders))
-    } else {
-      val error = result.error.get
-      val response = JobErrorResponse(
-        success = false,
-        error = error.message,
-        details = error.cause.map(_.getMessage)
-      )
-      Response(write(response), 500, withCors(r.original, jsonHeaders))
+        if (result.isSuccess) {
+          val output = result.output.get
+          val response = IngestJobResponse(
+            success = true,
+            jobId = output.job.jobId.getOrElse(0L),
+            streamId = output.streamEntry.flatMap(_.streamId),
+            applicationId = output.application.flatMap(_.applicationId),
+            message = s"Successfully ingested job: ${output.job.title}"
+          )
+          Response(write(response), 200, withCors(r.original, jsonHeaders))
+        } else {
+          val error = result.error.get
+          val response = JobErrorResponse(
+            success = false,
+            error = error.message,
+            details = error.cause.map(_.getMessage)
+          )
+          Response(write(response), 500, withCors(r.original, jsonHeaders))
+        }
     }
   }
 
