@@ -37,6 +37,20 @@
         "title": "Job Details",
         "company": "Company",
         "viewPosting": "View Original Posting",
+        "track": "Track",
+        "tracked": "Tracked",
+        "close": "Close",
+        "description": "Description",
+        "qualifications": "Qualifications",
+        "responsibilities": "Responsibilities",
+        "jobUrl": "Job URL",
+        "showMore": "More",
+        "showLess": "Less",
+        "error": "Failed to load job details",
+        "toast": {
+          "trackSuccess": "Job added to tracker",
+          "trackError": "Failed to track job"
+        },
         "placeholder": {
           "description": "Job description will appear here",
           "requirements": "Requirements will appear here",

@@ -10,12 +10,7 @@ import type { User } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLoaderData, useRevalidator } from "react-router-dom";
 import { ingestJobWithProgress, type ProgressUpdate } from "../../lib/api";
-import {
-  AddJobPopover,
-  IngestionProgress,
-  type JobDetailData,
-  JobDetailPanel,
-} from "../jobs";
+import { AddJobPopover, IngestionProgress, JobDetailPanel } from "../jobs";
 import KanbanLane from "./kanban/KanbanLane";
 
 type IngestionState = {
@@ -81,7 +76,6 @@ export default function HQ() {
   // Job detail panel state
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelJobId, setPanelJobId] = useState<number | null>(null);
-  const [panelJobData, setPanelJobData] = useState<JobDetailData | undefined>();
 
   const handleProgress = useCallback(
     (update: ProgressUpdate) => {
@@ -101,7 +95,6 @@ export default function HQ() {
         setTimeout(() => {
           if (update.jobId) {
             setPanelJobId(update.jobId);
-            setPanelJobData({ title: "New Job", company: "", url: "" });
             setPanelOpen(true);
           }
           setIngestionState(INITIAL_STATE);
@@ -163,7 +156,6 @@ export default function HQ() {
   const handleClosePanel = useCallback(() => {
     setPanelOpen(false);
     setPanelJobId(null);
-    setPanelJobData(undefined);
   }, []);
 
   const statuses = useMemo(() => {
@@ -271,7 +263,6 @@ export default function HQ() {
       </div>
       <JobDetailPanel
         isOpen={panelOpen}
-        jobData={panelJobData}
         jobId={panelJobId}
         onClose={handleClosePanel}
       />

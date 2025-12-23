@@ -2,11 +2,18 @@ import { Transition } from "@headlessui/react";
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
 
-export type NotificationVariant = "loading" | "success" | "error";
+export type NotificationVariant =
+  | "loading"
+  | "success"
+  | "error"
+  | "warning"
+  | "info";
 
 export type NotificationProps = {
   show: boolean;
@@ -20,7 +27,7 @@ function LoadingSpinner() {
   return (
     <svg
       aria-hidden="true"
-      className="size-6 animate-spin text-gray-400"
+      className="size-6 animate-spin text-gray-400 dark:text-gray-500"
       fill="none"
       viewBox="0 0 24 24"
     >
@@ -56,6 +63,20 @@ function VariantIcon({ variant }: { variant: NotificationVariant }) {
           className="size-6 text-red-400"
         />
       );
+    case "warning":
+      return (
+        <ExclamationTriangleIcon
+          aria-hidden="true"
+          className="size-6 text-yellow-400"
+        />
+      );
+    case "info":
+      return (
+        <InformationCircleIcon
+          aria-hidden="true"
+          className="size-6 text-blue-400"
+        />
+      );
     default:
       return null;
   }
@@ -71,9 +92,9 @@ export function Notification({
   return (
     <div
       aria-live="assertive"
-      className="pointer-events-none fixed inset-0 z-50 flex items-end px-4 py-6 sm:items-start sm:p-6"
+      className="pointer-events-none fixed inset-0 z-50 flex items-start justify-end px-4 py-6 sm:p-6"
     >
-      <div className="flex w-full flex-col items-center space-y-4 sm:items-end">
+      <div className="flex w-full flex-col items-end space-y-4">
         <Transition
           as={Fragment}
           enter="transform ease-out duration-300 transition"
@@ -84,22 +105,26 @@ export function Notification({
           leaveTo="opacity-0"
           show={show}
         >
-          <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5">
+          <div className="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:ring-white/10">
             <div className="p-4">
               <div className="flex items-start">
                 <div className="shrink-0">
                   <VariantIcon variant={variant} />
                 </div>
                 <div className="ml-3 w-0 flex-1 pt-0.5">
-                  <p className="font-medium text-gray-900 text-sm">{title}</p>
+                  <p className="font-medium text-gray-900 text-sm dark:text-white">
+                    {title}
+                  </p>
                   {message ? (
-                    <p className="mt-1 text-gray-500 text-sm">{message}</p>
+                    <p className="mt-1 text-gray-500 text-sm dark:text-gray-400">
+                      {message}
+                    </p>
                   ) : null}
                 </div>
                 {variant !== "loading" ? (
                   <div className="ml-4 flex shrink-0">
                     <button
-                      className="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      className="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-gray-800 dark:text-gray-500 dark:focus:ring-indigo-400 dark:hover:text-white"
                       onClick={onClose}
                       type="button"
                     >

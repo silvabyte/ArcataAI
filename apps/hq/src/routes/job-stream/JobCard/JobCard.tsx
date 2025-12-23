@@ -8,7 +8,7 @@ import { MatchScoreIndicator } from "./MatchScoreIndicator";
 
 export type JobCardProps = {
   job: JobStreamEntry;
-  onTrack?: (jobId: number) => void;
+  onTrack?: (jobId: number, streamId: number) => void;
 };
 
 function formatSalary(amount: number | null): string {
@@ -135,7 +135,9 @@ export function JobCard({ job, onTrack }: JobCardProps) {
 
             {/* Actions and Match Score - desktop only in header */}
             <div className="hidden flex-col items-end gap-2 lg:flex">
-              <JobCardActions onTrack={() => onTrack?.(jobData.job_id)} />
+              <JobCardActions
+                onTrack={() => onTrack?.(jobData.job_id, job.stream_id)}
+              />
               {matchScore !== null && (
                 <MatchScoreIndicator
                   postedDaysAgo={postedDaysAgo}
@@ -160,7 +162,7 @@ export function JobCard({ job, onTrack }: JobCardProps) {
           <div className="mt-4 lg:hidden">
             <JobCardActions
               isMobile
-              onTrack={() => onTrack?.(jobData.job_id)}
+              onTrack={() => onTrack?.(jobData.job_id, job.stream_id)}
             />
           </div>
 

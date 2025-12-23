@@ -1,10 +1,21 @@
+import {
+  FiyaIcon,
+  Skeleton,
+  Spinner,
+  useNotification,
+} from "@arcata/components";
 import { t } from "@arcata/translate";
 import { Dialog, Transition } from "@headlessui/react";
 import {
-  ArrowTopRightOnSquareIcon,
+  BriefcaseIcon,
+  LinkIcon,
+  MapPinIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
+import type { JobDetail } from "./types";
+import { useJobDetail } from "./useJobDetail";
+import { useTrackJob } from "./useTrackJob";
 
 export type JobDetailData = {
   title: string;
@@ -16,15 +27,268 @@ export type JobDetailPanelProps = {
   isOpen: boolean;
   onClose: () => void;
   jobId: number | null;
-  jobData?: JobDetailData;
+  streamId?: number | null;
+  isTracked?: boolean;
+  onTrackSuccess?: () => void;
 };
+
+function JobDetailSkeleton() {
+  return (
+    <div className="animate-pulse">
+      {/* Header skeleton */}
+      <div className="space-y-2">
+        <Skeleton height={14} variant="text" width={120} />
+        <Skeleton height={24} variant="text" width="80%" />
+      </div>
+
+      {/* Metadata row skeleton */}
+      <div className="mt-4 flex gap-4">
+        <Skeleton height={16} variant="text" width={100} />
+        <Skeleton height={16} variant="text" width={100} />
+        <Skeleton height={16} variant="text" width={80} />
+      </div>
+
+      {/* Content skeleton */}
+      <div className="mt-8 space-y-6">
+        <div>
+          <Skeleton height={16} variant="text" width={100} />
+          <div className="mt-2 space-y-2">
+            <Skeleton height={14} variant="text" width="100%" />
+            <Skeleton height={14} variant="text" width="90%" />
+            <Skeleton height={14} variant="text" width="95%" />
+          </div>
+        </div>
+        <div>
+          <Skeleton height={16} variant="text" width={120} />
+          <div className="mt-2 space-y-2">
+            <Skeleton height={14} variant="text" width="70%" />
+            <Skeleton height={14} variant="text" width="65%" />
+            <Skeleton height={14} variant="text" width="75%" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExpandableText({
+  text,
+  maxLength = 300,
+}: {
+  text: string;
+  maxLength?: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const shouldTruncate = text.length > maxLength;
+
+  if (!shouldTruncate) {
+    return <p className="whitespace-pre-wrap text-gray-600 text-sm">{text}</p>;
+  }
+
+  const displayText = expanded ? text : `${text.slice(0, maxLength)}...`;
+  const buttonText = expanded
+    ? t("pages.hq.jobDetail.showLess")
+    : t("pages.hq.jobDetail.showMore");
+
+  return (
+    <div>
+      <p className="whitespace-pre-wrap text-gray-600 text-sm">{displayText}</p>
+      <button
+        className="mt-1 font-medium text-indigo-600 text-sm hover:text-indigo-500"
+        onClick={() => setExpanded(!expanded)}
+        type="button"
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+}
+
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="mt-2 list-disc space-y-1 pl-5">
+      {items.map((item) => (
+        <li className="text-gray-600 text-sm" key={item}>
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function JobDetailContent({ job }: { job: JobDetail }) {
+  const hasDescription = Boolean(job.description);
+  const hasQualifications = job.qualifications && job.qualifications.length > 0;
+  const hasResponsibilities =
+    job.responsibilities && job.responsibilities.length > 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Description */}
+      {hasDescription && job.description ? (
+        <section>
+          <h3 className="font-medium text-gray-900 text-sm">
+            {t("pages.hq.jobDetail.description")}
+          </h3>
+          <div className="mt-2">
+            <ExpandableText text={job.description} />
+          </div>
+        </section>
+      ) : null}
+
+      {/* Qualifications */}
+      {hasQualifications && job.qualifications ? (
+        <section>
+          <h3 className="font-medium text-gray-900 text-sm">
+            {t("pages.hq.jobDetail.qualifications")}
+          </h3>
+          <BulletList items={job.qualifications} />
+        </section>
+      ) : null}
+
+      {/* Responsibilities */}
+      {hasResponsibilities && job.responsibilities ? (
+        <section>
+          <h3 className="font-medium text-gray-900 text-sm">
+            {t("pages.hq.jobDetail.responsibilities")}
+          </h3>
+          <BulletList items={job.responsibilities} />
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+function LocationDisplay({
+  location,
+  isRemote,
+}: {
+  location: string | null;
+  isRemote: boolean | null;
+}) {
+  if (location && isRemote) {
+    return (
+      <div className="flex items-center gap-1">
+        <MapPinIcon className="size-4" />
+        <span>{location} (Remote)</span>
+      </div>
+    );
+  }
+  if (location) {
+    return (
+      <div className="flex items-center gap-1">
+        <MapPinIcon className="size-4" />
+        <span>{location}</span>
+      </div>
+    );
+  }
+  if (isRemote) {
+    return (
+      <div className="flex items-center gap-1">
+        <MapPinIcon className="size-4" />
+        <span>Remote</span>
+      </div>
+    );
+  }
+  return null;
+}
+
+function TrackButton({
+  isTracked,
+  isTracking,
+  canTrack,
+  onClick,
+}: {
+  isTracked: boolean;
+  isTracking: boolean;
+  canTrack: boolean;
+  onClick: () => void;
+}) {
+  const isDisabled = isTracking || isTracked || !canTrack;
+  const buttonText = isTracked
+    ? t("pages.hq.jobDetail.tracked")
+    : t("pages.hq.jobDetail.track");
+
+  const buttonClasses = isDisabled
+    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+    : "bg-gray-900 text-white hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100";
+
+  return (
+    <button
+      className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-sm shadow-sm transition-colors ${buttonClasses}`}
+      disabled={isDisabled}
+      onClick={onClick}
+      type="button"
+    >
+      {isTracking ? <Spinner size="sm" /> : <FiyaIcon className="size-4" />}
+      {buttonText}
+    </button>
+  );
+}
+
+function PanelContent({
+  isLoading,
+  error,
+  job,
+}: {
+  isLoading: boolean;
+  error: Error | null;
+  job: JobDetail | null;
+}) {
+  if (isLoading) {
+    return <JobDetailSkeleton />;
+  }
+  if (error) {
+    return (
+      <div className="text-center">
+        <p className="text-gray-500 dark:text-gray-400">
+          {t("pages.hq.jobDetail.error")}
+        </p>
+      </div>
+    );
+  }
+  if (job) {
+    return <JobDetailContent job={job} />;
+  }
+  return null;
+}
 
 export function JobDetailPanel({
   isOpen,
   onClose,
   jobId,
-  jobData,
+  streamId = null,
+  isTracked = false,
+  onTrackSuccess,
 }: JobDetailPanelProps) {
+  const { data: job, isLoading, error } = useJobDetail(jobId);
+  const { trackJob, isTracking } = useTrackJob();
+  const { notify } = useNotification();
+
+  const canTrack = jobId !== null && streamId !== null && !isTracked;
+
+  async function handleTrack() {
+    if (!(jobId && streamId)) {
+      return;
+    }
+
+    try {
+      await trackJob(jobId, streamId);
+      notify(
+        t("pages.hq.jobDetail.toast.trackSuccess"),
+        "success",
+        undefined,
+        3000
+      );
+      onTrackSuccess?.();
+      onClose();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : t("common.errors.generic");
+      notify(t("pages.hq.jobDetail.toast.trackError"), "error", message, 5000);
+    }
+  }
+
   return (
     <Transition.Root as={Fragment} show={isOpen}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -53,117 +317,91 @@ export function JobDetailPanel({
                 leaveTo="translate-x-full"
               >
                 <Dialog.Panel className="pointer-events-auto w-screen max-w-2xl">
-                  <div className="flex h-full flex-col overflow-y-auto bg-white shadow-xl">
+                  <div className="flex h-full flex-col overflow-y-auto bg-white shadow-xl dark:bg-gray-900">
                     {/* Header */}
-                    <div className="bg-gray-50 px-4 py-6 sm:px-6">
-                      <div className="flex items-start justify-between space-x-3">
-                        <div className="space-y-1">
-                          <Dialog.Title className="font-semibold text-gray-900 text-lg">
-                            {jobData?.title || t("pages.hq.jobDetail.title")}
-                          </Dialog.Title>
-                          {jobData?.company ? (
-                            <p className="text-gray-500 text-sm">
-                              {jobData.company}
-                            </p>
+                    <div className="border-gray-200 border-b px-4 py-6 sm:px-6 dark:border-gray-700">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          {isLoading ? (
+                            <div className="space-y-2">
+                              <Skeleton
+                                height={14}
+                                variant="text"
+                                width={120}
+                              />
+                              <Skeleton
+                                height={24}
+                                variant="text"
+                                width="60%"
+                              />
+                            </div>
+                          ) : null}
+                          {!isLoading && job ? (
+                            <>
+                              <p className="text-gray-500 text-sm dark:text-gray-400">
+                                {job.companyName}
+                              </p>
+                              <Dialog.Title className="font-semibold text-gray-900 text-xl dark:text-white">
+                                {job.title}
+                              </Dialog.Title>
+                            </>
                           ) : null}
                         </div>
-                        <div className="flex h-7 items-center">
+                        <div className="ml-4 flex items-center gap-2">
+                          <TrackButton
+                            canTrack={canTrack}
+                            isTracked={isTracked}
+                            isTracking={isTracking}
+                            onClick={handleTrack}
+                          />
                           <button
-                            className="relative rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:hover:text-gray-300"
                             onClick={onClose}
                             type="button"
                           >
-                            <span className="sr-only">Close panel</span>
+                            <span className="sr-only">
+                              {t("pages.hq.jobDetail.close")}
+                            </span>
                             <XMarkIcon aria-hidden="true" className="size-6" />
                           </button>
                         </div>
                       </div>
+
+                      {/* Metadata row */}
+                      {!isLoading && job ? (
+                        <div className="mt-4 flex flex-wrap items-center gap-4 text-gray-500 text-sm dark:text-gray-400">
+                          {job.category ? (
+                            <div className="flex items-center gap-1">
+                              <BriefcaseIcon className="size-4" />
+                              <span>{job.category}</span>
+                            </div>
+                          ) : null}
+                          <LocationDisplay
+                            isRemote={job.isRemote}
+                            location={job.location}
+                          />
+                          {job.sourceUrl ? (
+                            <a
+                              className="flex items-center gap-1 text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                              href={job.sourceUrl}
+                              rel="noopener noreferrer"
+                              target="_blank"
+                            >
+                              <LinkIcon className="size-4" />
+                              <span>{t("pages.hq.jobDetail.jobUrl")}</span>
+                            </a>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 px-4 py-6 sm:px-6">
-                      {/* Original posting link */}
-                      {jobData?.url ? (
-                        <div className="mb-6">
-                          <a
-                            className="inline-flex items-center gap-2 font-medium text-indigo-600 text-sm hover:text-indigo-500"
-                            href={jobData.url}
-                            rel="noopener noreferrer"
-                            target="_blank"
-                          >
-                            <ArrowTopRightOnSquareIcon className="size-4" />
-                            {t("pages.hq.jobDetail.viewPosting")}
-                          </a>
-                        </div>
-                      ) : null}
-
-                      {/* Placeholder sections */}
-                      <div className="space-y-6">
-                        <section>
-                          <h3 className="font-medium text-gray-900 text-sm">
-                            Job Description
-                          </h3>
-                          <p className="mt-2 text-gray-500 text-sm">
-                            {t("pages.hq.jobDetail.placeholder.description")}
-                          </p>
-                        </section>
-
-                        <section>
-                          <h3 className="font-medium text-gray-900 text-sm">
-                            Requirements
-                          </h3>
-                          <p className="mt-2 text-gray-500 text-sm">
-                            {t("pages.hq.jobDetail.placeholder.requirements")}
-                          </p>
-                        </section>
-
-                        <section>
-                          <h3 className="font-medium text-gray-900 text-sm">
-                            Match Score
-                          </h3>
-                          <p className="mt-2 text-gray-500 text-sm">
-                            {t("pages.hq.jobDetail.placeholder.matchScore")}
-                          </p>
-                        </section>
-
-                        <section>
-                          <h3 className="font-medium text-gray-900 text-sm">
-                            Notes
-                          </h3>
-                          <p className="mt-2 text-gray-500 text-sm">
-                            {t("pages.hq.jobDetail.placeholder.notes")}
-                          </p>
-                        </section>
-                      </div>
-
-                      {/* Debug info */}
-                      {jobId ? (
-                        <div className="mt-8 rounded-md bg-gray-100 p-4">
-                          <p className="text-gray-500 text-xs">
-                            Job ID: {jobId}
-                          </p>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="shrink-0 border-gray-200 border-t px-4 py-5 sm:px-6">
-                      <div className="flex justify-end space-x-3">
-                        <button
-                          className="rounded-md bg-white px-3 py-2 font-semibold text-gray-900 text-sm shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
-                          onClick={onClose}
-                          type="button"
-                        >
-                          Close
-                        </button>
-                        <button
-                          className="rounded-md bg-indigo-600 px-3 py-2 font-semibold text-sm text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600 focus-visible:outline-offset-2"
-                          disabled
-                          type="button"
-                        >
-                          Track Job
-                        </button>
-                      </div>
+                      <PanelContent
+                        error={error}
+                        isLoading={isLoading}
+                        job={job}
+                      />
                     </div>
                   </div>
                 </Dialog.Panel>

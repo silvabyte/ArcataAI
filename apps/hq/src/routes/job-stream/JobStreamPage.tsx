@@ -1,4 +1,4 @@
-import { BottomSheet } from "@arcata/components";
+import { BottomSheet, useNotification } from "@arcata/components";
 import {
   type JobStreamFilters as DbJobStreamFilters,
   getFilterOptions,
@@ -14,6 +14,7 @@ import {
   useLoaderData,
   useSearchParams,
 } from "react-router-dom";
+import { useTrackJob } from "../jobs/useTrackJob";
 import {
   type DegreeLevel,
   type ExperienceLevel,
@@ -190,7 +191,7 @@ function getJobId(job: JobStreamEntry): number {
 type JobStreamContentProps = {
   error: Error | null;
   jobs: JobStreamEntry[];
-  onTrack: (jobId: number) => void;
+  onTrack: (jobId: number, streamId: number) => void;
 };
 
 function JobStreamContent({ error, jobs, onTrack }: JobStreamContentProps) {
@@ -235,13 +236,29 @@ export function JobStreamPage() {
   const { jobs, error, filterOptions } = useLoaderData() as LoaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { trackJob, isTracking } = useTrackJob();
+  const { notify } = useNotification();
 
   // Derive current filters from URL params
   const filters = parseUrlFilters(searchParams);
 
-  const handleTrack = (_jobId: number) => {
-    // TODO: Implement tracking functionality
-  };
+  const handleTrack = useCallback(
+    async (jobId: number, streamId: number) => {
+      if (isTracking) {
+        return;
+      }
+
+      try {
+        await trackJob(jobId, streamId);
+        notify(t("pages.hq.jobDetail.toast.trackSuccess"), "success");
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : t("common.errors.generic");
+        notify(t("pages.hq.jobDetail.toast.trackError"), "error", message);
+      }
+    },
+    [isTracking, notify, trackJob]
+  );
 
   const handleFiltersChange = useCallback(
     (newFilters: JobStreamFilters) => {
