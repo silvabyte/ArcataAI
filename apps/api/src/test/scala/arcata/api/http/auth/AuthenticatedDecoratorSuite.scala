@@ -23,25 +23,27 @@ object AuthenticatedDecoratorSuite extends TestSuite:
     sys.env.getOrElse("SUPABASE_JWT_SECRET", "test-jwt-secret-for-unit-tests")
 
   // Create a mock request with specified headers using Undertow's exchange
-  private def mockRequest(headers: Map[String, String]): Request =
+  private def mockRequest(headers: Map[String, String]): Request = {
     val exchange = new HttpServerExchange(null)
     val headerMap = exchange.getRequestHeaders
     headers.foreach { case (k, v) =>
       headerMap.put(new HttpString(k), v)
     }
     Request(exchange, Seq.empty, Map.empty)
+  }
 
   // Helper to extract response body as string
-  private def responseBody(response: Response.Raw): String =
+  private def responseBody(response: Response.Raw): String = {
     val out = new ByteArrayOutputStream()
     response.data.write(out)
     out.toString("UTF-8")
+  }
 
   // Helper to create a valid JWT
   private def createToken(
       sub: String = "user-123",
       email: Option[String] = Some("test@example.com")
-  ): String =
+  ): String = {
     val algorithm = Algorithm.HMAC256(testSecret)
     val now = System.currentTimeMillis()
 
@@ -55,6 +57,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
 
     email.foreach(e => builder.withClaim("email", e))
     builder.sign(algorithm)
+  }
 
   val tests = Tests {
     test("authenticated decorator") {
@@ -80,7 +83,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
         // Skip if JWT secret not configured (can't validate tokens)
         if sys.env.get("SUPABASE_JWT_SECRET").isEmpty then
           println("Skipping - SUPABASE_JWT_SECRET not set")
-        else
+        else {
           val decorator = new authenticated()
           val request = mockRequest(Map("Authorization" -> "Bearer invalid-token"))
 
@@ -95,28 +98,30 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(responseBody(response).contains("Invalid token"))
             case _ =>
               throw new java.lang.AssertionError("Expected Result.Success with 401")
+        }
       }
 
       test("passes AuthenticatedRequest to delegate for valid JWT") {
         // Skip if JWT secret not configured
         if sys.env.get("SUPABASE_JWT_SECRET").isEmpty then
           println("Skipping - SUPABASE_JWT_SECRET not set")
-        else
+        else {
           // Only run if we have the right secret configured
           val jwtSecretMatches =
             sys.env.get("SUPABASE_JWT_SECRET").contains(testSecret)
 
           if !jwtSecretMatches then println("Skipping - JWT secret mismatch")
-          else
+          else {
             val decorator = new authenticated()
             val token = createToken(sub = "test-user-456")
             val request = mockRequest(Map("Authorization" -> s"Bearer $token"))
 
             var capturedAuthReq: Option[AuthenticatedRequest] = None
 
-            val delegate: decorator.Delegate = (_, args) =>
+            val delegate: decorator.Delegate = (_, args) => {
               capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
               Result.Success(Response("ok", 200, Seq.empty))
+            }
 
             val result = decorator.wrapFunction(request, delegate)
 
@@ -128,6 +133,8 @@ object AuthenticatedDecoratorSuite extends TestSuite:
                 assert(capturedAuthReq.get.authType == AuthType.JWT)
               case _ =>
                 throw new java.lang.AssertionError("Expected successful delegation")
+          }
+        }
       }
     }
 
@@ -152,16 +159,17 @@ object AuthenticatedDecoratorSuite extends TestSuite:
         val apiKeysConfigured = sys.env.get("API_KEYS").exists(_.nonEmpty)
 
         if !apiKeysConfigured then println("Skipping - API_KEYS not set")
-        else
+        else {
           val validKey = AuthConfig.validApiKeys.head
           val decorator = new authenticated(Vector(AuthType.ApiKey))
           val request = mockRequest(Map("X-API-Key" -> validKey))
 
           var capturedAuthReq: Option[AuthenticatedRequest] = None
 
-          val delegate: decorator.Delegate = (_, args) =>
+          val delegate: decorator.Delegate = (_, args) => {
             capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
             Result.Success(Response("ok", 200, Seq.empty))
+          }
 
           val result = decorator.wrapFunction(request, delegate)
 
@@ -172,6 +180,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(capturedAuthReq.get.authType == AuthType.ApiKey)
             case _ =>
               throw new java.lang.AssertionError("Expected successful delegation")
+        }
       }
     }
 
@@ -180,22 +189,23 @@ object AuthenticatedDecoratorSuite extends TestSuite:
         // Skip if JWT secret not configured
         if sys.env.get("SUPABASE_JWT_SECRET").isEmpty then
           println("Skipping - SUPABASE_JWT_SECRET not set")
-        else
+        else {
           // JWT secret must match for this test
           val jwtSecretMatches =
             sys.env.get("SUPABASE_JWT_SECRET").contains(testSecret)
 
           if !jwtSecretMatches then println("Skipping - JWT secret mismatch")
-          else
+          else {
             val decorator = new authenticated(Vector(AuthType.JWT, AuthType.ApiKey))
             val token = createToken(sub = "jwt-user")
             val request = mockRequest(Map("Authorization" -> s"Bearer $token"))
 
             var capturedAuthReq: Option[AuthenticatedRequest] = None
 
-            val delegate: decorator.Delegate = (_, args) =>
+            val delegate: decorator.Delegate = (_, args) => {
               capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
               Result.Success(Response("ok", 200, Seq.empty))
+            }
 
             val result = decorator.wrapFunction(request, delegate)
 
@@ -205,22 +215,25 @@ object AuthenticatedDecoratorSuite extends TestSuite:
                 assert(capturedAuthReq.get.authType == AuthType.JWT)
               case _ =>
                 throw new java.lang.AssertionError("Expected successful delegation")
+          }
+        }
       }
 
       test("falls back to API key when JWT missing but ApiKey present") {
         val apiKeysConfigured = sys.env.get("API_KEYS").exists(_.nonEmpty)
 
         if !apiKeysConfigured then println("Skipping - API_KEYS not set")
-        else
+        else {
           val validKey = AuthConfig.validApiKeys.head
           val decorator = new authenticated(Vector(AuthType.JWT, AuthType.ApiKey))
           val request = mockRequest(Map("X-API-Key" -> validKey))
 
           var capturedAuthReq: Option[AuthenticatedRequest] = None
 
-          val delegate: decorator.Delegate = (_, args) =>
+          val delegate: decorator.Delegate = (_, args) => {
             capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
             Result.Success(Response("ok", 200, Seq.empty))
+          }
 
           val result = decorator.wrapFunction(request, delegate)
 
@@ -230,6 +243,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(capturedAuthReq.get.authType == AuthType.ApiKey)
             case _ =>
               throw new java.lang.AssertionError("Expected successful delegation")
+        }
       }
     }
 

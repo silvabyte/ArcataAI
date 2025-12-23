@@ -32,20 +32,23 @@ object ObjectStorageClientSuite extends TestSuite:
       Right(obj)
     }
 
-    override def download(objectId: String, userId: String): Either[StorageError, Array[Byte]] =
+    override def download(objectId: String, userId: String): Either[StorageError, Array[Byte]] = {
       storage.get(objectId) match
         case Some((content, _)) => Right(content)
         case None => Left(StorageError.NotFound(objectId))
+    }
 
-    override def getMetadata(objectId: String, userId: String): Either[StorageError, StoredObject] =
+    override def getMetadata(objectId: String, userId: String): Either[StorageError, StoredObject] = {
       storage.get(objectId) match
         case Some((_, obj)) => Right(obj)
         case None => Left(StorageError.NotFound(objectId))
+    }
 
-    override def delete(objectId: String, userId: String): Either[StorageError, StoredObject] =
+    override def delete(objectId: String, userId: String): Either[StorageError, StoredObject] = {
       storage.remove(objectId) match
         case Some((_, obj)) => Right(obj)
         case None => Left(StorageError.NotFound(objectId))
+    }
 
     def clear(): Unit = storage.clear()
     def size: Int = storage.size

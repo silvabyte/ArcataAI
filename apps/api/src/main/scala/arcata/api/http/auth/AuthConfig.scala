@@ -16,19 +16,21 @@ import arcata.api.config.ConfigError
 object AuthConfig:
 
   /** JWT validator for user authentication via Supabase tokens. */
-  lazy val jwtValidator: JwtValidator =
+  lazy val jwtValidator: JwtValidator = {
     val secret = sys.env.getOrElse(
       "SUPABASE_JWT_SECRET",
       throw ConfigError("Required environment variable 'SUPABASE_JWT_SECRET' is not set")
     )
     JwtValidator(secret)
+  }
 
   /** Valid API keys for service-to-service authentication. */
-  lazy val validApiKeys: Set[String] =
+  lazy val validApiKeys: Set[String] = {
     sys.env
       .get("API_KEYS")
       .map(_.split(",").map(_.trim).filter(_.nonEmpty).toSet)
       .getOrElse(Set.empty)
+  }
 
   /** Check if API key authentication is configured. */
   def apiKeysConfigured: Boolean = validApiKeys.nonEmpty

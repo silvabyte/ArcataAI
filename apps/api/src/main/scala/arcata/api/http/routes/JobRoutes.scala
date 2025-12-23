@@ -68,9 +68,10 @@ class JobRoutes(
 ) extends cask.Routes {
   private val jsonHeaders = Seq("Content-Type" -> "application/json")
 
-  private def withCors(request: cask.Request, headers: Seq[(String, String)]): Seq[(String, String)] =
+  private def withCors(request: cask.Request, headers: Seq[(String, String)]): Seq[(String, String)] = {
     val origin = request.headers.get("origin").flatMap(_.headOption).getOrElse("")
     headers ++ corsConfig.headersFor(origin)
+  }
 
   /**
    * POST /api/v1/jobs/ingest - Ingest a job from a URL.

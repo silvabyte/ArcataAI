@@ -15,7 +15,7 @@ final case class CompanyResolverInput(
     extractedData: ExtractedJobData,
     url: String,
     objectId: Option[String],
-    html: String
+    content: String
 )
 
 /** Output from the CompanyResolver step. */
@@ -75,7 +75,7 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
         // Enrich company data using AI before creating
         val companyName = input.extractedData.companyName.getOrElse(domain)
 
-        val enrichedData = enrichmentAgent.enrich(companyName, input.html, input.url) match
+        val enrichedData = enrichmentAgent.enrich(companyName, input.content, input.url) match
           case Right(data) =>
             logger.info(s"[${ctx.runId}] Successfully enriched company data for: $companyName")
             Some(data)

@@ -73,9 +73,9 @@ export default function HQ() {
   const [ingestionState, setIngestionState] =
     useState<IngestionState>(INITIAL_STATE);
 
-  // Job detail panel state
+  // Job detail panel state - only need streamId, panel fetches the rest
   const [panelOpen, setPanelOpen] = useState(false);
-  const [panelJobId, setPanelJobId] = useState<number | null>(null);
+  const [panelStreamId, setPanelStreamId] = useState<number | null>(null);
 
   const handleProgress = useCallback(
     (update: ProgressUpdate) => {
@@ -93,8 +93,8 @@ export default function HQ() {
 
         // After 1.5s, open panel and reset
         setTimeout(() => {
-          if (update.jobId) {
-            setPanelJobId(update.jobId);
+          if (update.streamId) {
+            setPanelStreamId(update.streamId);
             setPanelOpen(true);
           }
           setIngestionState(INITIAL_STATE);
@@ -141,7 +141,7 @@ export default function HQ() {
       }
 
       await ingestJobWithProgress(
-        { url, source: "manual" },
+        { url, source: "manual", createApplication: true },
         session.access_token,
         handleProgress
       );
@@ -155,7 +155,7 @@ export default function HQ() {
 
   const handleClosePanel = useCallback(() => {
     setPanelOpen(false);
-    setPanelJobId(null);
+    setPanelStreamId(null);
   }, []);
 
   const statuses = useMemo(() => {
@@ -263,8 +263,9 @@ export default function HQ() {
       </div>
       <JobDetailPanel
         isOpen={panelOpen}
-        jobId={panelJobId}
         onClose={handleClosePanel}
+        onTrackSuccess={() => revalidator.revalidate()}
+        streamId={panelStreamId}
       />
     </div>
   );

@@ -115,9 +115,12 @@ object Job:
         salaryMin = obj.get("salary_min").flatMap(v => if v.isNull then None else Some(v.num.toInt)),
         salaryMax = obj.get("salary_max").flatMap(v => if v.isNull then None else Some(v.num.toInt)),
         salaryCurrency = obj.get("salary_currency").flatMap(v => if v.isNull then None else Some(v.str)),
-        qualifications = obj.get("qualifications").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
-        preferredQualifications = obj.get("preferred_qualifications").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
-        responsibilities = obj.get("responsibilities").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
+        qualifications =
+          obj.get("qualifications").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
+        preferredQualifications =
+          obj.get("preferred_qualifications").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
+        responsibilities =
+          obj.get("responsibilities").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
         benefits = obj.get("benefits").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
         category = obj.get("category").flatMap(v => if v.isNull then None else Some(v.str)),
         sourceUrl = obj.get("source_url").flatMap(v => if v.isNull then None else Some(v.str)),

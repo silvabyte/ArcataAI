@@ -19,7 +19,7 @@ object ApiKeyValidator:
    * @return
    *   AuthResult.Success with service identity, or AuthResult.Failure with reason
    */
-  def validate(request: Request): AuthResult =
+  def validate(request: Request): AuthResult = {
     request.headers.get(headerName).flatMap(_.headOption) match
       case None =>
         AuthResult.Failure("Missing X-API-Key header")
@@ -36,3 +36,4 @@ object ApiKeyValidator:
 
       case Some(_) =>
         AuthResult.Failure("Invalid API key")
+  }

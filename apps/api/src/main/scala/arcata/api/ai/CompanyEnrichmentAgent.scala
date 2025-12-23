@@ -8,8 +8,8 @@ import boogieloops.ai.providers.OpenAICompatibleProvider
 /**
  * AI agent that enriches company data from job posting context.
  *
- * Uses the Vercel AI Gateway to extract additional company information
- * that can be inferred from the job posting and URL.
+ * Uses the Vercel AI Gateway to extract additional company information that can be inferred from
+ * the job posting and URL.
  */
 final class CompanyEnrichmentAgent(config: AIConfig):
 
@@ -23,7 +23,7 @@ final class CompanyEnrichmentAgent(config: AIConfig):
   private val agent = Agent(
     name = "CompanyEnricher",
     instructions = """You extract and enrich company information from job posting context.
-Given the company name, job posting HTML, and URL, extract additional company details.
+Given the company name, job posting content, and URL, extract additional company details.
 
 Guidelines:
 - Infer industry from the job posting content and company name
@@ -43,8 +43,8 @@ Guidelines:
    *
    * @param companyName
    *   The name of the company
-   * @param html
-   *   The raw HTML of the job posting page
+   * @param content
+   *   The cleaned content (Markdown) of the job posting
    * @param url
    *   The source URL of the job posting
    * @return
@@ -52,7 +52,7 @@ Guidelines:
    */
   def enrich(
       companyName: String,
-      html: String,
+      content: String,
       url: String
   ): Either[SchemaError, ExtractedCompanyData] = {
     agent
@@ -61,8 +61,8 @@ Guidelines:
 
 Source URL: $url
 
-HTML Content:
-$html""",
+Content:
+$content""",
         RequestMetadata()
       )
       .map(_.data)

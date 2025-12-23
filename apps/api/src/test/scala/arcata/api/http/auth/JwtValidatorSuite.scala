@@ -17,7 +17,7 @@ object JwtValidatorSuite extends TestSuite:
       email: Option[String] = Some("test@example.com"),
       role: String = "authenticated",
       expiresIn: Long = 3600000 // 1 hour
-  ): String =
+  ): String = {
     val algorithm = Algorithm.HMAC256(testSecret)
     val now = System.currentTimeMillis()
 
@@ -31,6 +31,7 @@ object JwtValidatorSuite extends TestSuite:
 
     email.foreach(e => builder.withClaim("email", e))
     builder.sign(algorithm)
+  }
 
   val tests = Tests {
     test("validate") {

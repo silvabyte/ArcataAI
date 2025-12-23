@@ -13,4 +13,5 @@ export type {
   JobStreamEntryWithTracking,
 } from "./types";
 export { useJobDetail } from "./useJobDetail";
+export { useJobStreamEntry } from "./useJobStreamEntry";
 export { useTrackJob } from "./useTrackJob";

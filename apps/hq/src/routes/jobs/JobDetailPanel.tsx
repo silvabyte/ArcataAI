@@ -15,6 +15,7 @@ import {
 import { Fragment, useState } from "react";
 import type { JobDetail } from "./types";
 import { useJobDetail } from "./useJobDetail";
+import { useJobStreamEntry } from "./useJobStreamEntry";
 import { useTrackJob } from "./useTrackJob";
 
 export type JobDetailData = {
@@ -26,9 +27,8 @@ export type JobDetailData = {
 export type JobDetailPanelProps = {
   isOpen: boolean;
   onClose: () => void;
-  jobId: number | null;
-  streamId?: number | null;
-  isTracked?: boolean;
+  /** Stream ID is the primary identifier - job data is derived from it */
+  streamId: number | null;
   onTrackSuccess?: () => void;
 };
 
@@ -256,16 +256,20 @@ function PanelContent({
 export function JobDetailPanel({
   isOpen,
   onClose,
-  jobId,
-  streamId = null,
-  isTracked = false,
+  streamId,
   onTrackSuccess,
 }: JobDetailPanelProps) {
+  const { data: streamEntry, refetch: refetchStream } =
+    useJobStreamEntry(streamId);
+  const jobId = streamEntry?.jobId ?? null;
+  // Job is tracked if stream entry exists and has an application
+  const isTracked = Boolean(streamEntry?.applicationId);
+
   const { data: job, isLoading, error } = useJobDetail(jobId);
   const { trackJob, isTracking } = useTrackJob();
   const { notify } = useNotification();
 
-  const canTrack = jobId !== null && streamId !== null && !isTracked;
+  const canTrack = streamId !== null && !isTracked;
 
   async function handleTrack() {
     if (!(jobId && streamId)) {
@@ -274,6 +278,8 @@ export function JobDetailPanel({
 
     try {
       await trackJob(jobId, streamId);
+      // Refetch stream entry to get updated application_id
+      await refetchStream();
       notify(
         t("pages.hq.jobDetail.toast.trackSuccess"),
         "success",

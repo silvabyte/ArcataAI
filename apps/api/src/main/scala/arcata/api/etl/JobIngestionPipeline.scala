@@ -25,8 +25,9 @@ final case class JobIngestionOutput(
 /**
  * Pipeline that ingests a job from a URL.
  *
- * Steps: 1. Fetch HTML from URL 2. Parse job details using AI 3. Resolve/create company 4. Load
- * job into database 5. Add to user's job stream 6. Optionally create an application
+ * Steps: 1. Fetch HTML from URL 2. Clean HTML and convert to Markdown 3. Parse job details using
+ * AI 4. Resolve/create company 5. Load job into database 6. Add to user's job stream 7.
+ * Optionally create an application
  */
 final class JobIngestionPipeline(
     supabaseClient: SupabaseClient,
@@ -39,6 +40,7 @@ final class JobIngestionPipeline(
 
   // Initialize steps
   private val htmlFetcher = HtmlFetcher(storageClient)
+  private val htmlCleaner = HtmlCleaner()
   private val jobParser = JobParser(aiConfig)
   private val companyResolver = CompanyResolver(supabaseClient, aiConfig)
   private val jobLoader = JobLoader(supabaseClient)
@@ -117,23 +119,23 @@ final class JobIngestionPipeline(
       input: JobIngestionInput,
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
-    val totalSteps = if input.createApplication then 7 else 6
+    val totalSteps = if input.createApplication then 8 else 7
 
     progressEmitter.emit(1, totalSteps, "fetching", "Getting job page...")
 
     val result = {
       for
-        // Step 1: Fetch HTML
+        // Step 1: Fetch HTML (raw HTML stored in ObjectStorage)
         fetcherOutput <- htmlFetcher.run(
           HtmlFetcherInput(url = input.url, profileId = input.profileId),
           ctx
         )
 
-        // Step 2: Parse job
-        parserOutput <- {
-          progressEmitter.emit(2, totalSteps, "parsing", "Extracting job details...")
-          jobParser.run(
-            JobParserInput(
+        // Step 2: Clean HTML and convert to Markdown
+        cleanerOutput <- {
+          progressEmitter.emit(2, totalSteps, "cleaning", "Processing content...")
+          htmlCleaner.run(
+            HtmlCleanerInput(
               html = fetcherOutput.html,
               url = fetcherOutput.url,
               objectId = fetcherOutput.objectId
@@ -142,23 +144,36 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 3: Resolve company
-        companyOutput <- {
-          progressEmitter.emit(3, totalSteps, "resolving", "Finding company...")
-          companyResolver.run(
-            CompanyResolverInput(
-              extractedData = parserOutput.extractedData,
-              url = parserOutput.url,
-              objectId = parserOutput.objectId,
-              html = fetcherOutput.html
+        // Step 3: Parse job (now receives Markdown)
+        parserOutput <- {
+          progressEmitter.emit(3, totalSteps, "parsing", "Extracting job details...")
+          jobParser.run(
+            JobParserInput(
+              content = cleanerOutput.markdown,
+              url = cleanerOutput.url,
+              objectId = cleanerOutput.objectId
             ),
             ctx
           )
         }
 
-        // Step 4: Load job
+        // Step 4: Resolve company (now receives Markdown)
+        companyOutput <- {
+          progressEmitter.emit(4, totalSteps, "resolving", "Finding company...")
+          companyResolver.run(
+            CompanyResolverInput(
+              extractedData = parserOutput.extractedData,
+              url = parserOutput.url,
+              objectId = parserOutput.objectId,
+              content = cleanerOutput.markdown
+            ),
+            ctx
+          )
+        }
+
+        // Step 5: Load job
         jobOutput <- {
-          progressEmitter.emit(4, totalSteps, "loading", "Creating job record...")
+          progressEmitter.emit(5, totalSteps, "loading", "Creating job record...")
           jobLoader.run(
             JobLoaderInput(
               extractedData = companyOutput.extractedData,
@@ -170,9 +185,9 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 5: Add to stream
+        // Step 6: Add to stream
         streamOutput <- {
-          progressEmitter.emit(5, totalSteps, "streaming", "Adding to your feed...")
+          progressEmitter.emit(6, totalSteps, "streaming", "Adding to your feed...")
           streamLoader.run(
             StreamLoaderInput(
               job = jobOutput.job,
@@ -183,10 +198,10 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 6: Optionally create application
+        // Step 7: Optionally create application
         applicationOutput <-
           if input.createApplication then
-            progressEmitter.emit(6, totalSteps, "tracking", "Creating application...")
+            progressEmitter.emit(7, totalSteps, "tracking", "Creating application...")
             applicationLoader
               .run(
                 ApplicationLoaderInput(

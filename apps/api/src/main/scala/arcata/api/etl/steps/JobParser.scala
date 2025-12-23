@@ -8,7 +8,7 @@ import boogieloops.ai.SchemaError
 
 /** Input for the JobParser step. */
 final case class JobParserInput(
-    html: String,
+    content: String,
     url: String,
     objectId: Option[String]
 )
@@ -21,7 +21,7 @@ final case class JobParserOutput(
 )
 
 /**
- * Parses job HTML using AI to extract structured job data.
+ * Parses job content using AI to extract structured job data.
  *
  * Uses JobExtractionAgent with Vercel AI Gateway for intelligent extraction.
  */
@@ -37,7 +37,7 @@ final class JobParser(aiConfig: AIConfig) extends BaseStep[JobParserInput, JobPa
   ): Either[StepError, JobParserOutput] = {
     logger.info(s"[${ctx.runId}] Parsing job from: ${input.url}")
 
-    agent.extract(input.html, input.url) match
+    agent.extract(input.content, input.url) match
       case Right(extractedData) =>
         logger.info(s"[${ctx.runId}] Extracted job: ${extractedData.title}")
         Right(

@@ -38,24 +38,24 @@ Guidelines:
   )
 
   /**
-   * Extract job data from HTML content.
+   * Extract job data from content.
    *
-   * @param html
-   *   The raw HTML of the job posting page
+   * @param content
+   *   The cleaned content (Markdown) of the job posting
    * @param url
    *   The source URL of the job posting
    * @return
    *   Either an error or the extracted job data
    */
-  def extract(html: String, url: String): Either[SchemaError, ExtractedJobData] = {
+  def extract(content: String, url: String): Either[SchemaError, ExtractedJobData] = {
     agent
       .generateObjectWithoutHistory[ExtractedJobData](
-        s"""Extract job details from this HTML content.
+        s"""Extract job details from this job posting content.
 
 Source URL: $url
 
-HTML Content:
-$html""",
+Content:
+$content""",
         RequestMetadata()
       )
       .map(_.data)

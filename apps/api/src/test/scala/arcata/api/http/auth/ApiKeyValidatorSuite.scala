@@ -13,13 +13,14 @@ import utest.*
  */
 object ApiKeyValidatorSuite extends TestSuite:
   // Create a mock request with specified headers using Undertow's exchange
-  private def mockRequest(headers: Map[String, String]): Request =
+  private def mockRequest(headers: Map[String, String]): Request = {
     val exchange = new HttpServerExchange(null)
     val headerMap = exchange.getRequestHeaders
     headers.foreach { case (k, v) =>
       headerMap.put(new HttpString(k), v)
     }
     Request(exchange, Seq.empty, Map.empty)
+  }
 
   val tests = Tests {
     test("validate") {
@@ -52,7 +53,7 @@ object ApiKeyValidatorSuite extends TestSuite:
         if !apiKeysConfigured then
           // Skip test - no API keys configured
           println("Skipping valid API key test - API_KEYS not set")
-        else
+        else {
           // Use the first configured API key
           val validKey = AuthConfig.validApiKeys.head
           val request = mockRequest(Map("X-API-Key" -> validKey))
@@ -65,6 +66,7 @@ object ApiKeyValidatorSuite extends TestSuite:
               assert(authReq.claims == None)
             case AuthResult.Failure(reason, _) =>
               throw new java.lang.AssertionError(s"Expected Success, got Failure: $reason")
+        }
       }
 
       test("header lookup is case-insensitive") {

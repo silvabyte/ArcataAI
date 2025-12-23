@@ -34,7 +34,7 @@ class authenticated(
   override def wrapFunction(
       ctx: Request,
       delegate: Delegate
-  ): Result[Response.Raw] =
+  ): Result[Response.Raw] = {
     // Try each allowed auth type until one succeeds
     val results = allowedTypes.map(tryAuth(_, ctx))
 
@@ -55,13 +55,15 @@ class authenticated(
             headers = jsonHeaders
           )
         )
+  }
 
-  private def tryAuth(authType: AuthType, ctx: Request): AuthResult =
+  private def tryAuth(authType: AuthType, ctx: Request): AuthResult = {
     authType match
-      case AuthType.JWT    => tryJwtAuth(ctx)
+      case AuthType.JWT => tryJwtAuth(ctx)
       case AuthType.ApiKey => ApiKeyValidator.validate(ctx)
+  }
 
-  private def tryJwtAuth(ctx: Request): AuthResult =
+  private def tryJwtAuth(ctx: Request): AuthResult = {
     ctx.headers.get("authorization").flatMap(_.headOption) match
       case None =>
         AuthResult.Failure("Missing Authorization header")
@@ -80,3 +82,4 @@ class authenticated(
 
           case JwtValidationResult.Invalid(reason) =>
             AuthResult.Failure(s"Invalid token: $reason")
+  }

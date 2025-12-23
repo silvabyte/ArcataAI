@@ -27,7 +27,11 @@ object api extends ScalaModule with ScalafmtModule {
     // BoogieLoops AI for LLM extraction
     ivy"dev.boogieloop::ai:0.5.5",
     // JWT validation (for Supabase JWTs)
-    ivy"com.auth0:java-jwt:4.4.0"
+    ivy"com.auth0:java-jwt:4.4.0",
+    // HTML parsing and cleaning
+    ivy"org.jsoup:jsoup:1.17.2",
+    // HTML to Markdown conversion
+    ivy"com.vladsch.flexmark:flexmark-html2md-converter:0.64.8"
   )
 
   def scalacOptions = Seq(

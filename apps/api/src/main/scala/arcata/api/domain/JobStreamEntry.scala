@@ -60,7 +60,8 @@ object JobStreamEntry:
         source = obj("source").str,
         status = obj.get("status").flatMap(v => if v.isNull then None else Some(v.str)),
         bestMatchScore = obj.get("best_match_score").flatMap(v => if v.isNull then None else Some(v.num)),
-        bestMatchJobProfileId = obj.get("best_match_job_profile_id").flatMap(v => if v.isNull then None else Some(v.num.toLong)),
+        bestMatchJobProfileId =
+          obj.get("best_match_job_profile_id").flatMap(v => if v.isNull then None else Some(v.num.toLong)),
         profileMatches = obj.get("profile_matches").flatMap(v => if v.isNull then None else Some(v))
       )
     }
