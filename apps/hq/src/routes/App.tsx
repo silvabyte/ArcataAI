@@ -27,7 +27,6 @@ import {
 } from "react-router-dom";
 import HQ, { loader as hqLoader } from "./hq/HQ";
 import { JobStreamPage, jobStreamLoader } from "./job-stream";
-import { route as addJobByUrlRoute } from "./jobs/AddJobByUrl";
 
 export const route: RouteObject = {
   path: "/",
@@ -42,7 +41,6 @@ export const route: RouteObject = {
           element: <JobStreamPage />,
           loader: jobStreamLoader,
         },
-        addJobByUrlRoute,
       ],
     },
   ],

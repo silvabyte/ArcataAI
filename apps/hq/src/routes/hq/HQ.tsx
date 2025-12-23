@@ -101,7 +101,13 @@ export default function HQ() {
           </h2>
         </div>
         <div className="flex md:mt-0 md:ml-4">
-          <AddJobPopover actuator={t("pages.hq.actions.addJob")} />
+          <AddJobPopover
+            actuator={t("pages.hq.actions.addJob")}
+            onSubmit={(url) => {
+              // TODO: Handle job URL submission - will be implemented in a future task
+              console.log("Job URL submitted:", url);
+            }}
+          />
         </div>
       </div>
       <div className="h-full flex-1 overflow-auto p-4">

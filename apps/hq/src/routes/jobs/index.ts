@@ -1,6 +1,4 @@
-import { route as jobByUrlRoute } from "./AddJobByUrl";
-
-export { AddJobPopover, route as addJobByUrlRoute } from "./AddJobByUrl";
+export { AddJobPopover } from "./AddJobByUrl";
 export {
   IngestionProgress,
   type IngestionProgressProps,
@@ -10,5 +8,3 @@ export {
   JobDetailPanel,
   type JobDetailPanelProps,
 } from "./JobDetailPanel";
-
-export default [jobByUrlRoute];

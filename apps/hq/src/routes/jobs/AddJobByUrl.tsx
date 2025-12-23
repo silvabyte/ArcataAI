@@ -2,132 +2,38 @@ import { AppButton, PopoverButton } from "@arcata/components";
 import { t } from "@arcata/translate";
 import { Popover, Transition } from "@headlessui/react";
 import joi from "joi";
-import { Fragment, type ReactNode, useEffect } from "react";
-import {
-  type ActionFunctionArgs,
-  type RouteObject,
-  redirect,
-  useFetcher,
-  useNavigation,
-} from "react-router-dom";
+import { Fragment, type ReactNode, useState } from "react";
 
 const schema = joi.object({
   jobUrl: joi.string().uri().required(),
 });
 
-const path = "/v1/job-by-url";
-
-export const route: RouteObject = {
-  path,
-  action,
-  loader: () => redirect("/"),
-};
-
-export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const updates = Object.fromEntries(formData);
-  const { error } = schema.validate(updates);
-  if (error?.details[0]?.message) {
-    return { success: false, error: error?.details[0]?.message };
-  }
-
-  //TODO: add parse job on backend using ai
-
-  return { success: true, error: null, job: null };
-}
-
 type AddJobPopoverProps = {
   actuator: ReactNode;
+  onSubmit: (url: string) => void;
+  disabled?: boolean;
 };
 
-type PanelContentProps = {
-  close: () => void;
-  success: boolean;
-  error: string | null;
-  nav: ReturnType<typeof useNavigation>;
-  fetcher: ReturnType<typeof useFetcher>;
-};
+export function AddJobPopover({
+  actuator,
+  onSubmit,
+  disabled,
+}: AddJobPopoverProps) {
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-function PanelContent({
-  close,
-  success,
-  error,
-  nav,
-  fetcher,
-}: PanelContentProps) {
-  useEffect(() => {
-    if (success) {
-      close();
+  const handleSubmit = (close: () => void) => {
+    const { error: validationError } = schema.validate({ jobUrl: url });
+    if (validationError?.details[0]?.message) {
+      setError(validationError.details[0].message);
+      return;
     }
-  }, [success, close]);
 
-  return (
-    <div className="w-screen max-w-sm flex-auto rounded-3xl bg-white p-4 text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
-      <fetcher.Form
-        action={path}
-        className="space-y-6"
-        id="add-job-url-submit"
-        method="POST"
-      >
-        <div>
-          <label
-            className="block font-medium text-gray-900 text-sm leading-6"
-            htmlFor="jobUrl"
-          >
-            {t("pages.hq.inputs.jobUrl.label")}
-          </label>
-          <div className="mt-2 h-14">
-            <input
-              className="block w-full rounded-md border-0 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-900 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-gray-900 focus:ring-inset sm:text-sm sm:leading-6"
-              id="job-url-input"
-              name="jobUrl"
-              placeholder="https://boards.greenhouse.io/arcata/jobs/4305870005"
-              required
-              type="text"
-            />
-            {error ? (
-              <p className="mt-2 text-red-600 text-sm" id="job-url-error">
-                {error}
-              </p>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <div>
-            <AppButton
-              className="py-1"
-              onClick={() => close()}
-              theme="link"
-              type="button"
-            >
-              {t("common.actions.cancel")}
-            </AppButton>
-          </div>
-          <div>
-            <AppButton
-              buttonState={nav.state}
-              className="py-1"
-              theme="primary_outline"
-              type="submit"
-            >
-              {t("common.actions.add")}
-            </AppButton>
-          </div>
-        </div>
-      </fetcher.Form>
-    </div>
-  );
-}
-
-export function AddJobPopover({ actuator }: AddJobPopoverProps) {
-  const nav = useNavigation();
-  const fetcher = useFetcher();
-  const { success, error, job } = fetcher.data || {
-    success: false,
-    error: null,
-    job: null,
+    setError(null);
+    onSubmit(url);
+    setUrl(""); // Reset for next time
+    close();
   };
-  console.log(job);
 
   return (
     <Popover className="relative">
@@ -149,13 +55,59 @@ export function AddJobPopover({ actuator }: AddJobPopoverProps) {
       >
         <Popover.Panel className="absolute left-3/4 z-10 mt-5 flex w-screen max-w-max -translate-x-full px-4">
           {({ close }) => (
-            <PanelContent
-              close={close}
-              error={error}
-              fetcher={fetcher}
-              nav={nav}
-              success={success}
-            />
+            <div className="w-screen max-w-sm flex-auto rounded-3xl bg-white p-4 text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
+              <div className="space-y-6">
+                <div>
+                  <label
+                    className="block font-medium text-gray-900 text-sm leading-6"
+                    htmlFor="job-url-input"
+                  >
+                    {t("pages.hq.inputs.jobUrl.label")}
+                  </label>
+                  <div className="mt-2 h-14">
+                    <input
+                      className="block w-full rounded-md border-0 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-900 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-gray-900 focus:ring-inset disabled:cursor-not-allowed disabled:bg-gray-100 sm:text-sm sm:leading-6"
+                      disabled={disabled}
+                      id="job-url-input"
+                      name="jobUrl"
+                      onChange={(e) => setUrl(e.target.value)}
+                      placeholder="https://boards.greenhouse.io/company/jobs/12345"
+                      required
+                      type="text"
+                      value={url}
+                    />
+                    {error ? (
+                      <p
+                        className="mt-2 text-red-600 text-sm"
+                        id="job-url-error"
+                      >
+                        {error}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <AppButton
+                    className="py-1"
+                    disabled={disabled}
+                    onClick={() => close()}
+                    theme="link"
+                    type="button"
+                  >
+                    {t("common.actions.cancel")}
+                  </AppButton>
+                  <AppButton
+                    className="py-1"
+                    disabled={disabled}
+                    onClick={() => handleSubmit(close)}
+                    theme="primary_outline"
+                    type="button"
+                  >
+                    {t("common.actions.add")}
+                  </AppButton>
+                </div>
+              </div>
+            </div>
           )}
         </Popover.Panel>
       </Transition>
