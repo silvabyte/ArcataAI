@@ -35,7 +35,7 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
     extends BaseStep[CompanyResolverInput, CompanyResolverOutput]:
 
   val name = "CompanyResolver"
-  
+
   private val enrichmentAgent = CompanyEnrichmentAgent(aiConfig)
 
   override def execute(
@@ -73,15 +73,15 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
       case None =>
         // Enrich company data using AI before creating
         val companyName = input.extractedData.companyName.getOrElse(domain)
-        
+
         val enrichedData = enrichmentAgent.enrich(companyName, input.html, input.url) match
-          case Right(data) => 
+          case Right(data) =>
             logger.info(s"[${ctx.runId}] Successfully enriched company data for: $companyName")
             Some(data)
           case Left(error) =>
             logger.warn(s"[${ctx.runId}] Company enrichment failed: ${error.message}, proceeding without enrichment")
             None
-        
+
         // Create company with enriched data (or basic data if enrichment failed)
         val newCompany = Company(
           companyName = Some(companyName),

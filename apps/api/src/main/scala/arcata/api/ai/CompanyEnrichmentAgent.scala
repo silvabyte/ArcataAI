@@ -55,7 +55,7 @@ Guidelines:
       companyName: String,
       html: String,
       url: String
-  ): Either[SchemaError, ExtractedCompanyData] =
+  ): Either[SchemaError, ExtractedCompanyData] = {
     agent
       .generateObjectWithoutHistory[ExtractedCompanyData](
         s"""Extract and enrich company information for '$companyName' from this job posting.
@@ -67,6 +67,7 @@ $html""",
         RequestMetadata()
       )
       .map(_.data)
+  }
 
 object CompanyEnrichmentAgent:
   def apply(config: AIConfig): CompanyEnrichmentAgent =

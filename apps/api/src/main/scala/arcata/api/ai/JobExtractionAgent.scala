@@ -48,7 +48,7 @@ Guidelines:
    * @return
    *   Either an error or the extracted job data
    */
-  def extract(html: String, url: String): Either[SchemaError, ExtractedJobData] =
+  def extract(html: String, url: String): Either[SchemaError, ExtractedJobData] = {
     agent
       .generateObjectWithoutHistory[ExtractedJobData](
         s"""Extract job details from this HTML content.
@@ -60,6 +60,7 @@ $html""",
         RequestMetadata()
       )
       .map(_.data)
+  }
 
 object JobExtractionAgent:
   def apply(config: AIConfig): JobExtractionAgent =

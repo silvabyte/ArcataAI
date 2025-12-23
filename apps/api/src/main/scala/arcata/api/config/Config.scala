@@ -37,9 +37,9 @@ final case class ObjectStorageConfig(
 
 /** AI provider configuration for job parsing and company enrichment. */
 final case class AIConfig(
-    baseUrl: String,    // Vercel AI Gateway: https://api.vercel.ai/v1
-    apiKey: String,     // VERCEL_AI_GATEWAY_API_KEY
-    model: String       // anthropic/claude-sonnet-4-20250514
+    baseUrl: String, // Vercel AI Gateway: https://api.vercel.ai/v1
+    apiKey: String, // VERCEL_AI_GATEWAY_API_KEY
+    model: String // anthropic/claude-sonnet-4-20250514
 )
 
 object Config:
@@ -103,7 +103,8 @@ object Config:
     Right(
       ObjectStorageConfig(
         baseUrl = getEnvOrDefault("OBJECT_STORAGE_URL", "https://s3.audetic.link/api/v1"),
-        tenantId = getEnvOrDefault("OBJECT_STORAGE_TENANT_ID", "arcata")
+        // this app does not have multi-tenancy, so just provide a fixed tenant here
+        tenantId = getEnvOrDefault("OBJECT_STORAGE_TENANT_ID", "arcata-ai")
       )
     )
   }
