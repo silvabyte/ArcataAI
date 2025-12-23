@@ -1,5 +1,6 @@
 package arcata.api.domain
 
+import boogieloops.schema.derivation.Schematic
 import upickle.default.*
 
 /**
@@ -41,8 +42,6 @@ import upickle.default.*
  *   Posted date if found
  * @param closingDate
  *   Closing date if found
- * @param rawText
- *   Raw extracted text (for debugging)
  */
 final case class ExtractedJobData(
     title: String,
@@ -61,9 +60,8 @@ final case class ExtractedJobData(
     applicationUrl: Option[String] = None,
     applicationEmail: Option[String] = None,
     postedDate: Option[String] = None,
-    closingDate: Option[String] = None,
-    rawText: Option[String] = None
-) derives ReadWriter
+    closingDate: Option[String] = None
+) derives ReadWriter, Schematic
 
 object ExtractedJobData:
   /** Create a minimal extraction result with just the title. */
