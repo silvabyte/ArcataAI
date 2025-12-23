@@ -38,6 +38,8 @@ export * from "./lib/icons/FiyaIcon";
 export * from "./lib/media/CompanyLogo";
 /** Navigation */
 export * from "./lib/navigation/BottomTabNav";
+/** Notifications */
+export * from "./lib/notifications";
 /** Pills */
 export * from "./lib/pills/RemovablePill";
 /** Sheets */
