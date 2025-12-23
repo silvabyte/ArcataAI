@@ -2,7 +2,7 @@ package arcata.api.etl.steps
 
 import scala.util.{Failure, Success, Try}
 
-import arcata.api.config.BoogieLoopsConfig
+import arcata.api.config.AIConfig
 import arcata.api.domain.ExtractedJobData
 import arcata.api.etl.framework.*
 import requests.*
@@ -34,7 +34,7 @@ private final case class BoogieLoopsResponse(
  *
  * This is a transformation step that uses AI to extract job details from raw HTML.
  */
-final class JobParser(config: BoogieLoopsConfig) extends BaseStep[JobParserInput, JobParserOutput]:
+final class JobParser(config: AIConfig) extends BaseStep[JobParserInput, JobParserOutput]:
 
   val name = "JobParser"
 
@@ -52,7 +52,7 @@ final class JobParser(config: BoogieLoopsConfig) extends BaseStep[JobParserInput
 
     val apiResult = Try {
       requests.post(
-        s"${config.apiUrl}/extract",
+        s"${config.baseUrl}/extract",
         headers = Map(
           "Authorization" -> s"Bearer ${config.apiKey}",
           "Content-Type" -> "application/json"
@@ -146,9 +146,9 @@ final class JobParser(config: BoogieLoopsConfig) extends BaseStep[JobParserInput
   }
 
 object JobParser:
-  def apply(config: BoogieLoopsConfig): JobParser =
+  def apply(config: AIConfig): JobParser =
     new JobParser(config)
 
   /** Create a parser with API URL and key directly. */
-  def apply(apiUrl: String, apiKey: String): JobParser =
-    new JobParser(BoogieLoopsConfig(apiUrl, apiKey))
+  def apply(baseUrl: String, apiKey: String, model: String = "anthropic/claude-sonnet-4-20250514"): JobParser =
+    new JobParser(AIConfig(baseUrl, apiKey, model))

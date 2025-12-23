@@ -1,7 +1,7 @@
 package arcata.api.etl
 
 import arcata.api.clients.{ObjectStorageClient, SupabaseClient}
-import arcata.api.config.{BoogieLoopsConfig, SupabaseConfig}
+import arcata.api.config.{AIConfig, SupabaseConfig}
 import arcata.api.domain.*
 import arcata.api.etl.framework.PipelineContext
 import munit.FunSuite
@@ -82,17 +82,18 @@ class IntegrationMockSupabaseClient extends SupabaseClient(
     job.sourceUrl.foreach(url => jobs = jobs + (url -> job))
 
 /**
- * Mock BoogieLoops for integration testing.
+ * Mock AI server for integration testing.
  *
  * Returns predictable extracted data based on input.
  */
-class MockBoogieLoopsServer:
-  private val boogieLoopsConfig = BoogieLoopsConfig(
-    apiUrl = "http://mock-boogieloops",
-    apiKey = "test-key"
+class MockAIServer:
+  private val aiConfig = AIConfig(
+    baseUrl = "http://mock-ai",
+    apiKey = "test-key",
+    model = "test-model"
   )
 
-  def config: BoogieLoopsConfig = boogieLoopsConfig
+  def config: AIConfig = aiConfig
 
   /** Parse HTML and return mock extracted data. */
   def mockExtract(html: String, url: String): ExtractedJobData = {
@@ -123,7 +124,7 @@ class JobIngestionPipelineIntegrationSuite extends FunSuite:
   test("Integration: full pipeline data flow with mocks"):
     val mockSupabase = new IntegrationMockSupabaseClient()
     val mockStorage = ObjectStorageClient.inMemory()
-    val mockBoogieLoops = new MockBoogieLoopsServer()
+    val mockAI = new MockAIServer()
 
     // Simulate what the pipeline would produce at each stage
     val ctx = PipelineContext.create("user-integration-test")
@@ -137,7 +138,7 @@ class JobIngestionPipelineIntegrationSuite extends FunSuite:
     assert(storageResult.isInstanceOf[arcata.api.clients.StorageResult.Success[?]])
 
     // Stage 2: Simulate job parsing
-    val extractedData = mockBoogieLoops.mockExtract(html, url)
+    val extractedData = mockAI.mockExtract(html, url)
     assertEquals(extractedData.title, "Senior Software Engineer")
     assertEquals(extractedData.companyName, Some("Techcorp Inc"))
 

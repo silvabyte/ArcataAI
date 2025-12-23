@@ -1,7 +1,7 @@
 package arcata.api.etl
 
 import arcata.api.clients.{ObjectStorageClient, SupabaseClient}
-import arcata.api.config.BoogieLoopsConfig
+import arcata.api.config.AIConfig
 import arcata.api.domain.{Job, JobApplication, JobStreamEntry}
 import arcata.api.etl.framework.*
 import arcata.api.etl.steps.*
@@ -30,7 +30,7 @@ final case class JobIngestionOutput(
  */
 final class JobIngestionPipeline(
     supabaseClient: SupabaseClient,
-    boogieLoopsConfig: BoogieLoopsConfig,
+    aiConfig: AIConfig,
     storageClient: Option[ObjectStorageClient] = None
 ) extends BasePipeline[JobIngestionInput, JobIngestionOutput]:
 
@@ -38,7 +38,7 @@ final class JobIngestionPipeline(
 
   // Initialize steps
   private val htmlFetcher = HtmlFetcher(storageClient)
-  private val jobParser = JobParser(boogieLoopsConfig)
+  private val jobParser = JobParser(aiConfig)
   private val companyResolver = CompanyResolver(supabaseClient)
   private val jobLoader = JobLoader(supabaseClient)
   private val streamLoader = StreamLoader(supabaseClient)
@@ -121,7 +121,7 @@ final class JobIngestionPipeline(
 object JobIngestionPipeline:
   def apply(
       supabaseClient: SupabaseClient,
-      boogieLoopsConfig: BoogieLoopsConfig,
+      aiConfig: AIConfig,
       storageClient: Option[ObjectStorageClient] = None
   ): JobIngestionPipeline =
-    new JobIngestionPipeline(supabaseClient, boogieLoopsConfig, storageClient)
+    new JobIngestionPipeline(supabaseClient, aiConfig, storageClient)

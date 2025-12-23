@@ -11,7 +11,7 @@ import arcata.api.logging.Log
  * Main entry point for the Arcata API server.
  *
  * This application provides a REST API for job ingestion using Cask HTTP server
- * with BoogieLoops for OpenAPI generation and AI extraction.
+ * with AI-powered job extraction via Vercel AI Gateway.
  */
 object ApiApp extends cask.Main {
 
@@ -41,7 +41,7 @@ object ApiApp extends cask.Main {
   // Initialize pipeline
   lazy val jobIngestionPipeline: JobIngestionPipeline = JobIngestionPipeline(
     supabaseClient = supabaseClient,
-    boogieLoopsConfig = config.boogieLoops,
+    aiConfig = config.ai,
     storageClient = storageClient
   )
 

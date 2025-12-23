@@ -12,7 +12,7 @@ final case class Config(
     server: ServerConfig,
     supabase: SupabaseConfig,
     objectStorage: ObjectStorageConfig,
-    boogieLoops: BoogieLoopsConfig
+    ai: AIConfig
 )
 
 /** HTTP server configuration. */
@@ -35,10 +35,11 @@ final case class ObjectStorageConfig(
     tenantId: String
 )
 
-/** BoogieLoops AI service configuration for job parsing. */
-final case class BoogieLoopsConfig(
-    apiUrl: String,
-    apiKey: String
+/** AI provider configuration for job parsing and company enrichment. */
+final case class AIConfig(
+    baseUrl: String,    // Vercel AI Gateway: https://api.vercel.ai/v1
+    apiKey: String,     // VERCEL_AI_GATEWAY_API_KEY
+    model: String       // anthropic/claude-sonnet-4-20250514
 )
 
 object Config:
@@ -53,12 +54,12 @@ object Config:
       server <- loadServerConfig()
       supabase <- loadSupabaseConfig()
       objectStorage <- loadObjectStorageConfig()
-      boogieLoops <- loadBoogieLoopsConfig()
+      ai <- loadAIConfig()
     yield Config(
       server = server,
       supabase = supabase,
       objectStorage = objectStorage,
-      boogieLoops = boogieLoops
+      ai = ai
     )
   }
 
@@ -107,12 +108,13 @@ object Config:
     )
   }
 
-  private def loadBoogieLoopsConfig(): Either[ConfigError, BoogieLoopsConfig] = {
-    Right(
-      BoogieLoopsConfig(
-        apiUrl = getEnvOrDefault("BOOGIELOOPS_API_URL", ""),
-        apiKey = getEnvOrDefault("BOOGIELOOPS_API_KEY", "")
-      )
+  private def loadAIConfig(): Either[ConfigError, AIConfig] = {
+    for
+      apiKey <- getEnvRequired("VERCEL_AI_GATEWAY_API_KEY")
+    yield AIConfig(
+      baseUrl = getEnvOrDefault("VERCEL_AI_GATEWAY_URL", "https://api.vercel.ai/v1"),
+      apiKey = apiKey,
+      model = getEnvOrDefault("AI_MODEL", "anthropic/claude-sonnet-4-20250514")
     )
   }
 
