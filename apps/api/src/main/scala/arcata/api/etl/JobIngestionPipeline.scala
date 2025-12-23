@@ -49,6 +49,7 @@ final class JobIngestionPipeline(
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
     for
+      // TODO: look up existing job first! so we can exit early
       // Step 1: Fetch HTML
       fetcherOutput <- htmlFetcher.run(
         HtmlFetcherInput(url = input.url, profileId = input.profileId),
