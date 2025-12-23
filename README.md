@@ -1,14 +1,14 @@
-# Arcata AI
+# Arcata
 
-Job application tracking that puts candidates first.
+Job application tracking that you can depend on for your entire career.
 
-Most job platforms treat candidates as the product. Arcata is built with empathy
-for people actually trying to find jobs. No dark patterns, no paywalls hiding
-public job links, no predatory tactics.
+Most job platforms are either overly predatory or they blur the lines there,
+or they rug pull you after you've invested a lot of time, effort and energy into the platform.
 
-Your data is yours. The code is open source under the O'Saasy license. If you're
-ever unhappy with our service, export your data and self-host. This is something
-you can trust for your entire career.
+With Arcata, your data is yours. The code is open source under the O'Saasy license. If you're
+ever unhappy with our service, export your data and self-host.
+
+I personally am getting exhausted of having the products I love vaporize or squeeze me out for the sake of a bigger payout.
 
 ## Quick Start
 
