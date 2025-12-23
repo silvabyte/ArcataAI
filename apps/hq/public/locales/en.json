@@ -27,6 +27,35 @@
         "jobUrl": {
           "label": "Add URL"
         }
+      },
+      "notifications": {
+        "processing": "Processing job URL...",
+        "success": "Job added successfully",
+        "error": "Failed to add job"
+      },
+      "jobDetail": {
+        "title": "Job Details",
+        "company": "Company",
+        "viewPosting": "View Original Posting",
+        "placeholder": {
+          "description": "Job description will appear here",
+          "requirements": "Requirements will appear here",
+          "matchScore": "Match score coming soon",
+          "notes": "Add your notes here"
+        }
+      },
+      "ingestion": {
+        "steps": {
+          "checking": "Checking",
+          "fetching": "Fetching",
+          "parsing": "Parsing",
+          "resolving": "Resolving",
+          "loading": "Loading",
+          "streaming": "Streaming",
+          "tracking": "Tracking"
+        },
+        "success": "Job added!",
+        "stepProgress": "Step {{current}} of {{total}}"
       }
     },
     "profile": {
