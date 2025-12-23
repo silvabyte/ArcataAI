@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import { AppErrorOutlet } from "@arcata/components";
+import { AppErrorOutlet, NotificationProvider } from "@arcata/components";
 import { getCurrentUser, setSession } from "@arcata/db";
 import { ui } from "@arcata/envs";
 import { load } from "@arcata/translate";
@@ -57,7 +57,11 @@ const loadApp = async () => {
   if (!rootElement) {
     throw new Error("Root element not found");
   }
-  ReactDOM.createRoot(rootElement).render(<RouterProvider router={router} />);
+  ReactDOM.createRoot(rootElement).render(
+    <NotificationProvider>
+      <RouterProvider router={router} />
+    </NotificationProvider>
+  );
 };
 
 loadApp();
