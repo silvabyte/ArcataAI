@@ -25,6 +25,14 @@ import upickle.default.*
  *   Minimum employee count estimate
  * @param employeeCountMax
  *   Maximum employee count estimate
+ * @param industry
+ *   AI-extracted industry classification
+ * @param companySize
+ *   Company size category (startup/small/medium/large/enterprise)
+ * @param description
+ *   Brief company description from AI
+ * @param headquarters
+ *   Headquarters location (e.g., "San Francisco, CA")
  */
 final case class Company(
     companyId: Option[Long] = None,
@@ -36,7 +44,12 @@ final case class Company(
     companyState: Option[String] = None,
     primaryIndustry: Option[String] = None,
     employeeCountMin: Option[Int] = None,
-    employeeCountMax: Option[Int] = None
+    employeeCountMax: Option[Int] = None,
+    // New enrichment fields
+    industry: Option[String] = None,
+    companySize: Option[String] = None,
+    description: Option[String] = None,
+    headquarters: Option[String] = None
 ) derives ReadWriter
 
 object Company:
