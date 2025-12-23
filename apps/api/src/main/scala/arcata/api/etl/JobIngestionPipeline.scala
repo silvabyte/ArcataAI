@@ -39,7 +39,7 @@ final class JobIngestionPipeline(
   // Initialize steps
   private val htmlFetcher = HtmlFetcher(storageClient)
   private val jobParser = JobParser(aiConfig)
-  private val companyResolver = CompanyResolver(supabaseClient)
+  private val companyResolver = CompanyResolver(supabaseClient, aiConfig)
   private val jobLoader = JobLoader(supabaseClient)
   private val streamLoader = StreamLoader(supabaseClient)
   private val applicationLoader = ApplicationLoader(supabaseClient)
@@ -120,7 +120,8 @@ final class JobIngestionPipeline(
         CompanyResolverInput(
           extractedData = parserOutput.extractedData,
           url = parserOutput.url,
-          objectId = parserOutput.objectId
+          objectId = parserOutput.objectId,
+          html = fetcherOutput.html
         ),
         ctx
       )
