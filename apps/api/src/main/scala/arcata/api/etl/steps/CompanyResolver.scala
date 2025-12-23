@@ -5,6 +5,7 @@ import arcata.api.clients.SupabaseClient
 import arcata.api.config.AIConfig
 import arcata.api.domain.{Company, ExtractedJobData}
 import arcata.api.etl.framework.*
+import boogieloops.ai.SchemaError
 
 import java.net.URI
 import scala.util.Try
@@ -78,8 +79,15 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
           case Right(data) =>
             logger.info(s"[${ctx.runId}] Successfully enriched company data for: $companyName")
             Some(data)
-          case Left(error) =>
-            logger.warn(s"[${ctx.runId}] Company enrichment failed: ${error.message}, proceeding without enrichment")
+          case Left(error: SchemaError) =>
+            val errorMessage: String = error match
+              case SchemaError.ModelNotSupported(model, prov, _) => s"Model $model not supported by $prov"
+              case SchemaError.NetworkError(msg, _) => msg
+              case SchemaError.ParseError(msg, _) => msg
+              case SchemaError.ApiError(msg, _, _) => msg
+              case SchemaError.SchemaConversionError(msg, _) => msg
+              case SchemaError.ConfigurationError(msg) => msg
+            logger.warn(s"[${ctx.runId}] Company enrichment failed: $errorMessage, proceeding without enrichment")
             None
 
         // Create company with enriched data (or basic data if enrichment failed)

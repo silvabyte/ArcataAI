@@ -2,9 +2,8 @@ package arcata.api.ai
 
 import arcata.api.config.AIConfig
 import arcata.api.domain.ExtractedJobData
-import boogieloops.ai.{Agent, RequestMetadata}
+import boogieloops.ai.{Agent, RequestMetadata, SchemaError}
 import boogieloops.ai.providers.OpenAICompatibleProvider
-import boogieloops.schema.SchemaError
 
 /**
  * AI agent that extracts structured job data from HTML.

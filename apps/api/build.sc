@@ -68,7 +68,7 @@ object api extends ScalaModule with ScalafmtModule {
         scalaVersion(),
         "--syntactic",
         files
-      ).call(cwd = millSourcePath)
+      ).call(cwd = millSourcePath / os.up)
     }
     ()
   }
@@ -89,7 +89,7 @@ object api extends ScalaModule with ScalafmtModule {
         "--syntactic",
         "--check",
         files
-      ).call(cwd = millSourcePath)
+      ).call(cwd = millSourcePath / os.up)
     }
     ()
   }
@@ -132,7 +132,7 @@ object api extends ScalaModule with ScalafmtModule {
           api.scalaVersion(),
           "--syntactic",
           files
-        ).call(cwd = api.millSourcePath)
+        ).call(cwd = api.millSourcePath / os.up)
       }
       ()
     }
@@ -152,7 +152,7 @@ object api extends ScalaModule with ScalafmtModule {
           "--syntactic",
           "--check",
           files
-        ).call(cwd = api.millSourcePath)
+        ).call(cwd = api.millSourcePath / os.up)
       }
       ()
     }

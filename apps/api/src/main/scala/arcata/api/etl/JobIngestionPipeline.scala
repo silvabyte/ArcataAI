@@ -75,41 +75,42 @@ final class JobIngestionPipeline(
     val totalSteps = if input.createApplication then 3 else 2
 
     progressEmitter.emit(0, totalSteps, "checking", "Job found!")
+    progressEmitter.emit(1, totalSteps, "streaming", "Adding to your feed...")
 
-    for
-      // Skip directly to adding to stream
-      _ = progressEmitter.emit(1, totalSteps, "streaming", "Adding to your feed...")
-      streamOutput <- streamLoader.run(
-        StreamLoaderInput(
-          job = job,
-          profileId = input.profileId,
-          source = input.source
-        ),
-        ctx
+    val result = {
+      for
+        streamOutput <- streamLoader.run(
+          StreamLoaderInput(
+            job = job,
+            profileId = input.profileId,
+            source = input.source
+          ),
+          ctx
+        )
+
+        applicationOutput <-
+          if input.createApplication then
+            progressEmitter.emit(2, totalSteps, "tracking", "Creating application...")
+            applicationLoader
+              .run(
+                ApplicationLoaderInput(
+                  job = job,
+                  profileId = input.profileId,
+                  notes = input.notes
+                ),
+                ctx
+              )
+              .map(out => Some(out.application))
+          else Right(None)
+      yield JobIngestionOutput(
+        job = job,
+        streamEntry = Some(streamOutput.streamEntry),
+        application = applicationOutput
       )
+    }
 
-      // Optionally create application
-      applicationOutput <-
-        if input.createApplication then
-          progressEmitter.emit(2, totalSteps, "tracking", "Creating application...")
-          applicationLoader
-            .run(
-              ApplicationLoaderInput(
-                job = job,
-                profileId = input.profileId,
-                notes = input.notes
-              ),
-              ctx
-            )
-            .map(out => Some(out.application))
-        else Right(None)
-
-      _ = progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added successfully")
-    yield JobIngestionOutput(
-      job = job,
-      streamEntry = Some(streamOutput.streamEntry),
-      application = applicationOutput
-    )
+    result.foreach(_ => progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added successfully"))
+    result
   }
 
   private def handleNewJob(
@@ -118,82 +119,94 @@ final class JobIngestionPipeline(
   ): Either[StepError, JobIngestionOutput] = {
     val totalSteps = if input.createApplication then 7 else 6
 
-    for
-      // Step 1: Fetch HTML
-      _ = progressEmitter.emit(1, totalSteps, "fetching", "Getting job page...")
-      fetcherOutput <- htmlFetcher.run(
-        HtmlFetcherInput(url = input.url, profileId = input.profileId),
-        ctx
+    progressEmitter.emit(1, totalSteps, "fetching", "Getting job page...")
+
+    val result = {
+      for
+        // Step 1: Fetch HTML
+        fetcherOutput <- htmlFetcher.run(
+          HtmlFetcherInput(url = input.url, profileId = input.profileId),
+          ctx
+        )
+
+        // Step 2: Parse job
+        parserOutput <- {
+          progressEmitter.emit(2, totalSteps, "parsing", "Extracting job details...")
+          jobParser.run(
+            JobParserInput(
+              html = fetcherOutput.html,
+              url = fetcherOutput.url,
+              objectId = fetcherOutput.objectId
+            ),
+            ctx
+          )
+        }
+
+        // Step 3: Resolve company
+        companyOutput <- {
+          progressEmitter.emit(3, totalSteps, "resolving", "Finding company...")
+          companyResolver.run(
+            CompanyResolverInput(
+              extractedData = parserOutput.extractedData,
+              url = parserOutput.url,
+              objectId = parserOutput.objectId,
+              html = fetcherOutput.html
+            ),
+            ctx
+          )
+        }
+
+        // Step 4: Load job
+        jobOutput <- {
+          progressEmitter.emit(4, totalSteps, "loading", "Creating job record...")
+          jobLoader.run(
+            JobLoaderInput(
+              extractedData = companyOutput.extractedData,
+              company = companyOutput.company,
+              url = companyOutput.url,
+              objectId = companyOutput.objectId
+            ),
+            ctx
+          )
+        }
+
+        // Step 5: Add to stream
+        streamOutput <- {
+          progressEmitter.emit(5, totalSteps, "streaming", "Adding to your feed...")
+          streamLoader.run(
+            StreamLoaderInput(
+              job = jobOutput.job,
+              profileId = input.profileId,
+              source = input.source
+            ),
+            ctx
+          )
+        }
+
+        // Step 6: Optionally create application
+        applicationOutput <-
+          if input.createApplication then
+            progressEmitter.emit(6, totalSteps, "tracking", "Creating application...")
+            applicationLoader
+              .run(
+                ApplicationLoaderInput(
+                  job = jobOutput.job,
+                  profileId = input.profileId,
+                  notes = input.notes
+                ),
+                ctx
+              )
+              .map(out => Some(out.application))
+          else Right(None)
+      yield JobIngestionOutput(
+        job = streamOutput.job,
+        streamEntry = Some(streamOutput.streamEntry),
+        application = applicationOutput
       )
+    }
 
-      // Step 2: Parse job
-      _ = progressEmitter.emit(2, totalSteps, "parsing", "Extracting job details...")
-      parserOutput <- jobParser.run(
-        JobParserInput(
-          html = fetcherOutput.html,
-          url = fetcherOutput.url,
-          objectId = fetcherOutput.objectId
-        ),
-        ctx
-      )
-
-      // Step 3: Resolve company
-      _ = progressEmitter.emit(3, totalSteps, "resolving", "Finding company...")
-      companyOutput <- companyResolver.run(
-        CompanyResolverInput(
-          extractedData = parserOutput.extractedData,
-          url = parserOutput.url,
-          objectId = parserOutput.objectId,
-          html = fetcherOutput.html
-        ),
-        ctx
-      )
-
-      // Step 4: Load job
-      _ = progressEmitter.emit(4, totalSteps, "loading", "Creating job record...")
-      jobOutput <- jobLoader.run(
-        JobLoaderInput(
-          extractedData = companyOutput.extractedData,
-          company = companyOutput.company,
-          url = companyOutput.url,
-          objectId = companyOutput.objectId
-        ),
-        ctx
-      )
-
-      // Step 5: Add to stream
-      _ = progressEmitter.emit(5, totalSteps, "streaming", "Adding to your feed...")
-      streamOutput <- streamLoader.run(
-        StreamLoaderInput(
-          job = jobOutput.job,
-          profileId = input.profileId,
-          source = input.source
-        ),
-        ctx
-      )
-
-      // Step 6: Optionally create application
-      applicationOutput <-
-        if input.createApplication then
-          progressEmitter.emit(6, totalSteps, "tracking", "Creating application...")
-          applicationLoader
-            .run(
-              ApplicationLoaderInput(
-                job = jobOutput.job,
-                profileId = input.profileId,
-                notes = input.notes
-              ),
-              ctx
-            )
-            .map(out => Some(out.application))
-        else Right(None)
-
-      _ = progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added successfully")
-    yield JobIngestionOutput(
-      job = streamOutput.job,
-      streamEntry = Some(streamOutput.streamEntry),
-      application = applicationOutput
-    )
+    result.foreach(_ => progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added successfully"))
+    result
   }
 
 object JobIngestionPipeline:

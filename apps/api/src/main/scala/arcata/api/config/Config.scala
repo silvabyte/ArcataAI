@@ -115,7 +115,7 @@ object Config:
     yield AIConfig(
       baseUrl = getEnvOrDefault("VERCEL_AI_GATEWAY_URL", "https://api.vercel.ai/v1"),
       apiKey = apiKey,
-      model = getEnvOrDefault("AI_MODEL", "anthropic/claude-sonnet-4-20250514")
+      model = getEnvOrDefault("AI_MODEL", "anthropic/claude-haiku-4.5")
     )
   }
 
