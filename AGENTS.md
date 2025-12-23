@@ -121,3 +121,15 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 ---
 
 Most formatting and common issues are automatically fixed by Biome. Run `bun x ultracite fix` before committing to ensure compliance.
+
+---
+
+## Architecture Documentation
+
+When modifying system architecture (adding/removing services, changing ports,
+altering data flow), update the architecture diagrams in:
+
+- `docs/architecture.md` - System overview diagram
+- `apps/api/README.md` - ETL pipeline diagram
+
+Keep diagrams in sync with actual system topology.

@@ -76,7 +76,7 @@ object Config:
 
   private def loadServerConfig(): Either[ConfigError, ServerConfig] = {
     val host = getEnvOrDefault("API_HOST", "0.0.0.0")
-    val portStr = getEnvOrDefault("API_PORT", "8080")
+    val portStr = getEnvOrDefault("API_PORT", "4203")
 
     Try(portStr.toInt) match
       case Success(port) => Right(ServerConfig(host = host, port = port))
