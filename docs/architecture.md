@@ -25,7 +25,7 @@ for auth and data persistence.
 
 ### Auth (`apps/auth/`)
 
-Authentication flows—login, signup, email verification. Communicates with
+Authentication flows: login, signup, email verification. Communicates with
 Supabase Auth. Redirects to HQ on successful auth.
 
 ### HQ (`apps/hq/`)

@@ -3,7 +3,7 @@
 Job application tracking that puts candidates first.
 
 Most job platforms treat candidates as the product. Arcata is built with empathy
-for people actually trying to find jobs—no dark patterns, no paywalls hiding
+for people actually trying to find jobs. No dark patterns, no paywalls hiding
 public job links, no predatory tactics.
 
 Your data is yours. The code is open source under the O'Saasy license. If you're
