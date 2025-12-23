@@ -48,8 +48,57 @@ final class JobIngestionPipeline(
       input: JobIngestionInput,
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
+    // Step 0: Check if job already exists
+    supabaseClient.findJobBySourceUrl(input.url) match
+      case Some(existingJob) =>
+        logger.info(s"[${ctx.runId}] Job already exists (id=${existingJob.jobId}), skipping to stream")
+        handleExistingJob(existingJob, input, ctx)
+      case None =>
+        handleNewJob(input, ctx)
+  }
+
+  private def handleExistingJob(
+      job: Job,
+      input: JobIngestionInput,
+      ctx: PipelineContext
+  ): Either[StepError, JobIngestionOutput] = {
     for
-      // TODO: look up existing job first! so we can exit early
+      // Skip directly to adding to stream
+      streamOutput <- streamLoader.run(
+        StreamLoaderInput(
+          job = job,
+          profileId = input.profileId,
+          source = input.source
+        ),
+        ctx
+      )
+
+      // Optionally create application
+      applicationOutput <-
+        if input.createApplication then
+          applicationLoader
+            .run(
+              ApplicationLoaderInput(
+                job = job,
+                profileId = input.profileId,
+                notes = input.notes
+              ),
+              ctx
+            )
+            .map(out => Some(out.application))
+        else Right(None)
+    yield JobIngestionOutput(
+      job = job,
+      streamEntry = Some(streamOutput.streamEntry),
+      application = applicationOutput
+    )
+  }
+
+  private def handleNewJob(
+      input: JobIngestionInput,
+      ctx: PipelineContext
+  ): Either[StepError, JobIngestionOutput] = {
+    for
       // Step 1: Fetch HTML
       fetcherOutput <- htmlFetcher.run(
         HtmlFetcherInput(url = input.url, profileId = input.profileId),
