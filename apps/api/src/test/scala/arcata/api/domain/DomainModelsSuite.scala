@@ -63,7 +63,7 @@ object DomainModelsSuite extends TestSuite:
 
         assert(parsed.companyId == 1L)
         assert(parsed.title == "Engineer")
-        assert(parsed.status == Some("active")) // default value
+        assert(parsed.salaryCurrency == Some("USD")) // default value
       }
     }
 

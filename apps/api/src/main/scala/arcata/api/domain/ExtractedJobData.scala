@@ -22,8 +22,12 @@ import upickle.default.*
  *   Required experience level
  * @param educationLevel
  *   Required education
- * @param salaryRange
- *   Salary range
+ * @param salaryMin
+ *   Minimum salary amount (extracted as integer)
+ * @param salaryMax
+ *   Maximum salary amount (extracted as integer)
+ * @param salaryCurrency
+ *   Currency code (default USD)
  * @param qualifications
  *   Required qualifications
  * @param preferredQualifications
@@ -36,8 +40,8 @@ import upickle.default.*
  *   Inferred job category
  * @param applicationUrl
  *   Direct application URL if found
- * @param applicationEmail
- *   Application email if found
+ * @param isRemote
+ *   Whether job allows remote work
  * @param postedDate
  *   Posted date if found
  * @param closingDate
@@ -51,14 +55,16 @@ final case class ExtractedJobData(
     jobType: Option[String] = None,
     experienceLevel: Option[String] = None,
     educationLevel: Option[String] = None,
-    salaryRange: Option[String] = None,
+    salaryMin: Option[Int] = None,
+    salaryMax: Option[Int] = None,
+    salaryCurrency: Option[String] = None,
     qualifications: Option[List[String]] = None,
     preferredQualifications: Option[List[String]] = None,
     responsibilities: Option[List[String]] = None,
     benefits: Option[List[String]] = None,
     category: Option[String] = None,
     applicationUrl: Option[String] = None,
-    applicationEmail: Option[String] = None,
+    isRemote: Option[Boolean] = None,
     postedDate: Option[String] = None,
     closingDate: Option[String] = None
 ) derives ReadWriter, Schematic

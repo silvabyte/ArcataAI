@@ -63,7 +63,9 @@ final class JobLoader(supabaseClient: SupabaseClient)
           jobType = input.extractedData.jobType,
           experienceLevel = input.extractedData.experienceLevel,
           educationLevel = input.extractedData.educationLevel,
-          salaryRange = input.extractedData.salaryRange,
+          salaryMin = input.extractedData.salaryMin,
+          salaryMax = input.extractedData.salaryMax,
+          salaryCurrency = input.extractedData.salaryCurrency,
           qualifications = input.extractedData.qualifications,
           preferredQualifications = input.extractedData.preferredQualifications,
           responsibilities = input.extractedData.responsibilities,
@@ -71,8 +73,7 @@ final class JobLoader(supabaseClient: SupabaseClient)
           category = input.extractedData.category,
           sourceUrl = Some(input.url),
           applicationUrl = input.extractedData.applicationUrl,
-          applicationEmail = input.extractedData.applicationEmail,
-          rawHtmlObjectId = input.objectId,
+          isRemote = input.extractedData.isRemote,
           postedDate = input.extractedData.postedDate,
           closingDate = input.extractedData.closingDate
         )

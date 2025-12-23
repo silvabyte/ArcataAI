@@ -21,8 +21,12 @@ import upickle.default.*
  *   Required experience level (e.g., "Senior", "Entry-level")
  * @param educationLevel
  *   Required education (e.g., "Bachelor's", "Master's")
- * @param salaryRange
- *   Salary range as text (e.g., "$120k-$180k")
+ * @param salaryMin
+ *   Minimum salary amount
+ * @param salaryMax
+ *   Maximum salary amount
+ * @param salaryCurrency
+ *   Currency code (default USD)
  * @param qualifications
  *   Required qualifications
  * @param preferredQualifications
@@ -37,12 +41,8 @@ import upickle.default.*
  *   Original URL where job was found
  * @param applicationUrl
  *   Direct URL to apply
- * @param applicationEmail
- *   Email to send applications to
- * @param rawHtmlObjectId
- *   Object storage ID for raw HTML
- * @param status
- *   Job status (e.g., "active", "closed")
+ * @param isRemote
+ *   Whether job allows remote work
  * @param postedDate
  *   When the job was posted
  * @param closingDate
@@ -57,7 +57,9 @@ final case class Job(
     jobType: Option[String] = None,
     experienceLevel: Option[String] = None,
     educationLevel: Option[String] = None,
-    salaryRange: Option[String] = None,
+    salaryMin: Option[Int] = None,
+    salaryMax: Option[Int] = None,
+    salaryCurrency: Option[String] = Some("USD"),
     qualifications: Option[Seq[String]] = None,
     preferredQualifications: Option[Seq[String]] = None,
     responsibilities: Option[Seq[String]] = None,
@@ -65,9 +67,64 @@ final case class Job(
     category: Option[String] = None,
     sourceUrl: Option[String] = None,
     applicationUrl: Option[String] = None,
-    applicationEmail: Option[String] = None,
-    rawHtmlObjectId: Option[String] = None,
-    status: Option[String] = Some("active"),
+    isRemote: Option[Boolean] = None,
     postedDate: Option[String] = None,
     closingDate: Option[String] = None
-) derives ReadWriter
+)
+
+object Job:
+  // Custom ReadWriter to handle snake_case from Supabase
+  given ReadWriter[Job] = readwriter[ujson.Value].bimap[Job](
+    job => {
+      val obj = ujson.Obj(
+        "company_id" -> ujson.Num(job.companyId.toDouble),
+        "title" -> job.title
+      )
+      job.jobId.foreach(v => obj("job_id") = ujson.Num(v.toDouble))
+      job.description.foreach(v => obj("description") = v)
+      job.location.foreach(v => obj("location") = v)
+      job.jobType.foreach(v => obj("job_type") = v)
+      job.experienceLevel.foreach(v => obj("experience_level") = v)
+      job.educationLevel.foreach(v => obj("education_level") = v)
+      job.salaryMin.foreach(v => obj("salary_min") = v)
+      job.salaryMax.foreach(v => obj("salary_max") = v)
+      job.salaryCurrency.foreach(v => obj("salary_currency") = v)
+      job.qualifications.foreach(v => obj("qualifications") = ujson.Arr.from(v))
+      job.preferredQualifications.foreach(v => obj("preferred_qualifications") = ujson.Arr.from(v))
+      job.responsibilities.foreach(v => obj("responsibilities") = ujson.Arr.from(v))
+      job.benefits.foreach(v => obj("benefits") = ujson.Arr.from(v))
+      job.category.foreach(v => obj("category") = v)
+      job.sourceUrl.foreach(v => obj("source_url") = v)
+      job.applicationUrl.foreach(v => obj("application_url") = v)
+      job.isRemote.foreach(v => obj("is_remote") = v)
+      job.postedDate.foreach(v => obj("posted_date") = v)
+      job.closingDate.foreach(v => obj("closing_date") = v)
+      obj
+    },
+    json => {
+      val obj = json.obj
+      Job(
+        jobId = obj.get("job_id").flatMap(v => if v.isNull then None else Some(v.num.toLong)),
+        companyId = obj("company_id").num.toLong,
+        title = obj("title").str,
+        description = obj.get("description").flatMap(v => if v.isNull then None else Some(v.str)),
+        location = obj.get("location").flatMap(v => if v.isNull then None else Some(v.str)),
+        jobType = obj.get("job_type").flatMap(v => if v.isNull then None else Some(v.str)),
+        experienceLevel = obj.get("experience_level").flatMap(v => if v.isNull then None else Some(v.str)),
+        educationLevel = obj.get("education_level").flatMap(v => if v.isNull then None else Some(v.str)),
+        salaryMin = obj.get("salary_min").flatMap(v => if v.isNull then None else Some(v.num.toInt)),
+        salaryMax = obj.get("salary_max").flatMap(v => if v.isNull then None else Some(v.num.toInt)),
+        salaryCurrency = obj.get("salary_currency").flatMap(v => if v.isNull then None else Some(v.str)),
+        qualifications = obj.get("qualifications").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
+        preferredQualifications = obj.get("preferred_qualifications").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
+        responsibilities = obj.get("responsibilities").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
+        benefits = obj.get("benefits").flatMap(v => if v.isNull then None else Some(v.arr.map(_.str).toSeq)),
+        category = obj.get("category").flatMap(v => if v.isNull then None else Some(v.str)),
+        sourceUrl = obj.get("source_url").flatMap(v => if v.isNull then None else Some(v.str)),
+        applicationUrl = obj.get("application_url").flatMap(v => if v.isNull then None else Some(v.str)),
+        isRemote = obj.get("is_remote").flatMap(v => if v.isNull then None else Some(v.bool)),
+        postedDate = obj.get("posted_date").flatMap(v => if v.isNull then None else Some(v.str)),
+        closingDate = obj.get("closing_date").flatMap(v => if v.isNull then None else Some(v.str))
+      )
+    }
+  )

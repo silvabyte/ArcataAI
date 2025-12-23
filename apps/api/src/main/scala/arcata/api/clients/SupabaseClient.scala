@@ -150,7 +150,9 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     job.jobType.foreach(v => obj("job_type") = v)
     job.experienceLevel.foreach(v => obj("experience_level") = v)
     job.educationLevel.foreach(v => obj("education_level") = v)
-    job.salaryRange.foreach(v => obj("salary_range") = v)
+    job.salaryMin.foreach(v => obj("salary_min") = v)
+    job.salaryMax.foreach(v => obj("salary_max") = v)
+    job.salaryCurrency.foreach(v => obj("salary_currency") = v)
     job.qualifications.foreach(v => obj("qualifications") = ujson.Arr.from(v))
     job.preferredQualifications.foreach(v => obj("preferred_qualifications") = ujson.Arr.from(v))
     job.responsibilities.foreach(v => obj("responsibilities") = ujson.Arr.from(v))
@@ -158,11 +160,10 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     job.category.foreach(v => obj("category") = v)
     job.sourceUrl.foreach(v => obj("source_url") = v)
     job.applicationUrl.foreach(v => obj("application_url") = v)
-    job.applicationEmail.foreach(v => obj("application_email") = v)
-    job.rawHtmlObjectId.foreach(v => obj("raw_html_object_id") = v)
-    job.status.foreach(v => obj("status") = v)
-    job.postedDate.foreach(v => obj("posted_date") = v)
-    job.closingDate.foreach(v => obj("closing_date") = v)
+    job.isRemote.foreach(v => obj("is_remote") = v)
+    // Filter out empty strings for timestamp fields - PostgreSQL expects valid timestamps or null
+    job.postedDate.filter(_.nonEmpty).foreach(v => obj("posted_date") = v)
+    job.closingDate.filter(_.nonEmpty).foreach(v => obj("closing_date") = v)
     ujson.write(obj)
   }
 
