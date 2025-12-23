@@ -2,6 +2,7 @@ package arcata.api.http.routes
 
 import arcata.api.etl.{JobIngestionInput, JobIngestionPipeline}
 import arcata.api.http.auth.{AuthenticatedRequest, JwtClaims, JwtValidationResult, JwtValidator}
+import arcata.api.http.middleware.{CorsConfig, cors}
 import boogieloops.schema.derivation.Schematic
 import boogieloops.web.*
 import boogieloops.web.Web.ValidatedRequestReader
@@ -60,11 +61,14 @@ final case class JobErrorResponse(
  *   The job ingestion pipeline
  * @param jwtValidator
  *   JWT validator for authentication
+ * @param corsConfig
+ *   CORS configuration for cross-origin requests
  */
 class JobRoutes(
     basePath: String,
     pipeline: JobIngestionPipeline,
-    jwtValidator: JwtValidator
+    jwtValidator: JwtValidator,
+    corsConfig: CorsConfig
 ) extends cask.Routes {
   private val jsonHeaders = Seq("Content-Type" -> "application/json")
 
@@ -108,6 +112,7 @@ class JobRoutes(
    * Fetches the job posting from the provided URL, extracts job details using AI, and adds it to
    * the user's job stream.
    */
+  @cors(corsConfig)
   @authenticated()
   @Web.post(
     s"$basePath/jobs/ingest",
@@ -170,7 +175,8 @@ object JobRoutes {
   def apply(
       basePath: String,
       pipeline: JobIngestionPipeline,
-      jwtValidator: JwtValidator
+      jwtValidator: JwtValidator,
+      corsConfig: CorsConfig
   ): JobRoutes =
-    new JobRoutes(basePath, pipeline, jwtValidator)
+    new JobRoutes(basePath, pipeline, jwtValidator, corsConfig)
 }

@@ -18,7 +18,8 @@ final case class Config(
 /** HTTP server configuration. */
 final case class ServerConfig(
     host: String,
-    port: Int
+    port: Int,
+    corsOrigins: List[String]
 )
 
 /** Supabase configuration for database access and JWT validation. */
@@ -78,9 +79,11 @@ object Config:
   private def loadServerConfig(): Either[ConfigError, ServerConfig] = {
     val host = getEnvOrDefault("API_HOST", "0.0.0.0")
     val portStr = getEnvOrDefault("API_PORT", "4203")
+    val corsOriginsStr = getEnvOrDefault("CORS_ORIGINS", "http://localhost:4201,http://localhost:4200")
+    val corsOrigins = corsOriginsStr.split(",").map(_.trim).filter(_.nonEmpty).toList
 
     Try(portStr.toInt) match
-      case Success(port) => Right(ServerConfig(host = host, port = port))
+      case Success(port) => Right(ServerConfig(host = host, port = port, corsOrigins = corsOrigins))
       case Failure(_) =>
         Left(ConfigError(s"API_PORT must be a valid integer, got: '$portStr'"))
   }

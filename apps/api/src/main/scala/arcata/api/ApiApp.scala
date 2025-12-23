@@ -4,6 +4,7 @@ import arcata.api.clients.{ObjectStorageClient, SupabaseClient}
 import arcata.api.config.Config
 import arcata.api.etl.JobIngestionPipeline
 import arcata.api.http.auth.JwtValidator
+import arcata.api.http.middleware.{CorsConfig, CorsPreflightRoutes}
 import arcata.api.http.routes.{IndexRoutes, JobRoutes}
 import arcata.api.logging.Log
 
@@ -38,6 +39,11 @@ object ApiApp extends cask.Main {
   // Initialize JWT validator
   lazy val jwtValidator: JwtValidator = JwtValidator(config.supabase.jwtSecret)
 
+  // Initialize CORS configuration
+  lazy val corsConfig: CorsConfig = CorsConfig(
+    allowedOrigins = config.server.corsOrigins
+  )
+
   // Initialize pipeline
   lazy val jobIngestionPipeline: JobIngestionPipeline = JobIngestionPipeline(
     supabaseClient = supabaseClient,
@@ -51,11 +57,16 @@ object ApiApp extends cask.Main {
   lazy val jobRoutes: JobRoutes = JobRoutes(
     basePath = "/api/v1",
     pipeline = jobIngestionPipeline,
-    jwtValidator = jwtValidator
+    jwtValidator = jwtValidator,
+    corsConfig = corsConfig
   )
+
+  // CORS preflight routes (handles OPTIONS requests)
+  lazy val corsPreflightRoutes: CorsPreflightRoutes = CorsPreflightRoutes(corsConfig)
 
   // Register all routes
   override def allRoutes: Seq[cask.Routes] = Seq(
+    corsPreflightRoutes,
     indexRoutes,
     jobRoutes
   )
