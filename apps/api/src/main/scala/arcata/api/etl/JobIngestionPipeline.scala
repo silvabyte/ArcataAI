@@ -31,7 +31,8 @@ final case class JobIngestionOutput(
 final class JobIngestionPipeline(
     supabaseClient: SupabaseClient,
     aiConfig: AIConfig,
-    storageClient: Option[ObjectStorageClient] = None
+    storageClient: Option[ObjectStorageClient] = None,
+    progressEmitter: ProgressEmitter = ProgressEmitter.noop
 ) extends BasePipeline[JobIngestionInput, JobIngestionOutput]:
 
   val name = "JobIngestionPipeline"
@@ -49,12 +50,21 @@ final class JobIngestionPipeline(
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
     // Step 0: Check if job already exists
+    progressEmitter.emit(0, 1, "checking", "Looking up job...")
     supabaseClient.findJobBySourceUrl(input.url) match
       case Some(existingJob) =>
         logger.info(s"[${ctx.runId}] Job already exists (id=${existingJob.jobId}), skipping to stream")
-        handleExistingJob(existingJob, input, ctx)
+        handleExistingJob(existingJob, input, ctx) match
+          case Left(err) =>
+            progressEmitter.emit(0, 1, "error", err.message)
+            Left(err)
+          case result => result
       case None =>
-        handleNewJob(input, ctx)
+        handleNewJob(input, ctx) match
+          case Left(err) =>
+            progressEmitter.emit(0, 1, "error", err.message)
+            Left(err)
+          case result => result
   }
 
   private def handleExistingJob(
@@ -62,8 +72,13 @@ final class JobIngestionPipeline(
       input: JobIngestionInput,
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
+    val totalSteps = if input.createApplication then 3 else 2
+
+    progressEmitter.emit(0, totalSteps, "checking", "Job found!")
+
     for
       // Skip directly to adding to stream
+      _ = progressEmitter.emit(1, totalSteps, "streaming", "Adding to your feed...")
       streamOutput <- streamLoader.run(
         StreamLoaderInput(
           job = job,
@@ -76,6 +91,7 @@ final class JobIngestionPipeline(
       // Optionally create application
       applicationOutput <-
         if input.createApplication then
+          progressEmitter.emit(2, totalSteps, "tracking", "Creating application...")
           applicationLoader
             .run(
               ApplicationLoaderInput(
@@ -87,6 +103,8 @@ final class JobIngestionPipeline(
             )
             .map(out => Some(out.application))
         else Right(None)
+
+      _ = progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added successfully")
     yield JobIngestionOutput(
       job = job,
       streamEntry = Some(streamOutput.streamEntry),
@@ -98,14 +116,18 @@ final class JobIngestionPipeline(
       input: JobIngestionInput,
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
+    val totalSteps = if input.createApplication then 7 else 6
+
     for
       // Step 1: Fetch HTML
+      _ = progressEmitter.emit(1, totalSteps, "fetching", "Getting job page...")
       fetcherOutput <- htmlFetcher.run(
         HtmlFetcherInput(url = input.url, profileId = input.profileId),
         ctx
       )
 
       // Step 2: Parse job
+      _ = progressEmitter.emit(2, totalSteps, "parsing", "Extracting job details...")
       parserOutput <- jobParser.run(
         JobParserInput(
           html = fetcherOutput.html,
@@ -116,6 +138,7 @@ final class JobIngestionPipeline(
       )
 
       // Step 3: Resolve company
+      _ = progressEmitter.emit(3, totalSteps, "resolving", "Finding company...")
       companyOutput <- companyResolver.run(
         CompanyResolverInput(
           extractedData = parserOutput.extractedData,
@@ -127,6 +150,7 @@ final class JobIngestionPipeline(
       )
 
       // Step 4: Load job
+      _ = progressEmitter.emit(4, totalSteps, "loading", "Creating job record...")
       jobOutput <- jobLoader.run(
         JobLoaderInput(
           extractedData = companyOutput.extractedData,
@@ -138,6 +162,7 @@ final class JobIngestionPipeline(
       )
 
       // Step 5: Add to stream
+      _ = progressEmitter.emit(5, totalSteps, "streaming", "Adding to your feed...")
       streamOutput <- streamLoader.run(
         StreamLoaderInput(
           job = jobOutput.job,
@@ -150,6 +175,7 @@ final class JobIngestionPipeline(
       // Step 6: Optionally create application
       applicationOutput <-
         if input.createApplication then
+          progressEmitter.emit(6, totalSteps, "tracking", "Creating application...")
           applicationLoader
             .run(
               ApplicationLoaderInput(
@@ -161,6 +187,8 @@ final class JobIngestionPipeline(
             )
             .map(out => Some(out.application))
         else Right(None)
+
+      _ = progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added successfully")
     yield JobIngestionOutput(
       job = streamOutput.job,
       streamEntry = Some(streamOutput.streamEntry),
@@ -172,6 +200,7 @@ object JobIngestionPipeline:
   def apply(
       supabaseClient: SupabaseClient,
       aiConfig: AIConfig,
-      storageClient: Option[ObjectStorageClient] = None
+      storageClient: Option[ObjectStorageClient] = None,
+      progressEmitter: ProgressEmitter = ProgressEmitter.noop
   ): JobIngestionPipeline =
-    new JobIngestionPipeline(supabaseClient, aiConfig, storageClient)
+    new JobIngestionPipeline(supabaseClient, aiConfig, storageClient, progressEmitter)
