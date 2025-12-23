@@ -2,14 +2,37 @@ import {
   type ApplicationStatus,
   db,
   getCurrentUser,
+  getSession,
   type JobApplication,
 } from "@arcata/db";
 import { t } from "@arcata/translate";
 import type { User } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useLoaderData } from "react-router-dom";
-import { AddJobPopover } from "../jobs/AddJobByUrl";
+import { Link, useLoaderData, useRevalidator } from "react-router-dom";
+import { ingestJobWithProgress, type ProgressUpdate } from "../../lib/api";
+import {
+  AddJobPopover,
+  IngestionProgress,
+  type JobDetailData,
+  JobDetailPanel,
+} from "../jobs";
 import KanbanLane from "./kanban/KanbanLane";
+
+type IngestionState = {
+  status: "idle" | "processing" | "success" | "error";
+  currentStep: number;
+  totalSteps: number;
+  stepName: string;
+  jobId?: number;
+  error?: string;
+};
+
+const INITIAL_STATE: IngestionState = {
+  status: "idle",
+  currentStep: 0,
+  totalSteps: 6,
+  stepName: "",
+};
 
 export const loader = async () => {
   try {
@@ -42,12 +65,106 @@ export default function HQ() {
     statuses: ApplicationStatus[] | null;
   } | null;
 
+  const revalidator = useRevalidator();
+
   const applications = useMemo(
     () => (data?.applications as JobApplication[]) || [],
     [data?.applications]
   );
 
   const [localStatuses, setLocalStatuses] = useState<ApplicationStatus[]>([]);
+
+  // Ingestion state
+  const [ingestionState, setIngestionState] =
+    useState<IngestionState>(INITIAL_STATE);
+
+  // Job detail panel state
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelJobId, setPanelJobId] = useState<number | null>(null);
+  const [panelJobData, setPanelJobData] = useState<JobDetailData | undefined>();
+
+  const handleProgress = useCallback(
+    (update: ProgressUpdate) => {
+      if (update.status === "complete") {
+        setIngestionState({
+          status: "success",
+          currentStep: update.totalSteps,
+          totalSteps: update.totalSteps,
+          stepName: update.message,
+          jobId: update.jobId,
+        });
+
+        // Revalidate data immediately
+        revalidator.revalidate();
+
+        // After 1.5s, open panel and reset
+        setTimeout(() => {
+          if (update.jobId) {
+            setPanelJobId(update.jobId);
+            setPanelJobData({ title: "New Job", company: "", url: "" });
+            setPanelOpen(true);
+          }
+          setIngestionState(INITIAL_STATE);
+        }, 1500);
+      } else if (update.status === "error") {
+        setIngestionState({
+          status: "error",
+          currentStep: update.step,
+          totalSteps: update.totalSteps,
+          stepName: update.message,
+          error: update.error,
+        });
+      } else {
+        setIngestionState({
+          status: "processing",
+          currentStep: update.step,
+          totalSteps: update.totalSteps,
+          stepName: update.message,
+        });
+      }
+    },
+    [revalidator]
+  );
+
+  const handleSubmitJob = useCallback(
+    async (url: string) => {
+      setIngestionState({
+        status: "processing",
+        currentStep: 0,
+        totalSteps: 6,
+        stepName: "Starting...",
+      });
+
+      const session = await getSession();
+      if (!session?.access_token) {
+        setIngestionState({
+          status: "error",
+          currentStep: 0,
+          totalSteps: 6,
+          stepName: "Authentication failed",
+          error: "Please log in again",
+        });
+        return;
+      }
+
+      await ingestJobWithProgress(
+        { url, source: "manual" },
+        session.access_token,
+        handleProgress
+      );
+    },
+    [handleProgress]
+  );
+
+  const handleDismissError = useCallback(() => {
+    setIngestionState(INITIAL_STATE);
+  }, []);
+
+  const handleClosePanel = useCallback(() => {
+    setPanelOpen(false);
+    setPanelJobId(null);
+    setPanelJobData(undefined);
+  }, []);
 
   const statuses = useMemo(() => {
     const source =
@@ -101,13 +218,27 @@ export default function HQ() {
           </h2>
         </div>
         <div className="flex md:mt-0 md:ml-4">
-          <AddJobPopover
-            actuator={t("pages.hq.actions.addJob")}
-            onSubmit={(url) => {
-              // TODO: Handle job URL submission - will be implemented in a future task
-              console.log("Job URL submitted:", url);
-            }}
-          />
+          {ingestionState.status === "idle" ? (
+            <AddJobPopover
+              actuator={t("pages.hq.actions.addJob")}
+              onSubmit={handleSubmitJob}
+            />
+          ) : (
+            <IngestionProgress
+              currentStep={ingestionState.currentStep}
+              error={ingestionState.error}
+              onDismiss={
+                ingestionState.status === "error"
+                  ? handleDismissError
+                  : undefined
+              }
+              status={
+                ingestionState.status as "processing" | "success" | "error"
+              }
+              stepName={ingestionState.stepName}
+              totalSteps={ingestionState.totalSteps}
+            />
+          )}
         </div>
       </div>
       <div className="h-full flex-1 overflow-auto p-4">
@@ -138,6 +269,12 @@ export default function HQ() {
           </div>
         ) : null}
       </div>
+      <JobDetailPanel
+        isOpen={panelOpen}
+        jobData={panelJobData}
+        jobId={panelJobId}
+        onClose={handleClosePanel}
+      />
     </div>
   );
 }
