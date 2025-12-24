@@ -184,7 +184,8 @@ final class JobIngestionPipeline(
               extractedData = companyOutput.extractedData,
               company = companyOutput.company,
               url = companyOutput.url,
-              objectId = companyOutput.objectId
+              objectId = companyOutput.objectId,
+              completionState = Some(extractorOutput.completionState.toString)
             ),
             ctx
           )

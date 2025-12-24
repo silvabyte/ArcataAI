@@ -47,6 +47,8 @@ import upickle.default.*
  *   When the job was posted
  * @param closingDate
  *   Application deadline
+ * @param completionState
+ *   Quality of extraction: Complete, Sufficient, Partial, Minimal, Failed, Unknown
  */
 final case class Job(
     jobId: Option[Long] = None,
@@ -69,7 +71,8 @@ final case class Job(
     applicationUrl: Option[String] = None,
     isRemote: Option[Boolean] = None,
     postedDate: Option[String] = None,
-    closingDate: Option[String] = None
+    closingDate: Option[String] = None,
+    completionState: Option[String] = None
 )
 
 object Job:
@@ -99,6 +102,7 @@ object Job:
       job.isRemote.foreach(v => obj("is_remote") = v)
       job.postedDate.foreach(v => obj("posted_date") = v)
       job.closingDate.foreach(v => obj("closing_date") = v)
+      job.completionState.foreach(v => obj("completion_state") = v)
       obj
     },
     json => {
@@ -127,7 +131,8 @@ object Job:
         applicationUrl = obj.get("application_url").flatMap(v => if v.isNull then None else Some(v.str)),
         isRemote = obj.get("is_remote").flatMap(v => if v.isNull then None else Some(v.bool)),
         postedDate = obj.get("posted_date").flatMap(v => if v.isNull then None else Some(v.str)),
-        closingDate = obj.get("closing_date").flatMap(v => if v.isNull then None else Some(v.str))
+        closingDate = obj.get("closing_date").flatMap(v => if v.isNull then None else Some(v.str)),
+        completionState = obj.get("completion_state").flatMap(v => if v.isNull then None else Some(v.str))
       )
     }
   )

@@ -9,7 +9,8 @@ final case class JobLoaderInput(
     extractedData: ExtractedJobData,
     company: Company,
     url: String,
-    objectId: Option[String]
+    objectId: Option[String],
+    completionState: Option[String] = None
 )
 
 /** Output from the JobLoader step. */
@@ -75,7 +76,8 @@ final class JobLoader(supabaseClient: SupabaseClient)
           applicationUrl = input.extractedData.applicationUrl,
           isRemote = input.extractedData.isRemote,
           postedDate = input.extractedData.postedDate,
-          closingDate = input.extractedData.closingDate
+          closingDate = input.extractedData.closingDate,
+          completionState = input.completionState
         )
 
         supabaseClient.insertJob(job) match
