@@ -193,6 +193,63 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     ujson.write(obj)
   }
 
+  // Extraction Config operations
+
+  /** Find an extraction config by match hash. */
+  def findExtractionConfigByHash(matchHash: String): Option[ExtractionConfig] = {
+    val response = requests.get(
+      s"$baseUrl/extraction_configs",
+      headers = headers,
+      params = Map("match_hash" -> s"eq.$matchHash", "limit" -> "1")
+    )
+    parseResponse[Seq[ExtractionConfig]](response).flatMap(_.headOption)
+  }
+
+  /** Get all extraction configs for matching against a page. */
+  def getAllExtractionConfigs(): Seq[ExtractionConfig] = {
+    val response = requests.get(
+      s"$baseUrl/extraction_configs",
+      headers = headers,
+      params = Map("order" -> "created_at.desc", "limit" -> "100")
+    )
+    parseResponse[Seq[ExtractionConfig]](response).getOrElse(Seq.empty)
+  }
+
+  /** Insert a new extraction config and return the created record. */
+  def insertExtractionConfig(config: ExtractionConfig): Option[ExtractionConfig] = {
+    val json = writeExtractionConfigForInsert(config)
+    val response = requests.post(
+      s"$baseUrl/extraction_configs",
+      headers = headers,
+      data = json
+    )
+    parseResponse[Seq[ExtractionConfig]](response).flatMap(_.headOption)
+  }
+
+  /** Upsert an extraction config (insert or update based on match_hash + version). */
+  def upsertExtractionConfig(config: ExtractionConfig): Option[ExtractionConfig] = {
+    val json = writeExtractionConfigForInsert(config)
+    val upsertHeaders = headers + ("Prefer" -> "resolution=merge-duplicates,return=representation")
+    val response = requests.post(
+      s"$baseUrl/extraction_configs",
+      headers = upsertHeaders,
+      data = json
+    )
+    parseResponse[Seq[ExtractionConfig]](response).flatMap(_.headOption)
+  }
+
+  private def writeExtractionConfigForInsert(config: ExtractionConfig): String = {
+    val obj = ujson.Obj(
+      "name" -> config.name,
+      "version" -> config.version,
+      "match_patterns" -> write(config.matchPatterns),
+      "match_hash" -> config.matchHash,
+      "extract_rules" -> write(config.extractRules)
+    )
+    config.id.foreach(v => obj("id") = v)
+    ujson.write(obj)
+  }
+
 object SupabaseClient:
   def apply(config: SupabaseConfig): SupabaseClient =
     new SupabaseClient(config)

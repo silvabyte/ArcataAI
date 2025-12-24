@@ -25,9 +25,14 @@ final case class JobIngestionOutput(
 /**
  * Pipeline that ingests a job from a URL.
  *
- * Steps: 1. Fetch HTML from URL 2. Clean HTML and convert to Markdown 3. Parse job details using
- * AI 4. Resolve/create company 5. Load job into database 6. Add to user's job stream 7.
- * Optionally create an application
+ * Steps:
+ * 1. Fetch HTML from URL
+ * 2. Extract job data using config-driven extraction (with AI fallback)
+ * 3. Clean HTML to markdown (for company enrichment only)
+ * 4. Resolve/create company
+ * 5. Load job into database
+ * 6. Add to user's job stream
+ * 7. Optionally create an application
  */
 final class JobIngestionPipeline(
     supabaseClient: SupabaseClient,
@@ -40,8 +45,8 @@ final class JobIngestionPipeline(
 
   // Initialize steps
   private val htmlFetcher = HtmlFetcher(storageClient)
-  private val htmlCleaner = HtmlCleaner()
-  private val jobParser = JobParser(aiConfig)
+  private val jobExtractor = JobExtractor(supabaseClient, aiConfig)
+  private val htmlCleaner = HtmlCleaner() // Still needed for company enrichment
   private val companyResolver = CompanyResolver(supabaseClient, aiConfig)
   private val jobLoader = JobLoader(supabaseClient)
   private val streamLoader = StreamLoader(supabaseClient)
@@ -131,9 +136,22 @@ final class JobIngestionPipeline(
           ctx
         )
 
-        // Step 2: Clean HTML and convert to Markdown
+        // Step 2: Extract job data using config-driven extraction
+        extractorOutput <- {
+          progressEmitter.emit(2, totalSteps, "extracting", "Extracting job details...")
+          jobExtractor.run(
+            JobExtractorInput(
+              html = fetcherOutput.html,
+              url = fetcherOutput.url,
+              objectId = fetcherOutput.objectId
+            ),
+            ctx
+          )
+        }
+
+        // Step 3: Clean HTML to markdown (for company enrichment only)
         cleanerOutput <- {
-          progressEmitter.emit(2, totalSteps, "cleaning", "Processing content...")
+          progressEmitter.emit(3, totalSteps, "cleaning", "Processing content...")
           htmlCleaner.run(
             HtmlCleanerInput(
               html = fetcherOutput.html,
@@ -144,27 +162,14 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 3: Parse job (now receives Markdown)
-        parserOutput <- {
-          progressEmitter.emit(3, totalSteps, "parsing", "Extracting job details...")
-          jobParser.run(
-            JobParserInput(
-              content = cleanerOutput.markdown,
-              url = cleanerOutput.url,
-              objectId = cleanerOutput.objectId
-            ),
-            ctx
-          )
-        }
-
-        // Step 4: Resolve company (now receives Markdown)
+        // Step 4: Resolve company (uses markdown for AI enrichment)
         companyOutput <- {
           progressEmitter.emit(4, totalSteps, "resolving", "Finding company...")
           companyResolver.run(
             CompanyResolverInput(
-              extractedData = parserOutput.extractedData,
-              url = parserOutput.url,
-              objectId = parserOutput.objectId,
+              extractedData = extractorOutput.extractedData,
+              url = extractorOutput.url,
+              objectId = extractorOutput.objectId,
               content = cleanerOutput.markdown
             ),
             ctx

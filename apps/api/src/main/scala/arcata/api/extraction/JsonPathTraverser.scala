@@ -112,42 +112,42 @@ object JsonPathTraverser:
   private case class Index(idx: Int) extends Segment
 
   /** Parse a path string into segments */
-  private def parseSegments(path: String): List[Segment] = {
-    val segments = scala.collection.mutable.ListBuffer[Segment]()
+  private def parseSegments(path: String): List[Segment] =
+    parseSegmentsRec(path, List.empty).reverse
 
-    // Split by dots, but handle array indices specially
-    var remaining = path
-    while remaining.nonEmpty do
-      // Check for array index at start
-      if remaining.startsWith("[") then
-        val endBracket = remaining.indexOf(']')
-        if endBracket > 0 then
-          val idxStr = remaining.substring(1, endBracket)
-          Try(idxStr.toInt).foreach(idx => segments += Index(idx))
-          remaining = remaining.substring(endBracket + 1).stripPrefix(".")
-        else remaining = ""
-      else {
-        // Find next delimiter (. or [)
-        val dotIdx = remaining.indexOf('.')
-        val bracketIdx = remaining.indexOf('[')
-        val nextDelim = {
-          if dotIdx < 0 && bracketIdx < 0 then remaining.length
-          else if dotIdx < 0 then bracketIdx
-          else if bracketIdx < 0 then dotIdx
-          else math.min(dotIdx, bracketIdx)
-        }
-
-        val segment = remaining.substring(0, nextDelim)
-        if segment.nonEmpty then segments += Property(segment)
-
-        remaining = {
-          if nextDelim >= remaining.length then ""
-          else if remaining.charAt(nextDelim) == '.' then remaining.substring(nextDelim + 1)
-          else remaining.substring(nextDelim)
-        }
+  @scala.annotation.tailrec
+  private def parseSegmentsRec(remaining: String, acc: List[Segment]): List[Segment] = {
+    if remaining.isEmpty then acc
+    // Check for array index at start
+    else if remaining.startsWith("[") then
+      val endBracket = remaining.indexOf(']')
+      if endBracket > 0 then
+        val idxStr = remaining.substring(1, endBracket)
+        val nextAcc = Try(idxStr.toInt).toOption.fold(acc)(idx => Index(idx) :: acc)
+        val nextRemaining = remaining.substring(endBracket + 1).stripPrefix(".")
+        parseSegmentsRec(nextRemaining, nextAcc)
+      else acc
+    else {
+      // Find next delimiter (. or [)
+      val dotIdx = remaining.indexOf('.')
+      val bracketIdx = remaining.indexOf('[')
+      val nextDelim = {
+        if dotIdx < 0 && bracketIdx < 0 then remaining.length
+        else if dotIdx < 0 then bracketIdx
+        else if bracketIdx < 0 then dotIdx
+        else math.min(dotIdx, bracketIdx)
       }
 
-    segments.toList
+      val segment = remaining.substring(0, nextDelim)
+      val nextAcc = if segment.nonEmpty then Property(segment) :: acc else acc
+
+      val nextRemaining = {
+        if nextDelim >= remaining.length then ""
+        else if remaining.charAt(nextDelim) == '.' then remaining.substring(nextDelim + 1)
+        else remaining.substring(nextDelim)
+      }
+      parseSegmentsRec(nextRemaining, nextAcc)
+    }
   }
 
   /** Traverse JSON following segments */
