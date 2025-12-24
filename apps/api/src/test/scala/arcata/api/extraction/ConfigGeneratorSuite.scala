@@ -165,10 +165,10 @@ object ConfigGeneratorSuite extends TestSuite:
       for (input, expected) <- patterns do
         val normalized = input.toLowerCase.replace("-", "_")
         val result = normalized match
-          case "css_exists" | "cssexists"             => MatchPatternType.CssExists
-          case "url_pattern" | "urlpattern"           => MatchPatternType.UrlPattern
+          case "css_exists" | "cssexists" => MatchPatternType.CssExists
+          case "url_pattern" | "urlpattern" => MatchPatternType.UrlPattern
           case "content_contains" | "contentcontains" => MatchPatternType.ContentContains
-          case _                                      => MatchPatternType.ContentContains
+          case _ => MatchPatternType.ContentContains
 
         assert(result == expected)
     }
@@ -188,10 +188,10 @@ object ConfigGeneratorSuite extends TestSuite:
         val normalized = input.toLowerCase.replace("-", "_").replace(" ", "")
         val result = normalized match
           case "jsonld" | "json_ld" | "ld+json" => ExtractionSource.JsonLd
-          case "css"                             => ExtractionSource.Css
-          case "meta"                            => ExtractionSource.Meta
-          case "regex"                           => ExtractionSource.Regex
-          case _                                 => ExtractionSource.Css
+          case "css" => ExtractionSource.Css
+          case "meta" => ExtractionSource.Meta
+          case "regex" => ExtractionSource.Regex
+          case _ => ExtractionSource.Css
 
         assert(result == expected)
     }

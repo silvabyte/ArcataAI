@@ -182,7 +182,7 @@ object DeterministicExtractor:
   /**
    * Apply a single transform.
    */
-  private def applyTransform(value: String, transform: Transform): Either[String, String] =
+  private def applyTransform(value: String, transform: Transform): Either[String, String] = {
     transform match
       case Transform.HtmlDecode =>
         Right(org.jsoup.parser.Parser.unescapeEntities(value, false))
@@ -194,6 +194,7 @@ object DeterministicExtractor:
         val digitsOnly = value.replaceAll("[^0-9.]", "")
         if digitsOnly.nonEmpty then Right(digitsOnly)
         else Left("No numeric value found")
+  }
 
   /**
    * Extract JSON-LD data from the document.

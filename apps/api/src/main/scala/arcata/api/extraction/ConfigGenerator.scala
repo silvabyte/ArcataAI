@@ -1,14 +1,7 @@
 package arcata.api.extraction
 
 import arcata.api.config.AIConfig
-import arcata.api.domain.{
-  ExtractionConfig,
-  ExtractionRule,
-  ExtractionSource,
-  MatchPattern,
-  MatchPatternType,
-  Transform
-}
+import arcata.api.domain.{ExtractionConfig, ExtractionRule, ExtractionSource, MatchPattern, MatchPatternType, Transform}
 import boogieloops.ai.{Agent, RequestMetadata, SchemaError}
 import boogieloops.ai.providers.OpenAICompatibleProvider
 import boogieloops.schema.derivation.Schematic
@@ -97,7 +90,7 @@ final class ConfigGenerator(aiConfig: AIConfig):
       html: String,
       url: String,
       maxAttempts: Int = 3
-  ): Either[SchemaError, GenerationResult] =
+  ): Either[SchemaError, GenerationResult] = {
     // Pre-extract JSON-LD to include in prompt (since it's the most valuable data source)
     val jsonLdContent = extractJsonLd(html)
     val pageAnalysis = analyzePage(html, url, jsonLdContent)
@@ -112,6 +105,7 @@ final class ConfigGenerator(aiConfig: AIConfig):
       previousFeedback = None,
       bestResult = None
     )
+  }
 
   private def generateWithRetry(
       html: String,
@@ -122,7 +116,7 @@ final class ConfigGenerator(aiConfig: AIConfig):
       maxAttempts: Int,
       previousFeedback: Option[String],
       bestResult: Option[GenerationResult]
-  ): Either[SchemaError, GenerationResult] =
+  ): Either[SchemaError, GenerationResult] = {
 
     val prompt = buildPrompt(url, jsonLd, pageAnalysis, previousFeedback)
 
@@ -150,7 +144,7 @@ final class ConfigGenerator(aiConfig: AIConfig):
         // Check if good enough or out of attempts
         if genResult.isSuccessful || attempt >= maxAttempts then
           Right(newBest)
-        else
+        else {
           // Build feedback and retry
           val feedback = buildFeedback(result, attempt)
           generateWithRetry(
@@ -163,11 +157,13 @@ final class ConfigGenerator(aiConfig: AIConfig):
             previousFeedback = Some(feedback),
             bestResult = Some(newBest)
           )
+        }
+  }
 
   /**
    * Extract JSON-LD content from HTML for inclusion in prompt.
    */
-  private def extractJsonLd(html: String): Option[String] =
+  private def extractJsonLd(html: String): Option[String] = {
     Try {
       val doc = Jsoup.parse(html)
       val scripts = doc.select("script[type='application/ld+json']").asScala
@@ -175,11 +171,12 @@ final class ConfigGenerator(aiConfig: AIConfig):
       if jsonLdContents.nonEmpty then Some(jsonLdContents.mkString("\n\n"))
       else None
     }.getOrElse(None)
+  }
 
   /**
    * Analyze page structure to help AI understand what's available.
    */
-  private def analyzePage(html: String, url: String, jsonLd: Option[String]): String =
+  private def analyzePage(html: String, url: String, jsonLd: Option[String]): String = {
     val doc = Try(Jsoup.parse(html)).getOrElse(return "Could not parse HTML")
 
     val hasJsonLd = jsonLd.isDefined
@@ -197,13 +194,14 @@ final class ConfigGenerator(aiConfig: AIConfig):
 - Meta tags found:
   $metaTags
 - Main content preview: ${mainContent.take(200)}..."""
+  }
 
   private def buildPrompt(
       url: String,
       jsonLd: Option[String],
       pageAnalysis: String,
       feedback: Option[String]
-  ): String =
+  ): String = {
     val jsonLdSection = jsonLd.map(j => s"""
 ## JSON-LD Data (PRIMARY SOURCE - use this first!)
 ```json
@@ -229,8 +227,9 @@ Remember:
 - For nested JSON-LD: $$.hiringOrganization.name, $$.baseSalary.value.minValue
 - Provide fallback rules using css or meta sources
 - The config will be reused for similar pages from this site"""
+  }
 
-  private def buildFeedback(result: DeterministicExtractor.ExtractionResult, attempt: Int): String =
+  private def buildFeedback(result: DeterministicExtractor.ExtractionResult, attempt: Int): String = {
     val score = result.scoringResult
     val missing = score.missingRequired ++ score.missingOptional.take(5)
     val present = score.presentFields
@@ -247,39 +246,40 @@ MISSING fields: ${missing.mkString(", ")}
 ${if failureDetails.nonEmpty then s"Extraction failures:\n$failureDetails" else ""}
 
 FIX THE CONFIG to extract the missing fields."""
+  }
 
-  private def toExtractionConfig(generated: GeneratedConfig): ExtractionConfig =
+  private def toExtractionConfig(generated: GeneratedConfig): ExtractionConfig = {
     val matchPatterns = generated.matchPatterns.flatMap { mp =>
       val patternType = mp.patternType.toLowerCase.replace("-", "_") match
-        case "css_exists" | "cssexists"             => Some(MatchPatternType.CssExists)
-        case "url_pattern" | "urlpattern"           => Some(MatchPatternType.UrlPattern)
+        case "css_exists" | "cssexists" => Some(MatchPatternType.CssExists)
+        case "url_pattern" | "urlpattern" => Some(MatchPatternType.UrlPattern)
         case "content_contains" | "contentcontains" => Some(MatchPatternType.ContentContains)
-        case _                                      => None
+        case _ => None
 
-      patternType.map(pt =>
+      patternType.map(pt => {
         MatchPattern(
           patternType = pt,
           selector = mp.selector,
           pattern = mp.pattern,
           contentContains = mp.contentContains
         )
-      )
+      })
     }
 
     val extractRules = generated.extractRules.map { case (field, rules) =>
       val convertedRules = rules.flatMap { rule =>
         val source = rule.source.toLowerCase.replace("-", "_").replace(" ", "") match
           case "jsonld" | "json_ld" | "ld+json" => Some(ExtractionSource.JsonLd)
-          case "css"                             => Some(ExtractionSource.Css)
-          case "meta"                            => Some(ExtractionSource.Meta)
-          case "regex"                           => Some(ExtractionSource.Regex)
-          case _                                 => None
+          case "css" => Some(ExtractionSource.Css)
+          case "meta" => Some(ExtractionSource.Meta)
+          case "regex" => Some(ExtractionSource.Regex)
+          case _ => None
 
         source.map { s =>
           val transforms = rule.transforms.getOrElse(Seq.empty).flatMap { t =>
             t.toLowerCase.replace("-", "_").replace(" ", "") match
               case "html_decode" | "htmldecode" | "decode" => Some(Transform.HtmlDecode)
-              case "inner_text" | "innertext" | "text"     => Some(Transform.InnerText)
+              case "inner_text" | "innertext" | "text" => Some(Transform.InnerText)
               case "parse_number" | "parsenumber" | "number" => Some(Transform.ParseNumber)
               case _ => None
           }
@@ -307,6 +307,7 @@ FIX THE CONFIG to extract the missing fields."""
       matchPatterns = finalPatterns,
       extractRules = extractRules
     )
+  }
 
 object ConfigGenerator:
   def apply(config: AIConfig): ConfigGenerator = new ConfigGenerator(config)
