@@ -46,7 +46,9 @@ object JwtValidatorSuite extends TestSuite:
             assert(claims.email == Some("test@example.com"))
             assert(claims.role == "authenticated")
           case JwtValidationResult.Invalid(reason) =>
-            throw new java.lang.AssertionError(s"Expected Valid, got Invalid: $reason") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              s"Expected Valid, got Invalid: $reason"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Valid for token without email") {
@@ -57,7 +59,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Valid(_, claims) =>
             assert(claims.email == None)
           case JwtValidationResult.Invalid(reason) =>
-            throw new java.lang.AssertionError(s"Expected Valid, got Invalid: $reason") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              s"Expected Valid, got Invalid: $reason"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Invalid for expired token") {
@@ -86,7 +90,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Invalid(reason) =>
             assert(reason.contains("Token validation failed"))
           case JwtValidationResult.Valid(_, _) =>
-            throw new java.lang.AssertionError("Expected Invalid for wrong signature") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              "Expected Invalid for wrong signature"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Invalid for malformed token") {
@@ -95,7 +101,9 @@ object JwtValidatorSuite extends TestSuite:
         result match
           case JwtValidationResult.Invalid(_) => () // Expected
           case JwtValidationResult.Valid(_, _) =>
-            throw new java.lang.AssertionError("Expected Invalid for malformed token") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              "Expected Invalid for malformed token"
+            ) // scalafix:ok DisableSyntax.throw
       }
     }
 
@@ -108,7 +116,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Valid(profileId, _) =>
             assert(profileId == "user-123")
           case JwtValidationResult.Invalid(reason) =>
-            throw new java.lang.AssertionError(s"Expected Valid, got Invalid: $reason") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              s"Expected Valid, got Invalid: $reason"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Invalid without Bearer prefix") {
@@ -119,7 +129,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Invalid(reason) =>
             assert(reason.contains("Bearer"))
           case JwtValidationResult.Valid(_, _) =>
-            throw new java.lang.AssertionError("Expected Invalid without Bearer prefix") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              "Expected Invalid without Bearer prefix"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Invalid for empty Bearer token") {

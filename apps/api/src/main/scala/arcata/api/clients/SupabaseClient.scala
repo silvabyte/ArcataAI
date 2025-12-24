@@ -240,12 +240,14 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
   }
 
   private def writeExtractionConfigForInsert(config: ExtractionConfig): String = {
+    // Use writeJs to get ujson.Value objects, not JSON strings
+    // This ensures JSONB columns receive proper JSON objects
     val obj = ujson.Obj(
       "name" -> config.name,
       "version" -> config.version,
-      "match_patterns" -> write(config.matchPatterns),
+      "match_patterns" -> writeJs(config.matchPatterns),
       "match_hash" -> config.matchHash,
-      "extract_rules" -> write(config.extractRules)
+      "extract_rules" -> writeJs(config.extractRules)
     )
     config.id.foreach(v => obj("id") = v)
     ujson.write(obj)

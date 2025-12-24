@@ -93,7 +93,9 @@ object ObjectStorageClientSuite extends TestSuite:
         assert(result.isLeft)
         result.left.foreach {
           case StorageError.NotFound(id) => assert(id == "non-existent-id")
-          case other => throw new java.lang.AssertionError(s"Expected NotFound error, got $other") // scalafix:ok DisableSyntax.throw
+          case other => throw new java.lang.AssertionError(
+              s"Expected NotFound error, got $other"
+            ) // scalafix:ok DisableSyntax.throw
         }
       }
 
@@ -139,7 +141,9 @@ object ObjectStorageClientSuite extends TestSuite:
         assert(result.isLeft)
         result.left.foreach {
           case StorageError.NotFound(_) => () // success
-          case other => throw new java.lang.AssertionError(s"Expected NotFound error, got $other") // scalafix:ok DisableSyntax.throw
+          case other => throw new java.lang.AssertionError(
+              s"Expected NotFound error, got $other"
+            ) // scalafix:ok DisableSyntax.throw
         }
       }
 

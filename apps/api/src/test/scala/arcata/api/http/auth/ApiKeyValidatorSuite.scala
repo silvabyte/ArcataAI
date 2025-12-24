@@ -67,7 +67,9 @@ object ApiKeyValidatorSuite extends TestSuite:
               assert(authReq.authType == AuthType.ApiKey)
               assert(authReq.claims == None)
             case AuthResult.Failure(reason, _) =>
-              throw new java.lang.AssertionError(s"Expected Success, got Failure: $reason") // scalafix:ok DisableSyntax.throw
+              throw new java.lang.AssertionError(
+                s"Expected Success, got Failure: $reason"
+              ) // scalafix:ok DisableSyntax.throw
         }
       }
 
