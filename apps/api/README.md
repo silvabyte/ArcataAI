@@ -34,7 +34,8 @@ make help     # All commands
 
 ## ETL Architecture
 
-The job ingestion pipeline processes URLs into structured job data:
+The job ingestion pipeline processes URLs into structured job data using a
+**config-driven extraction system** that learns over time:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -44,16 +45,23 @@ The job ingestion pipeline processes URLs into structured job data:
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│  HtmlFetcher  │────▶│   JobParser   │────▶│CompanyResolver│
-│  Fetch HTML   │     │ Extract data  │     │ Match/create  │
-│  Store in S3  │     │ via AI        │     │ company       │
-└───────────────┘     └───────────────┘     └───────┬───────┘
-                                                    │
-        ┌─────────────────────┬─────────────────────┤
+│  HtmlFetcher  │────▶│ JobExtractor  │────▶│  HtmlCleaner  │
+│  Fetch HTML   │     │ Config-driven │     │  (for company │
+│  Store in S3  │     │ extraction    │     │  enrichment)  │
+└───────────────┘     └───────┬───────┘     └───────┬───────┘
+                              │                     │
+                              ▼                     ▼
+                      ┌───────────────┐     ┌───────────────┐
+                      │CompanyResolver│◄────│   markdown    │
+                      │ Match/create  │     │   content     │
+                      └───────┬───────┘     └───────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌───────────────┐     ┌───────────────┐     ┌───────────────┐
 │   JobLoader   │     │ StreamLoader  │     │ApplicationLoader│
-│  Upsert job   │     │ Add to stream │     │  Create app   │
+│  Insert job   │     │ Add to stream │     │  Create app   │
+│  + comp.state │     │               │     │  (optional)   │
 └───────────────┘     └───────────────┘     └───────────────┘
 ```
 
@@ -62,11 +70,57 @@ The job ingestion pipeline processes URLs into structured job data:
 | Step | Responsibility |
 |------|----------------|
 | `HtmlFetcher` | Fetches job URL, stores raw HTML in ObjectStorage |
-| `JobParser` | Sends HTML to BoogieLoops AI for structured extraction |
+| `JobExtractor` | Config-driven extraction with AI fallback (see below) |
+| `HtmlCleaner` | Converts HTML to markdown for company enrichment |
 | `CompanyResolver` | Matches or creates company record in Supabase |
-| `JobLoader` | Upserts job record |
+| `JobLoader` | Inserts job with completion_state |
 | `StreamLoader` | Adds job to user's stream |
-| `ApplicationLoader` | Creates job application record |
+| `ApplicationLoader` | Creates job application record (optional) |
+
+### Config-Driven Extraction
+
+The `JobExtractor` step uses a self-improving extraction system:
+
+```
+HTML + URL
+    │
+    ▼
+┌──────────────────┐
+│ ConfigMatcher    │ ◄─── extraction_configs table
+└────────┬─────────┘
+         │
+   ┌─────┴─────┐
+   │           │
+   ▼           ▼
+Config      No Config
+Found       Found
+   │           │
+   ▼           ▼
+┌────────────┐  ┌────────────────────┐
+│Determini-  │  │ AI Config          │
+│stic        │  │ Generator          │
+│Extractor   │  │ (3 retry attempts) │
+└─────┬──────┘  └─────────┬──────────┘
+      │                   │
+      │            ┌──────┴──────┐
+      │            │ Save Config │
+      │            │ to DB       │
+      │            └──────┬──────┘
+      │                   │
+      └────────┬──────────┘
+               ▼
+       ExtractedJobData
+       + CompletionState
+```
+
+**Key benefits:**
+- Deterministic extraction for known sites (no AI needed)
+- AI generates reusable configs for new sites
+- Configs saved to database for future use
+- Tracks extraction quality (Complete, Sufficient, Partial, etc.)
+
+See [Config-Driven Extraction Architecture](../../docs/plans/2024-12-24-config-driven-extraction.md)
+for full details.
 
 ## External Dependencies
 

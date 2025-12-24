@@ -2,7 +2,7 @@
 
 **Created**: 2024-12-24  
 **Epic**: ArcataAI-xzo  
-**Status**: Planning
+**Status**: Implemented
 
 ## Problem Statement
 
@@ -207,61 +207,52 @@ extract:
 
 | Transform | Description |
 |-----------|-------------|
-| `html_decode` | Decode HTML entities (`&amp;` → `&`) |
-| `inner_html` | Get innerHTML of element |
-| `inner_text` | Get text content, strip tags |
-| `regex:<pattern>` | Apply regex, return first capture group |
-| `parse_number` | Remove non-numeric chars, parse as number |
-| `split:<delim>:<idx>` | Split string, return nth element |
-| `json_parse` | Parse as JSON (for embedded JSON strings) |
+| `HtmlDecode` | Decode HTML entities (`&amp;` → `&`) |
+| `InnerText` | Get text content, strip HTML tags |
+| `ParseNumber` | Remove non-numeric chars, parse as number |
+
+*Note: Additional transforms (regex capture, split, json parse) can be added as needed.*
 
 ## Database Schema
 
 ### extraction_configs table
 
 ```sql
+-- Simplified schema (YAGNI - removed unused tracking fields)
 CREATE TABLE extraction_configs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   version INTEGER NOT NULL DEFAULT 1,
   
   -- Matching
-  match_patterns JSONB NOT NULL,
-  match_hash TEXT NOT NULL,       -- Deterministic hash for lookup
+  match_patterns JSONB NOT NULL,  -- Array of MatchPattern objects
+  match_hash TEXT NOT NULL,       -- SHA-256 hash for fast lookup
   
   -- Extraction rules
-  extract_rules JSONB NOT NULL,
+  extract_rules JSONB NOT NULL,   -- Map of field -> extraction rules
   
-  -- Metadata
-  completion_state TEXT NOT NULL DEFAULT 'unknown',
-  times_used INTEGER DEFAULT 0,
-  times_succeeded INTEGER DEFAULT 0,
-  last_used_at TIMESTAMPTZ,
+  -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  created_by TEXT,                -- 'ai' or 'manual'
-  
-  -- Debugging
-  sample_url TEXT,
-  sample_extraction JSONB,
   
   UNIQUE(match_hash, version)
 );
 
 CREATE INDEX idx_extraction_configs_match_hash ON extraction_configs(match_hash);
-CREATE INDEX idx_extraction_configs_completion ON extraction_configs(completion_state);
 ```
 
 ### jobs table additions
 
 ```sql
-ALTER TABLE jobs
-ADD COLUMN completion_state TEXT DEFAULT 'unknown';
+ALTER TABLE jobs ADD COLUMN completion_state TEXT;
 
-ALTER TABLE jobs  
-ADD COLUMN extraction_config_id UUID REFERENCES extraction_configs(id);
+-- Valid values: Complete, Sufficient, Partial, Minimal, Failed, Unknown
+ALTER TABLE jobs ADD CONSTRAINT jobs_completion_state_check
+  CHECK (completion_state IS NULL OR completion_state IN (
+    'Complete', 'Sufficient', 'Partial', 'Minimal', 'Failed', 'Unknown'
+  ));
 
-CREATE INDEX idx_jobs_completion_state ON jobs(completion_state);
+CREATE INDEX jobs_completion_state_idx ON jobs(completion_state);
 ```
 
 ## Config Matching Strategy
@@ -280,22 +271,53 @@ CREATE INDEX idx_jobs_completion_state ON jobs(completion_state);
 | `url_pattern` | Regex match against URL | `.*\.jobs\.netflix\.net/careers/job/.*` |
 | `content_contains` | Check if HTML contains string | `JobPosting` |
 
-## Implementation Tasks
+## Implementation
 
-See bd issues under epic `ArcataAI-xzo`:
+All tasks completed. See `apps/api/src/main/scala/arcata/api/extraction/` for implementation.
 
-1. **ArcataAI-xzo.1**: Define CompletionState enum and scoring system
-2. **ArcataAI-xzo.2**: Create extraction_configs database table
-3. **ArcataAI-xzo.3**: Define ExtractionConfig domain models
-4. **ArcataAI-xzo.4**: Implement ConfigMatcher
-5. **ArcataAI-xzo.5**: Implement DeterministicExtractor
-6. **ArcataAI-xzo.6**: Implement AI ConfigGenerator with retry loop
-7. **ArcataAI-xzo.7**: Create ExtractionConfigRepository
-8. **ArcataAI-xzo.8**: Integrate into JobIngestionPipeline
-9. **ArcataAI-xzo.9**: Research upickle vs json-path
-10. **ArcataAI-xzo.10**: Create seed config for Schema.org JSON-LD
-11. **ArcataAI-xzo.11**: Add completion_state to jobs table
-12. **ArcataAI-xzo.12**: Write architecture documentation (this doc)
+### File Structure
+
+```
+apps/api/src/main/scala/arcata/api/
+├── domain/
+│   └── ExtractionConfig.scala      # Config domain models (MatchPattern, ExtractionRule, Transform)
+├── extraction/
+│   ├── CompletionState.scala       # Enum: Complete, Sufficient, Partial, Minimal, Failed, Unknown
+│   ├── CompletionScorer.scala      # Weighted scoring system
+│   ├── ConfigGenerator.scala       # AI config generation with retry loop
+│   ├── ConfigMatcher.scala         # Pattern matching against HTML/URL
+│   ├── DeterministicExtractor.scala # Apply configs to extract data
+│   └── JsonPathTraverser.scala     # Simple JSONPath for JSON-LD traversal
+├── etl/
+│   ├── JobIngestionPipeline.scala  # Main pipeline (updated)
+│   └── steps/
+│       └── JobExtractor.scala      # Orchestrates extraction system
+└── clients/
+    └── SupabaseClient.scala        # DB operations for extraction_configs
+
+supabase/migrations/
+├── 20241224000012_create_extraction_configs.sql  # Config table
+└── 20241224000013_add_completion_state_to_jobs.sql  # Jobs completion tracking
+
+supabase/seed.sql  # Includes Schema.org JobPosting seed config
+```
+
+### Completed Tasks
+
+| Task | Description | Status |
+|------|-------------|--------|
+| xzo.1 | CompletionState enum and scoring | ✅ Done |
+| xzo.2 | extraction_configs database table | ✅ Done |
+| xzo.3 | ExtractionConfig domain models | ✅ Done |
+| xzo.4 | ConfigMatcher | ✅ Done |
+| xzo.5 | DeterministicExtractor | ✅ Done |
+| xzo.6 | AI ConfigGenerator with retry loop | ✅ Done |
+| xzo.7 | ExtractionConfigRepository (in SupabaseClient) | ✅ Done |
+| xzo.8 | Pipeline integration | ✅ Done |
+| xzo.9 | JsonPathTraverser (upickle-based) | ✅ Done |
+| xzo.10 | Schema.org JSON-LD seed config | ✅ Done |
+| xzo.11 | completion_state column on jobs | ✅ Done |
+| xzo.12 | Architecture documentation | ✅ Done |
 
 ## Future Considerations
 

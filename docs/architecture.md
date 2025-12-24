@@ -35,11 +35,17 @@ The primary interface users interact with.
 
 ### API (`apps/api/`)
 
-Scala 3 backend handling job ingestion. Fetches job postings, extracts
-structured data via BoogieLoops AI, stores raw HTML in ObjectStorage,
-and persists job data to Supabase.
+Scala 3 backend handling job ingestion. Uses a **config-driven extraction
+system** that learns over time:
 
-See [API Architecture](../apps/api/README.md) for ETL pipeline details.
+- Fetches job postings and stores raw HTML in ObjectStorage
+- Matches pages to saved extraction configs for deterministic extraction
+- Falls back to AI when no config exists, then saves the generated config
+- Tracks extraction quality with CompletionState (Complete, Sufficient, Partial, etc.)
+- Persists job data to Supabase
+
+See [API Architecture](../apps/api/README.md) for ETL pipeline details.  
+See [Config-Driven Extraction](./plans/2024-12-24-config-driven-extraction.md) for the extraction system architecture.
 
 ## Shared Libraries (`libs/`)
 
