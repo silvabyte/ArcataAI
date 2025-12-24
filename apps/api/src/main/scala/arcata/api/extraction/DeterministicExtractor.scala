@@ -197,13 +197,38 @@ object DeterministicExtractor:
   }
 
   /**
-   * Extract JSON-LD data from the document.
+   * Extract JSON-LD data from the document, specifically finding JobPosting schema.
+   *
+   * Pages may have multiple JSON-LD blocks (e.g., WebSite, Organization, JobPosting).
+   * We need to find the one with @type: "JobPosting".
    */
   private def extractJsonLd(doc: Document): Option[ujson.Value] = {
     val scripts = doc.select("script[type='application/ld+json']").asScala
-    scripts.flatMap { script =>
+
+    val allJsonLd = scripts.flatMap { script =>
       Try(ujson.read(script.html())).toOption
-    }.headOption
+    }
+
+    // Find JobPosting specifically, or fall back to first block
+    allJsonLd
+      .find(isJobPosting)
+      .orElse(allJsonLd.headOption)
+  }
+
+  /**
+   * Check if a JSON-LD block is a JobPosting.
+   * Handles both string @type and array @type.
+   */
+  private def isJobPosting(json: ujson.Value): Boolean = {
+    Try {
+      json("@type") match
+        case s: ujson.Str => s.str == "JobPosting"
+        case arr: ujson.Arr => arr.value.exists {
+            case s: ujson.Str => s.str == "JobPosting"
+            case _ => false
+          }
+        case _ => false
+    }.getOrElse(false)
   }
 
   /**
@@ -253,7 +278,11 @@ object DeterministicExtractor:
       benefits = fields.get("benefits").map(_.split(",").map(_.trim).toList),
       category = fields.get("category"),
       applicationUrl = fields.get("applicationUrl"),
-      isRemote = fields.get("isRemote").map(_.toLowerCase == "true"),
+      isRemote = fields.get("isRemote").map(v => {
+        v.equalsIgnoreCase("true") ||
+          v.equalsIgnoreCase("TELECOMMUTE") ||
+          v.toLowerCase.contains("remote")
+      }),
       postedDate = fields.get("postedDate"),
       closingDate = fields.get("closingDate")
     )
