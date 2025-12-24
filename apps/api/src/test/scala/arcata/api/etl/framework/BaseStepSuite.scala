@@ -69,7 +69,7 @@ object BaseStepSuite extends TestSuite:
 
     test("step catches exceptions and returns error") {
       val throwing = BaseStep("throwing") { (_: Int, _: PipelineContext) =>
-        throw new RuntimeException("boom!")
+        throw new RuntimeException("boom!") // scalafix:ok DisableSyntax.throw
       }
       val ctx = PipelineContext.create("test-profile")
 
@@ -81,7 +81,7 @@ object BaseStepSuite extends TestSuite:
           assert(error.message.contains("Unexpected error"))
           assert(error.cause.isDefined)
         case Right(_) =>
-          throw new java.lang.AssertionError("Expected error")
+          throw new java.lang.AssertionError("Expected error") // scalafix:ok DisableSyntax.throw
     }
 
     test("composed step name includes both step names") {

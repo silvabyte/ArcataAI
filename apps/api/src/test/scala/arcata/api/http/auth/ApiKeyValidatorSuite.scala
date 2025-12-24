@@ -14,7 +14,9 @@ import utest.*
 object ApiKeyValidatorSuite extends TestSuite:
   // Create a mock request with specified headers using Undertow's exchange
   private def mockRequest(headers: Map[String, String]): Request = {
-    val exchange = new HttpServerExchange(null)
+    // scalafix:off DisableSyntax.null
+    val exchange = new HttpServerExchange(null) // Required by Undertow API for testing
+    // scalafix:on DisableSyntax.null
     val headerMap = exchange.getRequestHeaders
     headers.foreach { case (k, v) =>
       headerMap.put(new HttpString(k), v)
@@ -35,7 +37,7 @@ object ApiKeyValidatorSuite extends TestSuite:
           case AuthResult.Failure(reason, _) =>
             assert(reason.contains("Missing X-API-Key"))
           case AuthResult.Success(_) =>
-            throw new java.lang.AssertionError("Expected Failure for missing header")
+            throw new java.lang.AssertionError("Expected Failure for missing header") // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Failure for invalid API key") {
@@ -46,7 +48,7 @@ object ApiKeyValidatorSuite extends TestSuite:
           case AuthResult.Failure(reason, _) =>
             assert(reason.contains("Invalid API key"))
           case AuthResult.Success(_) =>
-            throw new java.lang.AssertionError("Expected Failure for invalid key")
+            throw new java.lang.AssertionError("Expected Failure for invalid key") // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Success for valid API key") {
@@ -65,7 +67,7 @@ object ApiKeyValidatorSuite extends TestSuite:
               assert(authReq.authType == AuthType.ApiKey)
               assert(authReq.claims == None)
             case AuthResult.Failure(reason, _) =>
-              throw new java.lang.AssertionError(s"Expected Success, got Failure: $reason")
+              throw new java.lang.AssertionError(s"Expected Success, got Failure: $reason") // scalafix:ok DisableSyntax.throw
         }
       }
 
@@ -78,7 +80,7 @@ object ApiKeyValidatorSuite extends TestSuite:
           case AuthResult.Failure(reason, _) =>
             assert(reason.contains("Invalid API key")) // Not "Missing"
           case AuthResult.Success(_) =>
-            throw new java.lang.AssertionError("Expected Failure for invalid key")
+            throw new java.lang.AssertionError("Expected Failure for invalid key") // scalafix:ok DisableSyntax.throw
       }
     }
 

@@ -65,15 +65,15 @@ object Config:
   }
 
   /**
-   * Load configuration, throwing on error. Useful for application startup.
-   *
-   * @throws ConfigError
-   *   if required environment variables are missing
-   */
+    * Load configuration, throwing on error. Useful for application startup.
+    *
+    * @throws ConfigError
+    *   if required environment variables are missing
+    */
   def loadOrThrow(): Config = {
     load() match
       case Right(config) => config
-      case Left(error) => throw error
+      case Left(error)   => throw error // scalafix:ok DisableSyntax.throw
   }
 
   private def loadServerConfig(): Either[ConfigError, ServerConfig] = {

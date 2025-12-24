@@ -24,7 +24,9 @@ object AuthenticatedDecoratorSuite extends TestSuite:
 
   // Create a mock request with specified headers using Undertow's exchange
   private def mockRequest(headers: Map[String, String]): Request = {
-    val exchange = new HttpServerExchange(null)
+    // scalafix:off DisableSyntax.null
+    val exchange = new HttpServerExchange(null) // Required by Undertow API for testing
+    // scalafix:on DisableSyntax.null
     val headerMap = exchange.getRequestHeaders
     headers.foreach { case (k, v) =>
       headerMap.put(new HttpString(k), v)
@@ -76,7 +78,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
             assert(response.statusCode == 401)
             assert(responseBody(response).contains("error"))
           case _ =>
-            throw new java.lang.AssertionError("Expected Result.Success with 401")
+            throw new java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
       }
 
       test("returns 401 for invalid JWT") {
@@ -97,7 +99,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(response.statusCode == 401)
               assert(responseBody(response).contains("Invalid token"))
             case _ =>
-              throw new java.lang.AssertionError("Expected Result.Success with 401")
+              throw new java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
         }
       }
 
@@ -116,7 +118,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
             val token = createToken(sub = "test-user-456")
             val request = mockRequest(Map("Authorization" -> s"Bearer $token"))
 
-            var capturedAuthReq: Option[AuthenticatedRequest] = None
+            var capturedAuthReq: Option[AuthenticatedRequest] = None // scalafix:ok DisableSyntax.var
 
             val delegate: decorator.Delegate = (_, args) => {
               capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
@@ -132,7 +134,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
                 assert(capturedAuthReq.get.profileId == "test-user-456")
                 assert(capturedAuthReq.get.authType == AuthType.JWT)
               case _ =>
-                throw new java.lang.AssertionError("Expected successful delegation")
+                throw new java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
           }
         }
       }
@@ -152,7 +154,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
           case Result.Success(response) =>
             assert(response.statusCode == 401)
           case _ =>
-            throw new java.lang.AssertionError("Expected Result.Success with 401")
+            throw new java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
       }
 
       test("accepts valid API key when ApiKey auth allowed") {
@@ -164,7 +166,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
           val decorator = new authenticated(Vector(AuthType.ApiKey))
           val request = mockRequest(Map("X-API-Key" -> validKey))
 
-          var capturedAuthReq: Option[AuthenticatedRequest] = None
+          var capturedAuthReq: Option[AuthenticatedRequest] = None // scalafix:ok DisableSyntax.var
 
           val delegate: decorator.Delegate = (_, args) => {
             capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
@@ -179,7 +181,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(capturedAuthReq.isDefined)
               assert(capturedAuthReq.get.authType == AuthType.ApiKey)
             case _ =>
-              throw new java.lang.AssertionError("Expected successful delegation")
+              throw new java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
         }
       }
     }
@@ -200,7 +202,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
             val token = createToken(sub = "jwt-user")
             val request = mockRequest(Map("Authorization" -> s"Bearer $token"))
 
-            var capturedAuthReq: Option[AuthenticatedRequest] = None
+            var capturedAuthReq: Option[AuthenticatedRequest] = None // scalafix:ok DisableSyntax.var
 
             val delegate: decorator.Delegate = (_, args) => {
               capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
@@ -214,7 +216,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
                 assert(response.statusCode == 200)
                 assert(capturedAuthReq.get.authType == AuthType.JWT)
               case _ =>
-                throw new java.lang.AssertionError("Expected successful delegation")
+                throw new java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
           }
         }
       }
@@ -228,7 +230,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
           val decorator = new authenticated(Vector(AuthType.JWT, AuthType.ApiKey))
           val request = mockRequest(Map("X-API-Key" -> validKey))
 
-          var capturedAuthReq: Option[AuthenticatedRequest] = None
+          var capturedAuthReq: Option[AuthenticatedRequest] = None // scalafix:ok DisableSyntax.var
 
           val delegate: decorator.Delegate = (_, args) => {
             capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
@@ -242,7 +244,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(response.statusCode == 200)
               assert(capturedAuthReq.get.authType == AuthType.ApiKey)
             case _ =>
-              throw new java.lang.AssertionError("Expected successful delegation")
+              throw new java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
         }
       }
     }

@@ -17,9 +17,10 @@ object AuthConfig:
 
   /** JWT validator for user authentication via Supabase tokens. */
   lazy val jwtValidator: JwtValidator = {
+    // scalafix:ok DisableSyntax.throw - Intentional fail-fast at startup for required config
     val secret = sys.env.getOrElse(
       "SUPABASE_JWT_SECRET",
-      throw ConfigError("Required environment variable 'SUPABASE_JWT_SECRET' is not set")
+      throw ConfigError("Required environment variable 'SUPABASE_JWT_SECRET' is not set") // scalafix:ok DisableSyntax.throw
     )
     JwtValidator(secret)
   }

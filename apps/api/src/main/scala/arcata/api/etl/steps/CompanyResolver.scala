@@ -127,12 +127,9 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
   private def extractDomain(url: String): Option[String] = {
     Try {
       val uri = new URI(url)
-      val host = uri.getHost
-      if host == null then None
-      else {
+      Option(uri.getHost).map { host =>
         // Remove www. prefix if present
-        val cleanHost = if host.startsWith("www.") then host.drop(4) else host
-        Some(cleanHost.toLowerCase)
+        if host.startsWith("www.") then host.drop(4).toLowerCase else host.toLowerCase
       }
     }.toOption.flatten
   }
