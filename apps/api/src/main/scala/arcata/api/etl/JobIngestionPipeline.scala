@@ -27,7 +27,7 @@ final case class JobIngestionOutput(
  *
  * Steps:
  * 1. Fetch HTML from URL
- * 2. Extract job data using config-driven extraction (with AI fallback)
+ * 2. Extract job data using AI-powered extraction
  * 3. Clean HTML to markdown (for company enrichment only)
  * 4. Resolve/create company
  * 5. Load job into database
@@ -45,7 +45,7 @@ final class JobIngestionPipeline(
 
   // Initialize steps
   private val htmlFetcher = HtmlFetcher(storageClient)
-  private val jobExtractor = JobExtractor(supabaseClient, aiConfig)
+  private val jobExtractor = JobExtractor(aiConfig)
   private val htmlCleaner = HtmlCleaner() // Still needed for company enrichment
   private val companyResolver = CompanyResolver(supabaseClient, aiConfig)
   private val jobLoader = JobLoader(supabaseClient)
@@ -136,7 +136,7 @@ final class JobIngestionPipeline(
           ctx
         )
 
-        // Step 2: Extract job data using config-driven extraction
+        // Step 2: Extract job data using AI
         extractorOutput <- {
           progressEmitter.emit(2, totalSteps, "extracting", "Extracting job details...")
           jobExtractor.run(
