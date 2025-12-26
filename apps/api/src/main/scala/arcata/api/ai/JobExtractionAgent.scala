@@ -4,6 +4,7 @@ import arcata.api.config.AIConfig
 import arcata.api.domain.ExtractedJobData
 import boogieloops.ai.{Agent, RequestMetadata, SchemaError}
 import boogieloops.ai.providers.OpenAICompatibleProvider
+import boogieloops.ai.providers.ProviderTimeouts
 
 /**
  * AI agent that extracts structured job data from HTML.
@@ -16,7 +17,8 @@ final class JobExtractionAgent(config: AIConfig):
     baseUrl = config.baseUrl,
     apiKey = config.apiKey,
     modelId = config.model,
-    strictModelValidation = false
+    strictModelValidation = false,
+    timeouts = ProviderTimeouts(60_000 * 5, 60_000 * 5)
   )
 
   private val agent = Agent(
