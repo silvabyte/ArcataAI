@@ -4,6 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   KanbanCard,
+  Progress,
 } from "@arcata/components";
 import { t } from "@arcata/translate";
 import {
@@ -119,12 +120,7 @@ export function JobCard({
 
         {/* Progress Bar */}
         <div className="flex items-center gap-2">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+          <Progress className="flex-1" value={progress} />
           <span className="text-muted-foreground text-xs">{progress}%</span>
         </div>
 
