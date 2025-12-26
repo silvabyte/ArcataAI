@@ -18,7 +18,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         {...props}
       >
         <div
-          className="h-1.5 rounded-full bg-primary transition-all"
+          className="h-1.5 rounded-full bg-indigo-600 transition-all"
           style={{ width: `${percentage}%` }}
         />
       </div>
