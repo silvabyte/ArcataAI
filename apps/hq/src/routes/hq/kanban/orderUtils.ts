@@ -36,26 +36,27 @@ export function calculateNewOrder(
 /**
  * Find which item changed between old and new data arrays.
  * Returns the changed item from newData, or null if no change.
+ *
+ * Note: The kanban component mutates items in place, so we compare
+ * the new `column` prop against the original `application.status_id`.
  */
 export function findChangedItem(
   oldData: KanbanApplication[],
   newData: KanbanApplication[]
 ): KanbanApplication | null {
   for (const newItem of newData) {
-    const oldItem = oldData.find((d) => d.id === newItem.id);
-    if (!oldItem) {
-      continue;
-    }
+    // Compare the kanban's `column` (string) against the original status_id from DB
+    const originalStatusId = String(newItem.application.status_id);
 
-    // Check if column changed
-    if (newItem.column !== oldItem.column) {
+    // Check if column changed (card moved to different column)
+    if (newItem.column !== originalStatusId) {
       return newItem;
     }
 
     // Check if position changed within same column
     const oldIndex = oldData
-      .filter((d) => d.column === oldItem.column)
-      .findIndex((d) => d.id === oldItem.id);
+      .filter((d) => d.column === originalStatusId)
+      .findIndex((d) => d.id === newItem.id);
     const newIndex = newData
       .filter((d) => d.column === newItem.column)
       .findIndex((d) => d.id === newItem.id);

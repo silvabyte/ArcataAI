@@ -252,7 +252,8 @@ export default function HQ() {
           status_id: newStatusId,
           status_order: newOrder,
         });
-      } catch {
+      } catch (error) {
+        console.error("Failed to persist card move:", error);
         notify(
           t("pages.hq.kanban.errors.moveFailedTitle"),
           "error",
