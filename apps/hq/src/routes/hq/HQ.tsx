@@ -343,7 +343,7 @@ export default function HQ() {
           >
             {(column: KanbanStatus) => (
               <KanbanBoard id={column.id} key={column.id}>
-                <KanbanHeader className="kb-header mb-3 flex h-12 w-58 items-center justify-between rounded-lg px-4">
+                <KanbanHeader className="kb-header mb-3 flex h-12 w-full items-center justify-between rounded-lg px-4">
                   <EditableText
                     className="font-semibold text-2xl text-white"
                     onSave={(newName) =>

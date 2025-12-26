@@ -8,7 +8,7 @@ import type {
   DragStartEvent,
 } from "@dnd-kit/core";
 import {
-  closestCenter,
+  closestCorners,
   DndContext,
   DragOverlay,
   KeyboardSensor,
@@ -70,15 +70,14 @@ export type KanbanBoardProps = {
 };
 
 export const KanbanBoard = ({ id, children, className }: KanbanBoardProps) => {
-  const { isOver, setNodeRef } = useDroppable({
+  const { setNodeRef } = useDroppable({
     id,
   });
 
   return (
     <div
       className={cn(
-        "flex min-h-40 min-w-64 shrink-0 flex-col overflow-hidden rounded-md bg-secondary text-xs ring-2 transition-all",
-        isOver ? "ring-primary" : "ring-transparent",
+        "flex min-h-40 min-w-64 shrink-0 flex-col overflow-hidden rounded-md bg-secondary text-xs",
         className
       )}
       ref={setNodeRef}
@@ -121,7 +120,7 @@ export const KanbanCard = <T extends KanbanItemProps = KanbanItemProps>({
       <div style={style} {...listeners} {...attributes} ref={setNodeRef}>
         <Card
           className={cn(
-            "w-64 cursor-grab gap-4 rounded-md p-3 shadow-sm",
+            "w-64 cursor-grab gap-4 rounded-md border-transparent p-3 shadow-sm outline-none",
             isDragging && "pointer-events-none cursor-grabbing opacity-30",
             className
           )}
@@ -315,7 +314,7 @@ export const KanbanProvider = <
     <KanbanContext.Provider value={{ columns, data, activeCardId }}>
       <DndContext
         accessibility={{ announcements }}
-        collisionDetection={closestCenter}
+        collisionDetection={closestCorners}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}

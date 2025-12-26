@@ -124,24 +124,24 @@ export function JobCard({
           <span className="text-muted-foreground text-xs">{progress}%</span>
         </div>
 
-        {/* Tags - single row, overflow hidden */}
+        {/* Tags - single row, no wrap */}
         <div className="flex gap-2 overflow-hidden text-muted-foreground text-xs">
           {job?.experience_level ? (
-            <span className="flex items-center gap-1">
-              <BuildingOfficeIcon className="h-3 w-3" />
-              {job.experience_level}
+            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+              <BuildingOfficeIcon className="h-3 w-3 shrink-0" />
+              {truncate(job.experience_level, 8)}
             </span>
           ) : null}
           {job?.job_type ? (
-            <span className="flex items-center gap-1">
-              <ClockIcon className="h-3 w-3" />
-              {job.job_type}
+            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+              <ClockIcon className="h-3 w-3 shrink-0" />
+              {truncate(job.job_type, 8)}
             </span>
           ) : null}
           {job?.location ? (
-            <span className="flex items-center gap-1">
-              <MapPinIcon className="h-3 w-3" />
-              {truncate(job.location, 12)}
+            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+              <MapPinIcon className="h-3 w-3 shrink-0" />
+              {truncate(job.location, 10)}
             </span>
           ) : null}
         </div>
