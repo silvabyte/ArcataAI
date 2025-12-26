@@ -77,7 +77,7 @@ export const KanbanBoard = ({ id, children, className }: KanbanBoardProps) => {
   return (
     <div
       className={cn(
-        "flex size-full min-h-40 flex-col overflow-hidden rounded-md bg-secondary text-xs ring-2 transition-all",
+        "flex min-h-40 min-w-64 shrink-0 flex-col overflow-hidden rounded-md bg-secondary text-xs ring-2 transition-all",
         isOver ? "ring-primary" : "ring-transparent",
         className
       )}
@@ -323,12 +323,7 @@ export const KanbanProvider = <
         // biome-ignore lint/suspicious/noExplicitAny: spreading props from shadcn component
         {...(props as any)}
       >
-        <div
-          className={cn(
-            "grid size-full auto-cols-fr grid-flow-col gap-4",
-            className
-          )}
-        >
+        <div className={cn("flex gap-4 overflow-x-auto pb-2", className)}>
           {columns.map((column) => children(column))}
         </div>
         {typeof window !== "undefined" &&
