@@ -62,6 +62,13 @@
         "errors": {
           "moveFailedTitle": "Couldn't move card",
           "moveFailedMessage": "Something went wrong. Your board has been refreshed."
+        },
+        "actions": {
+          "viewDetails": "Full Job Description",
+          "remove": "Remove from Tracking"
+        },
+        "card": {
+          "updated": "Updated {{time}}"
         }
       },
       "ingestion": {

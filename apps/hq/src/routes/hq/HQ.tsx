@@ -1,7 +1,6 @@
 import {
   EditableText,
   KanbanBoard,
-  KanbanCard,
   KanbanCards,
   KanbanHeader,
   KanbanProvider,
@@ -12,7 +11,8 @@ import {
   db,
   getCurrentUser,
   getSession,
-  type JobApplication,
+  type JobApplicationWithJob,
+  listApplicationsWithJobs,
 } from "@arcata/db";
 import { t } from "@arcata/translate";
 import type { User } from "@supabase/supabase-js";
@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLoaderData, useRevalidator } from "react-router-dom";
 import { ingestJobWithProgress, type ProgressUpdate } from "../../lib/api";
 import { AddJobPopover, IngestionProgress, JobDetailPanel } from "../jobs";
+import { JobCard } from "./kanban/JobCard";
 import "./kanban/KanBanLane.css";
 import { calculateNewOrder, findChangedItem } from "./kanban/orderUtils";
 import {
@@ -49,9 +50,7 @@ export const loader = async () => {
   try {
     const user = await getCurrentUser();
     const [applications, statuses] = await Promise.all([
-      db.job_applications.list<JobApplication>({
-        eq: { key: "profile_id", value: user?.id },
-      }),
+      listApplicationsWithJobs(user?.id ?? ""),
       db.application_statuses.list<ApplicationStatus>({
         eq: { key: "profile_id", value: user?.id },
       }),
@@ -72,14 +71,14 @@ export const loader = async () => {
 export default function HQ() {
   const data = useLoaderData() as {
     user?: User | null;
-    applications: JobApplication[] | null;
+    applications: JobApplicationWithJob[] | null;
     statuses: ApplicationStatus[] | null;
   } | null;
 
   const revalidator = useRevalidator();
 
   const applications = useMemo(
-    () => (data?.applications as JobApplication[]) || [],
+    () => data?.applications ?? [],
     [data?.applications]
   );
 
@@ -210,13 +209,8 @@ export default function HQ() {
   // Transform data for KanbanProvider
   const kanbanColumns = useMemo(() => statuses.map(toKanbanStatus), [statuses]);
 
-  // Note: currently using applications (JobApplication[]) which doesn't have job data
-  // For now we cast as any - Task 4 will update the loader to return JobApplicationWithJob[]
   const kanbanDataFromServer = useMemo(
-    () =>
-      applications.map((app) =>
-        toKanbanApplication(app as Parameters<typeof toKanbanApplication>[0])
-      ),
+    () => applications.map(toKanbanApplication),
     [applications]
   );
 
@@ -366,27 +360,23 @@ export default function HQ() {
                 </KanbanHeader>
                 <KanbanCards id={column.id}>
                   {(item: KanbanApplication) => (
-                    <KanbanCard
-                      column={item.column}
-                      id={item.id}
+                    <JobCard
+                      columnIndex={kanbanColumns.findIndex(
+                        (c) => c.id === item.column
+                      )}
+                      isSaving={savingIds.has(item.id)}
+                      item={item}
                       key={item.id}
-                      name={item.name}
-                    >
-                      {/* TODO: Task 4 will replace this with JobCard component using isSaving={savingIds.has(item.id)} */}
-                      <p className="font-medium text-sm">
-                        {item.application.jobs?.title ?? "Unknown"}
-                        {savingIds.has(item.id) && (
-                          <span className="ml-2 text-muted-foreground">
-                            ...
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        @{" "}
-                        {item.application.jobs?.companies?.company_name ??
-                          "Unknown"}
-                      </p>
-                    </KanbanCard>
+                      onRemove={async (appId) => {
+                        await db.job_applications.remove(appId);
+                        revalidator.revalidate();
+                      }}
+                      onViewDetails={(appId) => {
+                        setPanelStreamId(appId);
+                        setPanelOpen(true);
+                      }}
+                      totalColumns={kanbanColumns.length}
+                    />
                   )}
                 </KanbanCards>
               </KanbanBoard>

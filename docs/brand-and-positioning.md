@@ -35,25 +35,25 @@ Job hunting is exhausting:
 
 Candidates struggle to recall and articulate their accomplishments during interviews. Years of experience sit in scattered notes, impossible to quickly reference when a hiring manager asks "tell me about a time when..."
 
-## Our Strategy: Fast Track vs Long Poll
+## Two Strategies: Fast Track vs Long Poll
 
-Not all job opportunities are created equal. We categorize them into two types:
+Not all job opportunities are created equal. We recognize two distinct strategies for approaching the job market:
 
-### Long Poll Opportunities (Think Big Tech)
+### Long Poll (Big Tech / FAANG)
 
 - Lengthy, systematized interview processes
 - Dominate recruiting channels due to large budgets
 - Result in significantly more applicants per role
-- **The math isn't looking good for most folks**
+- Requires patience and persistence—the math isn't in most folks' favor
 
-### Fast Track Opportunities (Startups)
+### Fast Track (Startups)
 
 - Need talent *yesterday*
 - Interview processes are ad-hoc and vary by company
 - Can't compete with Big Tech for candidate pipeline—they lack both budget and recruiting team
-- **Less competition, faster decisions, more serendipity**
+- Less competition, faster decisions, more serendipity
 
-**Our focus:** Surface Fast Track opportunities that candidates would never find on their own. Help them compete where the odds are actually in their favor.
+**Arcata doesn't prescribe one strategy over the other.** Candidates choose their focus—we help them execute whichever approach they pursue. The key insight is that most candidates only see Long Poll opportunities because Big Tech dominates hiring channels. We surface the Fast Track opportunities that would otherwise stay hidden.
 
 ## Value Proposition
 
@@ -96,31 +96,31 @@ Centralized tracking of all job-related communications. Links emails to specific
 **Job Scanner**
 Automated bot that continuously scans company career pages for new openings matching your criteria. Updates your job stream in real-time and archives stale listings.
 
-## Emotional Hooks / UX Philosophy
+## Experience Principles
 
-### Rejection Handling
+### Rejection is Part of the Game
 
-When a user receives a rejection, don't just update the status—soften the blow:
+Getting rejected stings. When a user marks an application as rejected, acknowledge the moment:
 
-- Surface encouraging job hunt statistics
-- Remind them: *"Don't sweat it, this is one 'no' closer to the 'yes'!"*
-- Reinforce the probability mindset
+- Surface encouraging statistics that normalize rejection
+- *"Don't sweat it—this is one 'no' closer to the 'yes'."*
+- Reinforce that job hunting is a numbers game, not a referendum on their worth
 
-### Feedback Loops
+### Help Candidates Grow
 
-Help candidates learn and improve:
+The job hunt is a skill. Help users get better at it:
 
-- Integrate feedback from rejections to refine applications
-- Surface patterns (which types of roles get responses, which don't)
-- Guide users to iterate on their approach
+- Surface patterns from their applications (which roles get responses, which don't)
+- Integrate feedback to refine future applications
+- Guide iteration rather than just tracking status
 
-### Guide Arcata
+### Users Know Things We Don't
 
-Users know where to find jobs. Let them teach Arcata:
+Candidates discover opportunities we haven't indexed. Respect that knowledge:
 
-- Import job listings they've discovered
-- Flag application fields Arcata doesn't recognize
-- Build a collaborative system that gets smarter over time
+- Let users import job listings they've found
+- Allow them to flag application fields Arcata doesn't recognize
+- Build a system that learns from users and gets smarter over time
 
 ## Marketing Copy
 
