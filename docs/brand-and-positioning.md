@@ -130,7 +130,7 @@ Candidates discover opportunities we haven't indexed. Respect that knowledge:
 
 ### Tagline
 
-> Go from feeling overwhelmed by the tedious process of job hunting to having fun slaying the job market.
+> Stack job opportunities in your favor.
 
 ### Value Props
 

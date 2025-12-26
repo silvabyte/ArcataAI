@@ -21,7 +21,6 @@ import { Link, useLoaderData, useRevalidator } from "react-router-dom";
 import { ingestJobWithProgress, type ProgressUpdate } from "../../lib/api";
 import { AddJobPopover, IngestionProgress, JobDetailPanel } from "../jobs";
 import { JobCard } from "./kanban/JobCard";
-import "./kanban/KanBanLane.css";
 import { calculateNewOrder, findChangedItem } from "./kanban/orderUtils";
 import {
   type KanbanApplication,

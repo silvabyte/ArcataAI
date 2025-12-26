@@ -17,6 +17,16 @@
   );
 }
 
+/* Kanban header styling */
+.kb-header {
+  background: var(--Navy-Gradient);
+  transition: filter 0.3s ease;
+}
+
+.kb-header:hover {
+  filter: brightness(1.5);
+}
+
 /* shadcn CSS variables - Neutral theme */
 :root {
   --background: 0 0% 100%;
