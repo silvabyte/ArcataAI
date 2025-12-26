@@ -110,10 +110,10 @@ export function JobCard({
 
         {/* Title & Company */}
         <div>
-          <p className="line-clamp-2 font-semibold text-sm">
+          <p className="line-clamp-2 min-h-[2.5rem] font-semibold text-sm">
             {job?.title ?? "Unknown"}
           </p>
-          <p className="text-muted-foreground text-xs">
+          <p className="truncate text-muted-foreground text-xs">
             @ {company?.company_name ?? "Unknown"}
           </p>
         </div>
@@ -124,8 +124,8 @@ export function JobCard({
           <span className="text-muted-foreground text-xs">{progress}%</span>
         </div>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2 text-muted-foreground text-xs">
+        {/* Tags - single row, overflow hidden */}
+        <div className="flex gap-2 overflow-hidden text-muted-foreground text-xs">
           {job?.experience_level ? (
             <span className="flex items-center gap-1">
               <BuildingOfficeIcon className="h-3 w-3" />
