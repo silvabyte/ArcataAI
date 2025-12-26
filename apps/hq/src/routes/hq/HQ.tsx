@@ -323,7 +323,7 @@ export default function HQ() {
           )}
         </div>
       </div>
-      <div className="h-full flex-1 overflow-auto p-4">
+      <div className="min-h-0 flex-1 overflow-auto p-4">
         {empty ? (
           <div className="mt-6 flex flex-col items-start justify-start px-4 sm:px-6 lg:px-8">
             <h2 className="mb-2 text-2xl text-gray-900 sm:truncate sm:text-3xl">
