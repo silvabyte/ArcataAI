@@ -8,13 +8,15 @@
   --font-family-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Custom brand gradient (migrated from apps) */
+/* Custom brand colors (migrated from apps) */
 :root {
   --Navy-Gradient: radial-gradient(
     58.56% 55.32% at 41.8% 28.8%,
     #273655 0%,
     #111826 100%
   );
+  --brand-navy: #273655;
+  --brand-navy-dark: #111826;
 }
 
 /* Kanban header styling */
