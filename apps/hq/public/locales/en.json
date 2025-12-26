@@ -58,6 +58,12 @@
           "notes": "Add your notes here"
         }
       },
+      "kanban": {
+        "errors": {
+          "moveFailedTitle": "Couldn't move card",
+          "moveFailedMessage": "Something went wrong. Your board has been refreshed."
+        }
+      },
       "ingestion": {
         "steps": {
           "checking": "Checking",

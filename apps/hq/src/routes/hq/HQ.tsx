@@ -5,6 +5,7 @@ import {
   KanbanCards,
   KanbanHeader,
   KanbanProvider,
+  useNotification,
 } from "@arcata/components";
 import {
   type ApplicationStatus,
@@ -20,6 +21,7 @@ import { Link, useLoaderData, useRevalidator } from "react-router-dom";
 import { ingestJobWithProgress, type ProgressUpdate } from "../../lib/api";
 import { AddJobPopover, IngestionProgress, JobDetailPanel } from "../jobs";
 import "./kanban/KanBanLane.css";
+import { calculateNewOrder, findChangedItem } from "./kanban/orderUtils";
 import {
   type KanbanApplication,
   type KanbanStatus,
@@ -223,16 +225,77 @@ export default function HQ() {
     []
   );
 
+  // Track which cards are currently being saved (passed to JobCard in Task 4)
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+
+  // Notification hook
+  const { notify } = useNotification();
+
   // Sync from server when data changes
   useEffect(() => {
     setLocalKanbanData(kanbanDataFromServer);
   }, [kanbanDataFromServer]);
 
-  const handleDataChange = useCallback((newData: KanbanApplication[]) => {
-    // For now, just update local state
-    // Task 3 will add persistence logic
-    setLocalKanbanData(newData);
-  }, []);
+  // Persist card move to Supabase
+  const persistChange = useCallback(
+    async (movedItem: KanbanApplication, newData: KanbanApplication[]) => {
+      const newStatusId = Number(movedItem.column);
+
+      // Get siblings in destination column (excluding moved item), sorted by order
+      const siblings = newData
+        .filter((d) => d.column === movedItem.column && d.id !== movedItem.id)
+        .sort(
+          (a, b) => a.application.status_order - b.application.status_order
+        );
+
+      // Find insert position
+      const columnCards = newData.filter((d) => d.column === movedItem.column);
+      const insertIndex = columnCards.findIndex((d) => d.id === movedItem.id);
+
+      const newOrder = calculateNewOrder(siblings, insertIndex);
+
+      try {
+        await db.job_applications.update(movedItem.application.application_id, {
+          status_id: newStatusId,
+          status_order: newOrder,
+        });
+      } catch {
+        notify(
+          t("pages.hq.kanban.errors.moveFailedTitle"),
+          "error",
+          t("pages.hq.kanban.errors.moveFailedMessage")
+        );
+        revalidator.revalidate();
+      }
+    },
+    [notify, revalidator]
+  );
+
+  const handleDataChange = useCallback(
+    (newData: KanbanApplication[]) => {
+      const changed = findChangedItem(localKanbanData, newData);
+
+      if (changed) {
+        // Mark as saving
+        setSavingIds((prev) => new Set(prev).add(changed.id));
+
+        // Optimistic update
+        setLocalKanbanData(newData);
+
+        // Persist
+        persistChange(changed, newData).finally(() => {
+          setSavingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(changed.id);
+            return next;
+          });
+        });
+      } else {
+        setLocalKanbanData(newData);
+      }
+    },
+    [localKanbanData, persistChange]
+  );
 
   const empty = applications?.length === 0;
   return (
@@ -309,8 +372,14 @@ export default function HQ() {
                       key={item.id}
                       name={item.name}
                     >
+                      {/* TODO: Task 4 will replace this with JobCard component using isSaving={savingIds.has(item.id)} */}
                       <p className="font-medium text-sm">
                         {item.application.jobs?.title ?? "Unknown"}
+                        {savingIds.has(item.id) && (
+                          <span className="ml-2 text-muted-foreground">
+                            ...
+                          </span>
+                        )}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         @{" "}
