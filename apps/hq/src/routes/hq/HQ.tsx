@@ -1,4 +1,12 @@
 import {
+  EditableText,
+  KanbanBoard,
+  KanbanCard,
+  KanbanCards,
+  KanbanHeader,
+  KanbanProvider,
+} from "@arcata/components";
+import {
   type ApplicationStatus,
   db,
   getCurrentUser,
@@ -11,7 +19,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLoaderData, useRevalidator } from "react-router-dom";
 import { ingestJobWithProgress, type ProgressUpdate } from "../../lib/api";
 import { AddJobPopover, IngestionProgress, JobDetailPanel } from "../jobs";
-import KanbanLane from "./kanban/KanbanLane";
+import "./kanban/KanBanLane.css";
+import {
+  type KanbanApplication,
+  type KanbanStatus,
+  toKanbanApplication,
+  toKanbanStatus,
+} from "./kanban/types";
 
 type IngestionState = {
   status: "idle" | "processing" | "success" | "error";
@@ -191,14 +205,34 @@ export default function HQ() {
     [data?.statuses]
   );
 
-  const boardData = useMemo(
+  // Transform data for KanbanProvider
+  const kanbanColumns = useMemo(() => statuses.map(toKanbanStatus), [statuses]);
+
+  // Note: currently using applications (JobApplication[]) which doesn't have job data
+  // For now we cast as any - Task 4 will update the loader to return JobApplicationWithJob[]
+  const kanbanDataFromServer = useMemo(
     () =>
-      statuses.map((status) => ({
-        status,
-        apps: applications.filter((a) => a.status_id === status.status_id),
-      })),
-    [statuses, applications]
+      applications.map((app) =>
+        toKanbanApplication(app as Parameters<typeof toKanbanApplication>[0])
+      ),
+    [applications]
   );
+
+  // Local state for optimistic updates
+  const [localKanbanData, setLocalKanbanData] = useState<KanbanApplication[]>(
+    []
+  );
+
+  // Sync from server when data changes
+  useEffect(() => {
+    setLocalKanbanData(kanbanDataFromServer);
+  }, [kanbanDataFromServer]);
+
+  const handleDataChange = useCallback((newData: KanbanApplication[]) => {
+    // For now, just update local state
+    // Task 3 will add persistence logic
+    setLocalKanbanData(newData);
+  }, []);
 
   const empty = applications?.length === 0;
   return (
@@ -234,21 +268,6 @@ export default function HQ() {
         </div>
       </div>
       <div className="h-full flex-1 overflow-auto p-4">
-        <div className="flex h-full gap-3">
-          {boardData.map(({ status, apps }) => (
-            <KanbanLane
-              count={apps.length}
-              key={status.status_id}
-              onRename={handleRenameStatus}
-              statusId={status.status_id}
-              title={status.name}
-            >
-              {apps.map((a) => (
-                <div key={a.application_id}>{a.job_id}</div>
-              ))}
-            </KanbanLane>
-          ))}
-        </div>
         {empty ? (
           <div className="mt-6 flex flex-col items-start justify-start px-4 sm:px-6 lg:px-8">
             <h2 className="mb-2 text-2xl text-gray-900 sm:truncate sm:text-3xl">
@@ -259,7 +278,52 @@ export default function HQ() {
               {t("nav.jobList")} <span aria-hidden="true">&rarr;</span>
             </Link>
           </div>
-        ) : null}
+        ) : (
+          <KanbanProvider
+            columns={kanbanColumns}
+            data={localKanbanData}
+            onDataChange={handleDataChange}
+          >
+            {(column: KanbanStatus) => (
+              <KanbanBoard id={column.id} key={column.id}>
+                <KanbanHeader className="kb-header mb-3 flex h-12 w-58 items-center justify-between rounded-lg px-4">
+                  <EditableText
+                    className="font-semibold text-2xl text-white"
+                    onSave={(newName) =>
+                      handleRenameStatus(column.status.status_id, newName)
+                    }
+                    value={column.name}
+                  />
+                  <span className="font-extralight text-4xl text-white">
+                    {
+                      localKanbanData.filter((d) => d.column === column.id)
+                        .length
+                    }
+                  </span>
+                </KanbanHeader>
+                <KanbanCards id={column.id}>
+                  {(item: KanbanApplication) => (
+                    <KanbanCard
+                      column={item.column}
+                      id={item.id}
+                      key={item.id}
+                      name={item.name}
+                    >
+                      <p className="font-medium text-sm">
+                        {item.application.jobs?.title ?? "Unknown"}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        @{" "}
+                        {item.application.jobs?.companies?.company_name ??
+                          "Unknown"}
+                      </p>
+                    </KanbanCard>
+                  )}
+                </KanbanCards>
+              </KanbanBoard>
+            )}
+          </KanbanProvider>
+        )}
       </div>
       <JobDetailPanel
         isOpen={panelOpen}
