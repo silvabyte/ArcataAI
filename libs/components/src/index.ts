@@ -7,9 +7,10 @@
  * import '@arcata/components/globals.css';
  */
 
+/** Kanban */
+export * from "./components/ui/shadcn-io/kanban";
 /** Alerts */
 export * from "./lib/alerts/Alert";
-
 /** Brand */
 export * from "./lib/brand/Logo";
 export * from "./lib/buttons/AppButton";
@@ -52,8 +53,9 @@ export * from "./lib/spinner";
 export * from "./lib/support/SupportLink";
 /** Utils */
 export * from "./lib/utils";
-
 /** shadcn UI Components */
 export * from "./ui/button";
+export * from "./ui/card";
 export * from "./ui/input";
 export * from "./ui/label";
+export * from "./ui/scroll-area";

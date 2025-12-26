@@ -12,3 +12,15 @@ export type Conversation = Database["public"]["Tables"]["conversations"]["Row"];
 export type JobStream = Database["public"]["Tables"]["job_stream"]["Row"];
 export type ApplicationAnswer =
   Database["public"]["Tables"]["application_answers"]["Row"];
+
+// === Joined Types (for queries with relations) ===
+
+/** Job with nested company data */
+export type JobWithCompany = Job & {
+  companies: Company | null;
+};
+
+/** JobApplication with nested job and company data */
+export type JobApplicationWithJob = JobApplication & {
+  jobs: JobWithCompany | null;
+};
