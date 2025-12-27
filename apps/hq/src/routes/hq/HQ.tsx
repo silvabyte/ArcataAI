@@ -87,9 +87,10 @@ export default function HQ() {
   const [ingestionState, setIngestionState] =
     useState<IngestionState>(INITIAL_STATE);
 
-  // Job detail panel state - only need streamId, panel fetches the rest
+  // Job detail panel state - supports both streamId (from ingestion) and jobId (from kanban)
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelStreamId, setPanelStreamId] = useState<number | null>(null);
+  const [panelJobId, setPanelJobId] = useState<number | null>(null);
 
   const handleProgress = useCallback(
     (update: ProgressUpdate) => {
@@ -170,6 +171,7 @@ export default function HQ() {
   const handleClosePanel = useCallback(() => {
     setPanelOpen(false);
     setPanelStreamId(null);
+    setPanelJobId(null);
   }, []);
 
   const statuses = useMemo(() => {
@@ -371,9 +373,14 @@ export default function HQ() {
                         await db.job_applications.remove(appId);
                         revalidator.revalidate();
                       }}
-                      onViewDetails={(appId) => {
-                        setPanelStreamId(appId);
+                      onViewDetails={(jobId) => {
+                        console.log("[HQ] onViewDetails called", { jobId });
+                        setPanelJobId(jobId);
                         setPanelOpen(true);
+                        console.log("[HQ] Panel state set", {
+                          panelJobId: jobId,
+                          panelOpen: true,
+                        });
                       }}
                       totalColumns={kanbanColumns.length}
                     />
@@ -386,6 +393,7 @@ export default function HQ() {
       </div>
       <JobDetailPanel
         isOpen={panelOpen}
+        jobId={panelJobId}
         onClose={handleClosePanel}
         onTrackSuccess={() => revalidator.revalidate()}
         streamId={panelStreamId}

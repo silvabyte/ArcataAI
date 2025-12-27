@@ -12,6 +12,7 @@ export async function listApplicationsWithJobs(
     .select(`
       *,
       jobs (
+        job_id,
         title,
         experience_level,
         job_type,

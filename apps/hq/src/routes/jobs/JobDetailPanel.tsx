@@ -27,8 +27,10 @@ export type JobDetailData = {
 export type JobDetailPanelProps = {
   isOpen: boolean;
   onClose: () => void;
-  /** Stream ID is the primary identifier - job data is derived from it */
-  streamId: number | null;
+  /** Stream ID - used when viewing from job stream (enables tracking) */
+  streamId?: number | null;
+  /** Job ID - used when viewing from kanban (already tracked, no track button) */
+  jobId?: number | null;
   onTrackSuccess?: () => void;
 };
 
@@ -82,7 +84,11 @@ function ExpandableText({
   const shouldTruncate = text.length > maxLength;
 
   if (!shouldTruncate) {
-    return <p className="whitespace-pre-wrap text-gray-600 text-sm">{text}</p>;
+    return (
+      <p className="whitespace-pre-wrap text-gray-300 leading-relaxed">
+        {text}
+      </p>
+    );
   }
 
   const displayText = expanded ? text : `${text.slice(0, maxLength)}...`;
@@ -92,9 +98,11 @@ function ExpandableText({
 
   return (
     <div>
-      <p className="whitespace-pre-wrap text-gray-600 text-sm">{displayText}</p>
+      <p className="whitespace-pre-wrap text-gray-300 leading-relaxed">
+        {displayText}
+      </p>
       <button
-        className="mt-1 font-medium text-indigo-600 text-sm hover:text-indigo-500"
+        className="mt-2 font-medium text-white underline decoration-gray-500 underline-offset-2 transition-colors hover:decoration-white"
         onClick={() => setExpanded(!expanded)}
         type="button"
       >
@@ -106,9 +114,9 @@ function ExpandableText({
 
 function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className="mt-2 list-disc space-y-1 pl-5">
+    <ul className="mt-3 list-disc space-y-2 pl-5 marker:text-gray-500">
       {items.map((item) => (
-        <li className="text-gray-600 text-sm" key={item}>
+        <li className="text-gray-300 leading-relaxed" key={item}>
           {item}
         </li>
       ))}
@@ -123,23 +131,21 @@ function JobDetailContent({ job }: { job: JobDetail }) {
     job.responsibilities && job.responsibilities.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Description */}
       {hasDescription && job.description ? (
         <section>
-          <h3 className="font-medium text-gray-900 text-sm">
+          <h3 className="mb-3 font-semibold text-base text-white">
             {t("pages.hq.jobDetail.description")}
           </h3>
-          <div className="mt-2">
-            <ExpandableText text={job.description} />
-          </div>
+          <ExpandableText text={job.description} />
         </section>
       ) : null}
 
       {/* Qualifications */}
       {hasQualifications && job.qualifications ? (
         <section>
-          <h3 className="font-medium text-gray-900 text-sm">
+          <h3 className="font-semibold text-base text-white">
             {t("pages.hq.jobDetail.qualifications")}
           </h3>
           <BulletList items={job.qualifications} />
@@ -149,7 +155,7 @@ function JobDetailContent({ job }: { job: JobDetail }) {
       {/* Responsibilities */}
       {hasResponsibilities && job.responsibilities ? (
         <section>
-          <h3 className="font-medium text-gray-900 text-sm">
+          <h3 className="font-semibold text-base text-white">
             {t("pages.hq.jobDetail.responsibilities")}
           </h3>
           <BulletList items={job.responsibilities} />
@@ -210,12 +216,12 @@ function TrackButton({
     : t("pages.hq.jobDetail.track");
 
   const buttonClasses = isDisabled
-    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
-    : "bg-gray-900 text-white hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100";
+    ? "cursor-not-allowed border border-gray-600 bg-transparent text-gray-400"
+    : "border border-white bg-transparent text-white hover:bg-white/10";
 
   return (
     <button
-      className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-sm shadow-sm transition-colors ${buttonClasses}`}
+      className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-sm transition-colors ${buttonClasses}`}
       disabled={isDisabled}
       onClick={onClick}
       type="button"
@@ -241,9 +247,7 @@ function PanelContent({
   if (error) {
     return (
       <div className="text-center">
-        <p className="text-gray-500 dark:text-gray-400">
-          {t("pages.hq.jobDetail.error")}
-        </p>
+        <p className="text-gray-400">{t("pages.hq.jobDetail.error")}</p>
       </div>
     );
   }
@@ -257,19 +261,36 @@ export function JobDetailPanel({
   isOpen,
   onClose,
   streamId,
+  jobId: directJobId,
   onTrackSuccess,
 }: JobDetailPanelProps) {
-  const { data: streamEntry, refetch: refetchStream } =
-    useJobStreamEntry(streamId);
-  const jobId = streamEntry?.jobId ?? null;
-  // Job is tracked if stream entry exists and has an application
-  const isTracked = Boolean(streamEntry?.applicationId);
+  console.log("[JobDetailPanel] Render", {
+    isOpen,
+    streamId,
+    directJobId,
+  });
+
+  const { data: streamEntry, refetch: refetchStream } = useJobStreamEntry(
+    streamId ?? null
+  );
+  // Use direct jobId if provided, otherwise get from stream entry
+  const jobId = directJobId ?? streamEntry?.jobId ?? null;
+  // Job is tracked if direct jobId provided (from kanban) or stream entry has application
+  const isTracked =
+    directJobId !== undefined || Boolean(streamEntry?.applicationId);
+
+  console.log("[JobDetailPanel] State", {
+    jobId,
+    isTracked,
+    streamEntry,
+  });
 
   const { data: job, isLoading, error } = useJobDetail(jobId);
   const { trackJob, isTracking } = useTrackJob();
   const { notify } = useNotification();
 
-  const canTrack = streamId !== null && !isTracked;
+  // Can only track if we have a streamId (not direct jobId) and not already tracked
+  const canTrack = streamId !== null && streamId !== undefined && !isTracked;
 
   async function handleTrack() {
     if (!(jobId && streamId)) {
@@ -307,7 +328,7 @@ export function JobDetailPanel({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500/75 transition-opacity" />
+          <div className="fixed inset-0 bg-black/60 transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-hidden">
@@ -323,9 +344,12 @@ export function JobDetailPanel({
                 leaveTo="translate-x-full"
               >
                 <Dialog.Panel className="pointer-events-auto w-screen max-w-2xl">
-                  <div className="flex h-full flex-col overflow-y-auto bg-white shadow-xl dark:bg-gray-900">
-                    {/* Header */}
-                    <div className="border-gray-200 border-b px-4 py-6 sm:px-6 dark:border-gray-700">
+                  <div className="flex h-full flex-col overflow-y-auto bg-[#111826] shadow-xl">
+                    {/* Header with Navy Gradient */}
+                    <div
+                      className="px-6 py-6"
+                      style={{ background: "var(--Navy-Gradient)" }}
+                    >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0 flex-1">
                           {isLoading ? (
@@ -344,10 +368,10 @@ export function JobDetailPanel({
                           ) : null}
                           {!isLoading && job ? (
                             <>
-                              <p className="text-gray-500 text-sm dark:text-gray-400">
+                              <p className="text-gray-400 text-sm">
                                 {job.companyName}
                               </p>
-                              <Dialog.Title className="font-semibold text-gray-900 text-xl dark:text-white">
+                              <Dialog.Title className="mt-1 font-semibold text-white text-xl">
                                 {job.title}
                               </Dialog.Title>
                             </>
@@ -361,7 +385,7 @@ export function JobDetailPanel({
                             onClick={handleTrack}
                           />
                           <button
-                            className="rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:hover:text-gray-300"
+                            className="rounded-md p-1 text-gray-400 transition-colors hover:text-white focus:outline-none"
                             onClick={onClose}
                             type="button"
                           >
@@ -375,9 +399,9 @@ export function JobDetailPanel({
 
                       {/* Metadata row */}
                       {!isLoading && job ? (
-                        <div className="mt-4 flex flex-wrap items-center gap-4 text-gray-500 text-sm dark:text-gray-400">
+                        <div className="mt-4 flex flex-wrap items-center gap-4 text-gray-300 text-sm">
                           {job.category ? (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               <BriefcaseIcon className="size-4" />
                               <span>{job.category}</span>
                             </div>
@@ -388,7 +412,7 @@ export function JobDetailPanel({
                           />
                           {job.sourceUrl ? (
                             <a
-                              className="flex items-center gap-1 text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                              className="flex items-center gap-1.5 text-white underline decoration-gray-500 underline-offset-2 transition-colors hover:decoration-white"
                               href={job.sourceUrl}
                               rel="noopener noreferrer"
                               target="_blank"
@@ -402,7 +426,7 @@ export function JobDetailPanel({
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 px-4 py-6 sm:px-6">
+                    <div className="flex-1 px-6 py-8">
                       <PanelContent
                         error={error}
                         isLoading={isLoading}

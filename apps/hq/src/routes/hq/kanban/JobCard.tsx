@@ -23,7 +23,7 @@ type JobCardProps = {
   isSaving: boolean;
   columnIndex: number;
   totalColumns: number;
-  onViewDetails: (applicationId: number) => void;
+  onViewDetails: (jobId: number) => void;
   onRemove: (applicationId: number) => void;
 };
 
@@ -93,12 +93,24 @@ export function JobCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => onViewDetails(application.application_id)}
+                  className="cursor-pointer hover:bg-accent"
+                  onClick={() => {
+                    console.log("[JobCard] View Details clicked", {
+                      jobId: job?.job_id,
+                      hasJob: !!job,
+                      applicationId: application.application_id,
+                    });
+                    if (job?.job_id) {
+                      onViewDetails(job.job_id);
+                    } else {
+                      console.warn("[JobCard] No job_id available");
+                    }
+                  }}
                 >
                   {t("pages.hq.kanban.actions.viewDetails")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="text-destructive"
+                  className="cursor-pointer text-destructive hover:bg-accent"
                   onClick={() => onRemove(application.application_id)}
                 >
                   {t("pages.hq.kanban.actions.remove")}
