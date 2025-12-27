@@ -17,16 +17,24 @@ import {
   UserCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import type { User } from "@supabase/supabase-js";
 import { Fragment, useState } from "react";
 import {
+  Link,
   Outlet,
   type RouteObject,
   redirect,
+  useLoaderData,
   useLocation,
   useNavigate,
 } from "react-router-dom";
 import HQ, { loader as hqLoader } from "./hq/HQ";
 import { JobStreamPage, jobStreamLoader } from "./job-stream";
+import AccountSettings from "./settings/AccountSettings";
+
+type AppLoaderData = {
+  user: User;
+};
 
 export const route: RouteObject = {
   path: "/",
@@ -40,6 +48,10 @@ export const route: RouteObject = {
           path: "job-stream",
           element: <JobStreamPage />,
           loader: jobStreamLoader,
+        },
+        {
+          path: "settings/account",
+          element: <AccountSettings />,
         },
       ],
     },
@@ -58,6 +70,14 @@ export const route: RouteObject = {
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useLoaderData() as AppLoaderData;
+
+  // User display info - fallback to email if no full name, then "User" as last resort
+  const userName =
+    user.user_metadata?.full_name ||
+    user.email ||
+    t("pages.account.fallbackName");
+  const userAvatar = user.user_metadata?.avatar_url as string | undefined;
 
   // Desktop sidebar navigation
   const navigation = [
@@ -262,18 +282,26 @@ export default function App() {
                 </ul>
               </li>
               <li className="-mx-6 mt-auto">
-                <button
-                  className="flex w-full items-center gap-x-3 px-6 py-3 font-semibold text-sm text-white leading-6 hover:bg-gray-800"
-                  type="button"
+                <Link
+                  className="flex w-full items-center gap-x-4 px-6 py-3 font-semibold text-sm text-white leading-6 hover:bg-gray-800"
+                  to="/settings/account"
                 >
-                  <UserCircleIcon className="h-6 w-6" />
+                  {userAvatar ? (
+                    <img
+                      alt=""
+                      className="h-8 w-8 rounded-full bg-gray-800"
+                      height={32}
+                      src={userAvatar}
+                      width={32}
+                    />
+                  ) : (
+                    <UserCircleIcon className="h-8 w-8 text-gray-400" />
+                  )}
                   <span className="sr-only">
-                    {t("pages.profile.yourProfile")}
+                    {t("pages.account.yourAccount")}
                   </span>
-                  <span aria-hidden="true">
-                    {t("pages.profile.yourProfile")}
-                  </span>
-                </button>
+                  <span aria-hidden="true">{userName}</span>
+                </Link>
               </li>
             </ul>
           </nav>
@@ -293,10 +321,20 @@ export default function App() {
         <div className="flex-1 font-semibold text-sm text-white leading-6">
           {t("dashboard.title")}
         </div>
-        <button type="button">
-          <span className="sr-only">{t("pages.profile.yourProfile")}</span>
-          <UserCircleIcon className="h-6 w-6" />
-        </button>
+        <Link to="/settings/account">
+          <span className="sr-only">{t("pages.account.yourAccount")}</span>
+          {userAvatar ? (
+            <img
+              alt=""
+              className="h-6 w-6 rounded-full bg-gray-800"
+              height={24}
+              src={userAvatar}
+              width={24}
+            />
+          ) : (
+            <UserCircleIcon className="h-6 w-6" />
+          )}
+        </Link>
       </div>
 
       <main className="pb-16 lg:pb-0 lg:pl-72">

@@ -85,8 +85,37 @@
         "stepProgress": "Step {{current}} of {{total}}"
       }
     },
-    "profile": {
-      "yourProfile": "Your profile"
+    "account": {
+      "title": "Account Settings",
+      "subtitle": "Manage your account settings and preferences.",
+      "yourAccount": "Your account",
+      "fallbackName": "User",
+      "personalInfo": {
+        "title": "Personal Information",
+        "description": "Update your personal details and how others see you.",
+        "changeAvatar": "Change avatar",
+        "avatarHint": "JPG, GIF or PNG. 1MB max.",
+        "firstName": "First name",
+        "firstNamePlaceholder": "Enter your first name",
+        "lastName": "Last name",
+        "lastNamePlaceholder": "Enter your last name",
+        "email": "Email address",
+        "emailPlaceholder": "Enter your email",
+        "username": "Username",
+        "usernamePlaceholder": "your-username",
+        "timezone": "Timezone",
+        "save": "Save"
+      },
+      "logout": {
+        "title": "Log out",
+        "description": "Log out of your current session on this device.",
+        "button": "Log out"
+      },
+      "deleteAccount": {
+        "title": "Delete account",
+        "description": "No longer want to use our service? You can delete your account here. This action is not reversible. All information related to this account will be deleted permanently.",
+        "button": "Yes, delete my account"
+      }
     },
     "jobStream": {
       "title": "Job Stream",
