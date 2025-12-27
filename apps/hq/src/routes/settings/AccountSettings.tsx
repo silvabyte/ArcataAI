@@ -8,9 +8,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { Fragment, useState } from "react";
 
-/**
- * Common timezone options - can be expanded as needed
- */
 const TIMEZONES = [
   { id: "UTC", name: "UTC" },
   { id: "America/New_York", name: "Eastern Time (US & Canada)" },
@@ -32,7 +29,6 @@ function classNames(...classes: string[]) {
 }
 
 export default function AccountSettings() {
-  // Form state - in a real implementation, these would be populated from user data
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -64,50 +60,40 @@ export default function AccountSettings() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-2xl px-6 py-8">
       {/* Page Header */}
-      <div className="mb-10">
-        <h1 className="font-semibold text-2xl text-gray-900 dark:text-white">
-          {t("pages.account.title")}
-        </h1>
-        <p className="mt-1 text-gray-600 text-sm dark:text-gray-400">
-          {t("pages.account.subtitle")}
-        </p>
-      </div>
+      <p className="text-gray-500 text-sm">{t("pages.account.subtitle")}</p>
 
       {/* Personal Information Section */}
-      <section className="mb-12">
-        <h2 className="font-semibold text-base text-gray-900 dark:text-white">
-          {t("pages.account.personalInfo.title")}
-        </h2>
-        <p className="mt-1 text-gray-600 text-sm dark:text-gray-400">
+      <section className="mt-8">
+        <p className="text-gray-500 text-sm">
           {t("pages.account.personalInfo.description")}
         </p>
 
-        <form className="mt-6 space-y-6" onSubmit={handleSaveProfile}>
+        <form className="mt-6 space-y-5" onSubmit={handleSaveProfile}>
           {/* Avatar */}
           <div className="flex items-center gap-x-6">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-              <UserCircleIcon className="h-20 w-20 text-gray-400 dark:text-gray-500" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100">
+              <UserCircleIcon className="h-16 w-16 text-gray-400" />
             </div>
             <div>
               <Button type="button" variant="outline">
                 {t("pages.account.personalInfo.changeAvatar")}
               </Button>
-              <p className="mt-2 text-gray-500 text-xs dark:text-gray-400">
+              <p className="mt-2 text-gray-400 text-xs">
                 {t("pages.account.personalInfo.avatarHint")}
               </p>
             </div>
           </div>
 
           {/* Name Fields - Side by Side */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
               <Label htmlFor="firstName">
                 {t("pages.account.personalInfo.firstName")}
               </Label>
               <Input
-                className="mt-2"
+                className="mt-1.5"
                 id="firstName"
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder={t(
@@ -122,7 +108,7 @@ export default function AccountSettings() {
                 {t("pages.account.personalInfo.lastName")}
               </Label>
               <Input
-                className="mt-2"
+                className="mt-1.5"
                 id="lastName"
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder={t(
@@ -140,7 +126,7 @@ export default function AccountSettings() {
               {t("pages.account.personalInfo.email")}
             </Label>
             <Input
-              className="mt-2"
+              className="mt-1.5"
               id="email"
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t("pages.account.personalInfo.emailPlaceholder")}
@@ -154,8 +140,8 @@ export default function AccountSettings() {
             <Label htmlFor="username">
               {t("pages.account.personalInfo.username")}
             </Label>
-            <div className="mt-2 flex rounded-md shadow-sm">
-              <span className="inline-flex items-center rounded-l-md border border-input border-r-0 bg-gray-50 px-3 text-gray-500 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+            <div className="mt-1.5 flex rounded-md">
+              <span className="inline-flex items-center rounded-l-md border border-gray-200 border-r-0 bg-gray-50 px-3 text-gray-500 text-sm">
                 arcata.ai/
               </span>
               <Input
@@ -177,8 +163,8 @@ export default function AccountSettings() {
               {t("pages.account.personalInfo.timezone")}
             </Label>
             <Listbox onChange={setSelectedTimezone} value={selectedTimezone}>
-              <div className="relative mt-2">
-                <Listbox.Button className="relative w-full cursor-default rounded-md border border-input bg-background py-2.5 pr-10 pl-3 text-left text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring">
+              <div className="relative mt-1.5">
+                <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-200 bg-white py-2 pr-10 pl-3 text-left text-gray-900 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900">
                   <span className="block truncate">
                     {selectedTimezone.name}
                   </span>
@@ -195,14 +181,12 @@ export default function AccountSettings() {
                   leaveFrom="opacity-100"
                   leaveTo="opacity-0"
                 >
-                  <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-gray-800">
+                  <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 focus:outline-none">
                     {TIMEZONES.map((timezone) => (
                       <Listbox.Option
                         className={({ active }) =>
                           classNames(
-                            active
-                              ? "bg-primary text-primary-foreground"
-                              : "text-gray-900 dark:text-gray-100",
+                            active ? "bg-gray-900 text-white" : "text-gray-900",
                             "relative cursor-default select-none py-2 pr-9 pl-3"
                           )
                         }
@@ -213,7 +197,7 @@ export default function AccountSettings() {
                           <>
                             <span
                               className={classNames(
-                                selected ? "font-semibold" : "font-normal",
+                                selected ? "font-medium" : "font-normal",
                                 "block truncate"
                               )}
                             >
@@ -222,9 +206,7 @@ export default function AccountSettings() {
                             {selected ? (
                               <span
                                 className={classNames(
-                                  active
-                                    ? "text-primary-foreground"
-                                    : "text-primary",
+                                  active ? "text-white" : "text-gray-900",
                                   "absolute inset-y-0 right-0 flex items-center pr-4"
                                 )}
                               >
@@ -245,8 +227,11 @@ export default function AccountSettings() {
           </div>
 
           {/* Save Button */}
-          <div className="flex justify-end">
-            <Button type="submit">
+          <div className="flex pt-2">
+            <Button
+              className="bg-[#273655] text-white hover:bg-[#111826]"
+              type="submit"
+            >
               {t("pages.account.personalInfo.save")}
             </Button>
           </div>
@@ -254,17 +239,14 @@ export default function AccountSettings() {
       </section>
 
       {/* Divider */}
-      <div className="border-gray-200 border-t dark:border-gray-700" />
+      <div className="my-10 border-gray-100 border-t" />
 
       {/* Log Out Section */}
-      <section className="my-12">
-        <h2 className="font-semibold text-base text-gray-900 dark:text-white">
-          {t("pages.account.logout.title")}
-        </h2>
-        <p className="mt-1 text-gray-600 text-sm dark:text-gray-400">
+      <section>
+        <p className="text-gray-500 text-sm">
           {t("pages.account.logout.description")}
         </p>
-        <div className="mt-6">
+        <div className="mt-4">
           <Button onClick={handleLogout} type="button" variant="outline">
             {t("pages.account.logout.button")}
           </Button>
@@ -272,21 +254,22 @@ export default function AccountSettings() {
       </section>
 
       {/* Divider */}
-      <div className="border-gray-200 border-t dark:border-gray-700" />
+      <div className="my-10 border-gray-100 border-t" />
 
-      {/* Delete Account Section - at the bottom, visually distinct */}
-      <section className="mt-12">
-        <h2 className="font-semibold text-base text-red-600 dark:text-red-400">
+      {/* Delete Account Section */}
+      <section>
+        <h2 className="font-semibold text-red-600 text-sm">
           {t("pages.account.deleteAccount.title")}
         </h2>
-        <p className="mt-1 text-gray-600 text-sm dark:text-gray-400">
+        <p className="mt-1 text-gray-500 text-sm">
           {t("pages.account.deleteAccount.description")}
         </p>
-        <div className="mt-6">
+        <div className="mt-4">
           <Button
+            className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
             onClick={handleDeleteAccount}
             type="button"
-            variant="destructive"
+            variant="outline"
           >
             {t("pages.account.deleteAccount.button")}
           </Button>
