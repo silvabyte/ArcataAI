@@ -1,4 +1,6 @@
-import { Button, Input, Label } from "@arcata/components";
+import { Button, Input, Label, useNotification } from "@arcata/components";
+import { getUserProfile, signOut, updateUserProfile } from "@arcata/db";
+import { ui } from "@arcata/envs";
 import { t } from "@arcata/translate";
 import { Listbox, Transition } from "@headlessui/react";
 import {
@@ -6,7 +8,9 @@ import {
   ChevronUpDownIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { Fragment, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { Fragment, useEffect, useState } from "react";
+import { useRouteLoaderData } from "react-router-dom";
 
 const TIMEZONES = [
   { id: "UTC", name: "UTC" },
@@ -29,6 +33,9 @@ function classNames(...classes: string[]) {
 }
 
 export default function AccountSettings() {
+  const { user } = useRouteLoaderData("root") as { user: User };
+  const { notify } = useNotification();
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,27 +43,82 @@ export default function AccountSettings() {
   const [selectedTimezone, setSelectedTimezone] = useState<TimezoneOption>(
     TIMEZONES[0]
   );
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  // Load user profile data from profiles table on mount
+  useEffect(() => {
+    async function loadProfile() {
+      // Set email from auth user
+      if (user?.email) {
+        setEmail(user.email);
+      }
+
+      // Load profile data from profiles table
+      const { data: profile } = await getUserProfile();
+      if (profile) {
+        setFirstName(profile.first_name || "");
+        setLastName(profile.last_name || "");
+        setUsername(profile.username || "");
+
+        // Find matching timezone or default to UTC
+        const userTimezone = TIMEZONES.find((tz) => tz.id === profile.timezone);
+        if (userTimezone) {
+          setSelectedTimezone(userTimezone);
+        }
+      }
+    }
+
+    loadProfile();
+  }, [user]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement save profile logic
-    console.log("Save profile", {
-      firstName,
-      lastName,
-      email,
-      username,
-      timezone: selectedTimezone.id,
-    });
+    setIsSaving(true);
+
+    try {
+      const { error } = await updateUserProfile({
+        firstName,
+        lastName,
+        username,
+        timezone: selectedTimezone.id,
+      });
+
+      if (error) {
+        notify(t("pages.account.notifications.saveError"), "error");
+      } else {
+        notify(t("pages.account.notifications.saveSuccess"), "success");
+      }
+    } catch {
+      notify(t("pages.account.notifications.saveError"), "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    console.log("Logout");
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      const { error } = await signOut();
+
+      if (error) {
+        notify(t("pages.account.notifications.logoutError"), "error");
+        setIsLoggingOut(false);
+      } else {
+        // Redirect to login page
+        const loginUrl = ui.get("VITE_AUTH_BASE_URL");
+        window.location.href = loginUrl;
+      }
+    } catch {
+      notify(t("pages.account.notifications.logoutError"), "error");
+      setIsLoggingOut(false);
+    }
   };
 
   const handleDeleteAccount = () => {
-    // TODO: Implement delete account logic with confirmation
-    console.log("Delete account");
+    // TODO: Implement delete account with confirmation dialog
+    notify("Account deletion is not yet implemented", "info");
   };
 
   return (
@@ -74,7 +136,17 @@ export default function AccountSettings() {
           {/* Avatar */}
           <div className="flex items-center gap-x-6">
             <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100">
-              <UserCircleIcon className="h-16 w-16 text-gray-400" />
+              {user?.user_metadata?.avatar_url ? (
+                <img
+                  alt=""
+                  className="h-20 w-20 rounded-lg object-cover"
+                  height={80}
+                  src={user.user_metadata.avatar_url}
+                  width={80}
+                />
+              ) : (
+                <UserCircleIcon className="h-16 w-16 text-gray-400" />
+              )}
             </div>
             <div>
               <Button type="button" variant="outline">
@@ -127,12 +199,15 @@ export default function AccountSettings() {
             </Label>
             <Input
               className="mt-1.5"
+              disabled
               id="email"
-              onChange={(e) => setEmail(e.target.value)}
               placeholder={t("pages.account.personalInfo.emailPlaceholder")}
               type="email"
               value={email}
             />
+            <p className="mt-1 text-gray-400 text-xs">
+              {t("pages.account.personalInfo.emailHint")}
+            </p>
           </div>
 
           {/* Username */}
@@ -230,9 +305,12 @@ export default function AccountSettings() {
           <div className="flex pt-2">
             <Button
               className="bg-[#273655] text-white hover:bg-[#111826]"
+              disabled={isSaving}
               type="submit"
             >
-              {t("pages.account.personalInfo.save")}
+              {isSaving
+                ? t("pages.account.personalInfo.saving")
+                : t("pages.account.personalInfo.save")}
             </Button>
           </div>
         </form>
@@ -247,8 +325,15 @@ export default function AccountSettings() {
           {t("pages.account.logout.description")}
         </p>
         <div className="mt-4">
-          <Button onClick={handleLogout} type="button" variant="outline">
-            {t("pages.account.logout.button")}
+          <Button
+            disabled={isLoggingOut}
+            onClick={handleLogout}
+            type="button"
+            variant="outline"
+          >
+            {isLoggingOut
+              ? t("pages.account.logout.loggingOut")
+              : t("pages.account.logout.button")}
           </Button>
         </div>
       </section>

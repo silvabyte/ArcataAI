@@ -101,15 +101,23 @@
         "lastNamePlaceholder": "Enter your last name",
         "email": "Email address",
         "emailPlaceholder": "Enter your email",
+        "emailHint": "Email cannot be changed",
         "username": "Username",
         "usernamePlaceholder": "your-username",
         "timezone": "Timezone",
-        "save": "Save"
+        "save": "Save",
+        "saving": "Saving..."
       },
       "logout": {
         "title": "Log out",
         "description": "Log out of your current session on this device.",
-        "button": "Log out"
+        "button": "Log out",
+        "loggingOut": "Logging out..."
+      },
+      "notifications": {
+        "saveSuccess": "Profile updated successfully",
+        "saveError": "Failed to update profile",
+        "logoutError": "Failed to log out"
       },
       "deleteAccount": {
         "title": "Delete account",

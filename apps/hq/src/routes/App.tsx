@@ -37,6 +37,7 @@ type AppLoaderData = {
 };
 
 export const route: RouteObject = {
+  id: "root",
   path: "/",
   element: <App />,
   children: [
