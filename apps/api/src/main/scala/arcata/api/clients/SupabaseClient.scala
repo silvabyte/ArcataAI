@@ -161,9 +161,8 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     job.sourceUrl.foreach(v => obj("source_url") = v)
     job.applicationUrl.foreach(v => obj("application_url") = v)
     job.isRemote.foreach(v => obj("is_remote") = v)
-    // Filter out empty strings for timestamp fields - PostgreSQL expects valid timestamps or null
-    job.postedDate.filter(_.nonEmpty).foreach(v => obj("posted_date") = v)
-    job.closingDate.filter(_.nonEmpty).foreach(v => obj("closing_date") = v)
+    job.postedDate.foreach(v => obj("posted_date") = v)
+    job.closingDate.foreach(v => obj("closing_date") = v)
     job.completionState.foreach(v => obj("completion_state") = v)
     ujson.write(obj)
   }

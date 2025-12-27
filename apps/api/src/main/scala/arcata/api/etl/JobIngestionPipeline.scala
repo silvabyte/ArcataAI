@@ -47,6 +47,7 @@ final class JobIngestionPipeline(
   private val htmlFetcher = HtmlFetcher(storageClient)
   private val jobExtractor = JobExtractor(aiConfig)
   private val htmlCleaner = HtmlCleaner() // Still needed for company enrichment
+  private val jobTransformer = JobTransformer
   private val companyResolver = CompanyResolver(supabaseClient, aiConfig)
   private val jobLoader = JobLoader(supabaseClient)
   private val streamLoader = StreamLoader(supabaseClient)
@@ -124,7 +125,7 @@ final class JobIngestionPipeline(
       input: JobIngestionInput,
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
-    val totalSteps = if input.createApplication then 8 else 7
+    val totalSteps = if input.createApplication then 9 else 8
 
     progressEmitter.emit(1, totalSteps, "fetching", "Getting job page...")
 
@@ -162,38 +163,52 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 4: Resolve company (uses markdown for AI enrichment)
+        // Step 4: Transform/sanitize job data
+        transformerOutput <- {
+          progressEmitter.emit(4, totalSteps, "transforming", "Sanitizing job data...")
+          jobTransformer.run(
+            JobTransformerInput(
+              extracted = extractorOutput.extractedData,
+              sourceUrl = extractorOutput.url,
+              objectId = extractorOutput.objectId,
+              completionState = extractorOutput.completionState
+            ),
+            ctx
+          )
+        }
+
+        // Step 5: Resolve company (uses markdown for AI enrichment)
         companyOutput <- {
-          progressEmitter.emit(4, totalSteps, "resolving", "Finding company...")
+          progressEmitter.emit(5, totalSteps, "resolving", "Finding company...")
           companyResolver.run(
             CompanyResolverInput(
-              extractedData = extractorOutput.extractedData,
-              url = extractorOutput.url,
-              objectId = extractorOutput.objectId,
+              extractedData = transformerOutput.transformed,
+              url = transformerOutput.sourceUrl,
+              objectId = transformerOutput.objectId,
               content = cleanerOutput.markdown
             ),
             ctx
           )
         }
 
-        // Step 5: Load job
+        // Step 6: Load job
         jobOutput <- {
-          progressEmitter.emit(5, totalSteps, "loading", "Creating job record...")
+          progressEmitter.emit(6, totalSteps, "loading", "Creating job record...")
           jobLoader.run(
             JobLoaderInput(
               extractedData = companyOutput.extractedData,
               company = companyOutput.company,
               url = companyOutput.url,
               objectId = companyOutput.objectId,
-              completionState = Some(extractorOutput.completionState.toString)
+              completionState = Some(transformerOutput.completionState.toString)
             ),
             ctx
           )
         }
 
-        // Step 6: Add to stream
+        // Step 7: Add to stream
         streamOutput <- {
-          progressEmitter.emit(6, totalSteps, "streaming", "Adding to your feed...")
+          progressEmitter.emit(7, totalSteps, "streaming", "Adding to your feed...")
           streamLoader.run(
             StreamLoaderInput(
               job = jobOutput.job,
@@ -204,10 +219,10 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 7: Optionally create application
+        // Step 8: Optionally create application
         applicationOutput <-
           if input.createApplication then
-            progressEmitter.emit(7, totalSteps, "tracking", "Creating application...")
+            progressEmitter.emit(8, totalSteps, "tracking", "Creating application...")
             applicationLoader
               .run(
                 ApplicationLoaderInput(

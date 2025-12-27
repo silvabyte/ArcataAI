@@ -12,7 +12,7 @@ import scala.util.Try
 
 /** Input for the CompanyResolver step. */
 final case class CompanyResolverInput(
-    extractedData: ExtractedJobData,
+    extractedData: Transformed[ExtractedJobData],
     url: String,
     objectId: Option[String],
     content: String
@@ -20,7 +20,7 @@ final case class CompanyResolverInput(
 
 /** Output from the CompanyResolver step. */
 final case class CompanyResolverOutput(
-    extractedData: ExtractedJobData,
+    extractedData: Transformed[ExtractedJobData],
     company: Company,
     url: String,
     objectId: Option[String]
@@ -73,7 +73,7 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
 
       case None =>
         // Enrich company data using AI before creating
-        val companyName = input.extractedData.companyName.getOrElse(domain)
+        val companyName = input.extractedData.value.companyName.getOrElse(domain)
 
         val enrichedData = enrichmentAgent.enrich(companyName, input.content, input.url) match
           case Right(data) =>

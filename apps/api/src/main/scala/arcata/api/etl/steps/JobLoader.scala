@@ -6,7 +6,7 @@ import arcata.api.etl.framework.*
 
 /** Input for the JobLoader step. */
 final case class JobLoaderInput(
-    extractedData: ExtractedJobData,
+    extractedData: Transformed[ExtractedJobData],
     company: Company,
     url: String,
     objectId: Option[String],
@@ -33,7 +33,8 @@ final class JobLoader(supabaseClient: SupabaseClient)
       input: JobLoaderInput,
       ctx: PipelineContext
   ): Either[StepError, JobLoaderOutput] = {
-    logger.info(s"[${ctx.runId}] Loading job: ${input.extractedData.title}")
+    val data = input.extractedData.value
+    logger.info(s"[${ctx.runId}] Loading job: ${data.title}")
 
     // Check if job already exists by source URL
     supabaseClient.findJobBySourceUrl(input.url) match
@@ -58,25 +59,25 @@ final class JobLoader(supabaseClient: SupabaseClient)
 
         val job = Job(
           companyId = companyId,
-          title = input.extractedData.title,
-          description = input.extractedData.description,
-          location = input.extractedData.location,
-          jobType = input.extractedData.jobType,
-          experienceLevel = input.extractedData.experienceLevel,
-          educationLevel = input.extractedData.educationLevel,
-          salaryMin = input.extractedData.salaryMin,
-          salaryMax = input.extractedData.salaryMax,
-          salaryCurrency = input.extractedData.salaryCurrency,
-          qualifications = input.extractedData.qualifications,
-          preferredQualifications = input.extractedData.preferredQualifications,
-          responsibilities = input.extractedData.responsibilities,
-          benefits = input.extractedData.benefits,
-          category = input.extractedData.category,
+          title = data.title,
+          description = data.description,
+          location = data.location,
+          jobType = data.jobType,
+          experienceLevel = data.experienceLevel,
+          educationLevel = data.educationLevel,
+          salaryMin = data.salaryMin,
+          salaryMax = data.salaryMax,
+          salaryCurrency = data.salaryCurrency,
+          qualifications = data.qualifications,
+          preferredQualifications = data.preferredQualifications,
+          responsibilities = data.responsibilities,
+          benefits = data.benefits,
+          category = data.category,
           sourceUrl = Some(input.url),
-          applicationUrl = input.extractedData.applicationUrl,
-          isRemote = input.extractedData.isRemote,
-          postedDate = input.extractedData.postedDate,
-          closingDate = input.extractedData.closingDate,
+          applicationUrl = data.applicationUrl,
+          isRemote = data.isRemote,
+          postedDate = data.postedDate,
+          closingDate = data.closingDate,
           completionState = input.completionState
         )
 
@@ -93,7 +94,7 @@ final class JobLoader(supabaseClient: SupabaseClient)
           case None =>
             Left(
               StepError.LoadError(
-                message = s"Failed to create job: ${input.extractedData.title}",
+                message = s"Failed to create job: ${data.title}",
                 stepName = name
               )
             )

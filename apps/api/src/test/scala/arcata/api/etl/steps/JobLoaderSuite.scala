@@ -34,7 +34,7 @@ object JobLoaderSuite extends TestSuite:
       val loader = JobLoader(client)
 
       val input = JobLoaderInput(
-        extractedData = ExtractedJobData(title = "New Job"),
+        extractedData = Transformed(ExtractedJobData(title = "New Job")),
         company = Company(companyId = Some(1L)),
         url = "https://example.com/job",
         objectId = None
@@ -63,10 +63,12 @@ object JobLoaderSuite extends TestSuite:
       val loader = JobLoader(client)
 
       val input = JobLoaderInput(
-        extractedData = ExtractedJobData(
-          title = "Software Engineer",
-          description = Some("Build things"),
-          location = Some("Remote")
+        extractedData = Transformed(
+          ExtractedJobData(
+            title = "Software Engineer",
+            description = Some("Build things"),
+            location = Some("Remote")
+          )
         ),
         company = Company(companyId = Some(1L)),
         url = "https://example.com/new-job",
@@ -87,7 +89,7 @@ object JobLoaderSuite extends TestSuite:
       val loader = JobLoader(client)
 
       val input = JobLoaderInput(
-        extractedData = ExtractedJobData(title = "Job"),
+        extractedData = Transformed(ExtractedJobData(title = "Job")),
         company = Company(), // No companyId
         url = "https://example.com/job",
         objectId = None
@@ -110,7 +112,7 @@ object JobLoaderSuite extends TestSuite:
       val loader = JobLoader(client)
 
       val input = JobLoaderInput(
-        extractedData = ExtractedJobData(title = "Job"),
+        extractedData = Transformed(ExtractedJobData(title = "Job")),
         company = Company(companyId = Some(1L)),
         url = "https://example.com/job",
         objectId = None
