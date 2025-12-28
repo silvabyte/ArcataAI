@@ -202,6 +202,47 @@ function ContactNodeComponent({
     data.name || data.email || data.phone || data.location
   );
   const hasLinks = Boolean(data.linkedIn || data.portfolio || data.github);
+  const contactItems = [
+    data.email !== "" && (
+      <span className="flex items-center gap-x-1" key="email">
+        <EnvelopeIcon className="size-4" />
+        {data.email}
+      </span>
+    ),
+    data.phone !== "" && (
+      <span className="flex items-center gap-x-1" key="phone">
+        <PhoneIcon className="size-4" />
+        {data.phone}
+      </span>
+    ),
+    data.location !== "" && (
+      <span className="flex items-center gap-x-1" key="location">
+        <MapPinIcon className="size-4" />
+        {data.location}
+      </span>
+    ),
+  ].filter(Boolean);
+
+  const linkItems = [
+    data.linkedIn !== "" && (
+      <span className="flex items-center gap-x-1" key="linkedin">
+        <GlobeAltIcon className="size-4" />
+        {data.linkedIn}
+      </span>
+    ),
+    data.portfolio !== "" && (
+      <span className="flex items-center gap-x-1" key="portfolio">
+        <GlobeAltIcon className="size-4" />
+        {data.portfolio}
+      </span>
+    ),
+    data.github !== "" && (
+      <span className="flex items-center gap-x-1" key="github">
+        <GlobeAltIcon className="size-4" />
+        {data.github}
+      </span>
+    ),
+  ].filter(Boolean);
 
   return (
     <button
@@ -210,55 +251,23 @@ function ContactNodeComponent({
       type="button"
     >
       {hasContent ? (
-        <div className="text-center">
+        <div>
           {data.name !== "" && (
             <h2 className="font-bold text-2xl text-gray-900">{data.name}</h2>
           )}
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-gray-600 text-sm">
-            {data.email !== "" && (
-              <span className="flex items-center gap-x-1">
-                <EnvelopeIcon className="size-4" />
-                {data.email}
-              </span>
-            )}
-            {data.phone !== "" && (
-              <span className="flex items-center gap-x-1">
-                <PhoneIcon className="size-4" />
-                {data.phone}
-              </span>
-            )}
-            {data.location !== "" && (
-              <span className="flex items-center gap-x-1">
-                <MapPinIcon className="size-4" />
-                {data.location}
-              </span>
-            )}
-          </div>
-          {hasLinks ? (
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 text-gray-500 text-sm">
-              {data.linkedIn !== "" && (
-                <span className="flex items-center gap-x-1">
-                  <GlobeAltIcon className="size-4" />
-                  {data.linkedIn}
-                </span>
-              )}
-              {data.portfolio !== "" && (
-                <span className="flex items-center gap-x-1">
-                  <GlobeAltIcon className="size-4" />
-                  {data.portfolio}
-                </span>
-              )}
-              {data.github !== "" && (
-                <span className="flex items-center gap-x-1">
-                  <GlobeAltIcon className="size-4" />
-                  {data.github}
-                </span>
-              )}
+          {contactItems.length > 0 && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-600 text-sm">
+              {contactItems}
             </div>
-          ) : null}
+          )}
+          {hasLinks && linkItems.length > 0 && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 text-gray-500 text-sm">
+              {linkItems}
+            </div>
+          )}
         </div>
       ) : (
-        <div className="text-center text-gray-500">
+        <div className="text-gray-500">
           <p>Click to add contact information</p>
         </div>
       )}
