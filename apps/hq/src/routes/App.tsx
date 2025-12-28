@@ -13,6 +13,7 @@ import { t } from "@arcata/translate";
 import { Dialog, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
+  MapIcon,
   RocketLaunchIcon,
   UserCircleIcon,
   XMarkIcon,
@@ -36,6 +37,7 @@ import {
   profileBuilderLoader,
   profilesLoader,
 } from "./profiles";
+import RoadmapPage from "./roadmap/RoadmapPage";
 import AccountSettings from "./settings/AccountSettings";
 
 type AppLoaderData = {
@@ -69,6 +71,10 @@ export const route: RouteObject = {
         {
           path: "settings/account",
           element: <AccountSettings />,
+        },
+        {
+          path: "roadmap",
+          element: <RoadmapPage />,
         },
       ],
     },
@@ -118,15 +124,15 @@ export default function App() {
     // },
     {
       name: t("nav.profile"),
-      href: "#",
-      icon: UserCircleIcon,
-      current: false,
-    },
-    {
-      name: t("nav.profile"),
       href: "/profiles",
       icon: UserCircleIcon,
       current: location.pathname.startsWith("/profiles"),
+    },
+    {
+      name: t("nav.roadmap"),
+      href: "/roadmap",
+      icon: MapIcon,
+      current: location.pathname === "/roadmap",
     },
   ];
 

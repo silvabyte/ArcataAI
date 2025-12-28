@@ -133,3 +133,47 @@ altering data flow), update the architecture diagrams in:
 - `apps/api/README.md` - ETL pipeline diagram
 
 Keep diagrams in sync with actual system topology.
+
+---
+
+## Product Roadmap
+
+Arcata follows a phased release cycle: **Alpha > Beta > GA v1.0**
+
+### Phase Definitions
+
+**Alpha (Current):** Core platform shipped. Building foundational features with early adopter feedback.
+
+**Beta:** All Alpha features complete. Focus on AI-powered matching and automation.
+
+**GA v1.0:** All features stable, battle-tested, and refined by community feedback.
+
+### Keeping Roadmap in Sync
+
+The in-app roadmap lives at `apps/hq/src/routes/roadmap/RoadmapPage.tsx`. When closing roadmap-related issues:
+
+1. Update the feature's `status` in `RoadmapPage.tsx` from `'upcoming'` to `'complete'`
+2. If all Alpha features done, update the Alpha section header label to reflect completion
+3. Use `bd list --status open` to verify remaining work
+
+### Alpha Features
+
+| Issue | Feature |
+|-------|---------|
+| `ArcataAI-bp9` | Resume Import with AI Parsing |
+| `ArcataAI-txp` | Chrome Extension: Track Job (Foundation) |
+| `ArcataAI-9jy` | PDF/Markdown Export for Profiles |
+| `ArcataAI-zlt` | Job Status Checker Cron |
+| `ArcataAI-hz1` | Job Discovery Collector Service |
+| `ArcataAI-7ne` | Track Job button (in-app) |
+| `ArcataAI-nt7.2` | Community Invite Automation |
+
+### Beta Features
+
+| Issue | Feature |
+|-------|---------|
+| `ArcataAI-yrk` | Profile-based Job Stream Filtering |
+| `ArcataAI-7ob` | Company Enrichment Cron/ETL |
+| `ArcataAI-9d2` | Conversation Tracking |
+| `ArcataAI-8ep` | Auto-Apply Wizard |
+| `ArcataAI-s91` | AI Profile+ (cover letters/resumes) |
