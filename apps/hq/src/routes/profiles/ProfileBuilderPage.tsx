@@ -41,9 +41,9 @@ export async function loader({
 
 function getStatusBadgeClasses(status: JobProfileStatus): string {
   if (status === "live") {
-    return "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-500 dark:ring-green-500/30";
+    return "bg-green-50 text-green-700 ring-green-600/20";
   }
-  return "bg-yellow-50 text-yellow-700 ring-yellow-600/20 dark:bg-yellow-500/10 dark:text-yellow-500 dark:ring-yellow-500/30";
+  return "bg-yellow-50 text-yellow-700 ring-yellow-600/20";
 }
 
 function getStatusLabel(status: JobProfileStatus): string {
@@ -87,72 +87,70 @@ function ProfileHeader({
   };
 
   return (
-    <header className="border-gray-200 border-b bg-white px-4 py-4 sm:px-6 lg:px-8 dark:border-white/10 dark:bg-gray-900">
-      <div className="mx-auto flex max-w-4xl items-center justify-between gap-x-4">
-        {/* Left side: Back + Name */}
-        <div className="flex min-w-0 items-center gap-x-4">
-          <Link
-            className="flex items-center gap-x-2 text-gray-500 text-sm hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            to="/profiles"
-          >
-            <ArrowLeftIcon className="size-4" />
-            <span className="hidden sm:inline">Profiles</span>
-          </Link>
+    <header className="flex items-center justify-between border-gray-200 border-b bg-white px-4 py-3 lg:px-6 lg:py-4">
+      {/* Left side: Back + Name */}
+      <div className="flex min-w-0 items-center gap-x-4">
+        <Link
+          className="flex items-center gap-x-2 text-gray-500 text-sm hover:text-gray-700"
+          to="/profiles"
+        >
+          <ArrowLeftIcon className="size-4" />
+          <span className="hidden sm:inline">Profiles</span>
+        </Link>
 
-          <div className="h-6 w-px bg-gray-200 dark:bg-white/10" />
+        <div className="h-6 w-px bg-gray-200" />
 
-          {isEditingName ? (
-            <input
-              autoFocus
-              className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-2 py-1 font-semibold text-gray-900 text-lg ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-indigo-600 dark:text-white dark:ring-white/20"
-              onBlur={handleNameSubmit}
-              onChange={(e) => setEditedName(e.target.value)}
-              onKeyDown={handleKeyDown}
-              type="text"
-              value={editedName}
-            />
-          ) : (
-            <button
-              className="min-w-0 truncate font-semibold text-gray-900 text-lg hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
-              onClick={() => setIsEditingName(true)}
-              type="button"
-            >
-              {profile.name}
-            </button>
-          )}
-        </div>
-
-        {/* Right side: Status + Actions */}
-        <div className="flex shrink-0 items-center gap-x-3">
-          {/* Save status indicator */}
-          <span className="text-gray-500 text-sm dark:text-gray-400">
-            {saveStatus === "saving" && "Saving..."}
-            {saveStatus === "saved" && "Saved"}
-            {saveStatus === "error" && "Error saving"}
-          </span>
-
-          {/* Status badge (clickable) */}
+        {isEditingName ? (
+          <input
+            autoFocus
+            className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-2 py-1 font-semibold text-gray-900 text-lg ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-gray-400"
+            onBlur={handleNameSubmit}
+            onChange={(e) => setEditedName(e.target.value)}
+            onKeyDown={handleKeyDown}
+            type="text"
+            value={editedName}
+          />
+        ) : (
           <button
-            className={`inline-flex shrink-0 cursor-pointer items-center rounded-full px-2 py-1 font-medium text-xs ring-1 ring-inset transition-opacity hover:opacity-80 ${getStatusBadgeClasses(profile.status)}`}
-            onClick={onStatusToggle}
-            title={`Click to change to ${profile.status === "draft" ? "Live" : "Draft"}`}
+            className="min-w-0 truncate font-semibold text-gray-900 text-lg hover:text-gray-600"
+            onClick={() => setIsEditingName(true)}
             type="button"
           >
-            {getStatusLabel(profile.status)}
+            {profile.name}
           </button>
+        )}
+      </div>
 
-          {/* Download button (stubbed) */}
-          <button
-            className="inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 focus-visible:outline-offset-2 dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400"
-            onClick={() => {
-              // TODO: Implement download - see ArcataAI-9jy
-            }}
-            type="button"
-          >
-            <ArrowDownTrayIcon className="-ml-0.5 size-4" />
-            <span className="hidden sm:inline">Download</span>
-          </button>
-        </div>
+      {/* Right side: Status + Actions */}
+      <div className="flex shrink-0 items-center gap-x-3">
+        {/* Save status indicator */}
+        <span className="text-gray-500 text-sm">
+          {saveStatus === "saving" && "Saving..."}
+          {saveStatus === "saved" && "Saved"}
+          {saveStatus === "error" && "Error saving"}
+        </span>
+
+        {/* Status badge (clickable) */}
+        <button
+          className={`inline-flex shrink-0 cursor-pointer items-center rounded-full px-2 py-1 font-medium text-xs ring-1 ring-inset transition-opacity hover:opacity-80 ${getStatusBadgeClasses(profile.status)}`}
+          onClick={onStatusToggle}
+          title={`Click to change to ${profile.status === "draft" ? "Live" : "Draft"}`}
+          type="button"
+        >
+          {getStatusLabel(profile.status)}
+        </button>
+
+        {/* Download button */}
+        <button
+          className="inline-flex items-center gap-x-1.5 rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-sm hover:bg-gray-700"
+          onClick={() => {
+            // TODO: Implement download - see ArcataAI-9jy
+          }}
+          type="button"
+        >
+          <ArrowDownTrayIcon className="-ml-0.5 size-4" />
+          <span className="hidden sm:inline">Download</span>
+        </button>
       </div>
     </header>
   );
@@ -281,10 +279,10 @@ export function ProfileBuilderPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <h3 className="font-medium text-lg text-red-800 dark:text-red-400">
+          <h3 className="font-medium text-lg text-red-800">
             {error ? "Error loading profile" : "Profile not found"}
           </h3>
-          <p className="mt-2 text-red-600 text-sm dark:text-red-300">
+          <p className="mt-2 text-red-600 text-sm">
             {error?.message ?? "The requested profile could not be found."}
           </p>
           <button

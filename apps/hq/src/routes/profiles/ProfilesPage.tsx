@@ -43,9 +43,9 @@ function formatDate(dateString: string | null): string {
 
 function getStatusBadgeClasses(status: JobProfile["status"]): string {
   if (status === "live") {
-    return "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-500 dark:ring-green-500/30";
+    return "bg-green-50 text-green-700 ring-green-600/20";
   }
-  return "bg-yellow-50 text-yellow-700 ring-yellow-600/20 dark:bg-yellow-500/10 dark:text-yellow-500 dark:ring-yellow-500/30";
+  return "bg-yellow-50 text-yellow-700 ring-yellow-600/20";
 }
 
 function getStatusLabel(status: JobProfile["status"]): string {
@@ -63,17 +63,17 @@ function EmptyState({ onCreateProfile, isCreating }: EmptyStateProps) {
       <div className="text-center">
         <DocumentPlusIcon
           aria-hidden="true"
-          className="mx-auto size-12 text-gray-400 dark:text-gray-500"
+          className="mx-auto size-12 text-gray-400"
         />
-        <h3 className="mt-2 font-semibold text-gray-900 text-sm dark:text-white">
+        <h3 className="mt-2 font-semibold text-gray-900 text-sm">
           No profiles yet
         </h3>
-        <p className="mt-1 text-gray-500 text-sm dark:text-gray-400">
+        <p className="mt-1 text-gray-500 text-sm">
           Get started by creating a new profile.
         </p>
         <div className="mt-6">
           <button
-            className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 focus-visible:outline-offset-2 disabled:opacity-50 dark:bg-indigo-500 dark:shadow-none dark:focus-visible:outline-indigo-500 dark:hover:bg-indigo-400"
+            className="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-gray-900 focus-visible:outline-offset-2 disabled:opacity-50"
             disabled={isCreating}
             onClick={onCreateProfile}
             type="button"
@@ -95,11 +95,11 @@ type ProfileCardProps = {
 
 function ProfileCard({ profile, onView, onEdit }: ProfileCardProps) {
   return (
-    <li className="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:outline-white/10 dark:-outline-offset-1">
+    <li className="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow-sm">
       <div className="flex w-full items-center justify-between space-x-6 p-6">
         <div className="flex-1 truncate">
           <div className="flex items-center space-x-3">
-            <h3 className="truncate font-medium text-gray-900 text-sm dark:text-white">
+            <h3 className="truncate font-medium text-gray-900 text-sm">
               {profile.name}
             </h3>
             <span
@@ -108,36 +108,30 @@ function ProfileCard({ profile, onView, onEdit }: ProfileCardProps) {
               {getStatusLabel(profile.status)}
             </span>
           </div>
-          <p className="mt-1 truncate text-gray-500 text-sm dark:text-gray-400">
+          <p className="mt-1 truncate text-gray-500 text-sm">
             Updated {formatDate(profile.updated_at)}
           </p>
         </div>
       </div>
       <div>
-        <div className="-mt-px flex divide-x divide-gray-200 dark:divide-white/10">
+        <div className="-mt-px flex divide-x divide-gray-200">
           <div className="flex w-0 flex-1">
             <button
-              className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 font-semibold text-gray-900 text-sm dark:text-white"
+              className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 font-semibold text-gray-900 text-sm"
               onClick={() => onView(profile.job_profile_id)}
               type="button"
             >
-              <EyeIcon
-                aria-hidden="true"
-                className="size-5 text-gray-400 dark:text-gray-500"
-              />
+              <EyeIcon aria-hidden="true" className="size-5 text-gray-400" />
               View
             </button>
           </div>
           <div className="-ml-px flex w-0 flex-1">
             <button
-              className="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 font-semibold text-gray-900 text-sm dark:text-white"
+              className="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 font-semibold text-gray-900 text-sm"
               onClick={() => onEdit(profile.job_profile_id)}
               type="button"
             >
-              <PencilIcon
-                aria-hidden="true"
-                className="size-5 text-gray-400 dark:text-gray-500"
-              />
+              <PencilIcon aria-hidden="true" className="size-5 text-gray-400" />
               Edit
             </button>
           </div>
@@ -166,16 +160,16 @@ function ProfileGrid({
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="font-semibold text-base text-gray-900 leading-6 dark:text-white">
+          <h1 className="font-semibold text-base text-gray-900 leading-6">
             Profiles
           </h1>
-          <p className="mt-2 text-gray-700 text-sm dark:text-gray-400">
+          <p className="mt-2 text-gray-700 text-sm">
             Manage your job profiles and resumes.
           </p>
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <button
-            className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-indigo-600 focus-visible:outline-offset-2 disabled:opacity-50 dark:bg-indigo-500 dark:shadow-none dark:focus-visible:outline-indigo-500 dark:hover:bg-indigo-400"
+            className="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-gray-900 focus-visible:outline-offset-2 disabled:opacity-50"
             disabled={isCreating}
             onClick={onCreateProfile}
             type="button"
@@ -251,13 +245,11 @@ export function ProfilesPage() {
   if (error) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="rounded-lg bg-red-50 p-6 dark:bg-red-900/20">
-          <h3 className="font-medium text-lg text-red-800 dark:text-red-400">
+        <div className="rounded-lg bg-red-50 p-6">
+          <h3 className="font-medium text-lg text-red-800">
             Error loading profiles
           </h3>
-          <p className="mt-2 text-red-600 text-sm dark:text-red-300">
-            {error.message}
-          </p>
+          <p className="mt-2 text-red-600 text-sm">{error.message}</p>
         </div>
       </div>
     );
