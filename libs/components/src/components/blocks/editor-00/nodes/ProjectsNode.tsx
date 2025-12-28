@@ -523,10 +523,17 @@ export class ProjectsNode extends DecoratorNode<JSX.Element> {
   createDOM(_config: EditorConfig): HTMLElement {
     const div = document.createElement("div");
     div.className = "resume-section";
+    // Set explicit line-height so Lexical's DraggableBlockPlugin
+    // can properly center the drag handle on the first line
+    div.style.lineHeight = "32px";
     return div;
   }
 
   updateDOM(): false {
+    return false;
+  }
+
+  isInline(): boolean {
     return false;
   }
 

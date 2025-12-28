@@ -12,7 +12,7 @@ import { useToolbarContext } from "src/components/editor/context/toolbar-context
 export function useUpdateToolbarHandler(
   callback: (selection: BaseSelection) => void
 ) {
-  const [editor] = useLexicalComposerContext();
+  const [_editor] = useLexicalComposerContext();
   const { activeEditor } = useToolbarContext();
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function useUpdateToolbarHandler(
       COMMAND_PRIORITY_CRITICAL
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, callback]);
+  }, [callback, activeEditor.registerCommand]);
 
   useEffect(() => {
     activeEditor.getEditorState().read(() => {
