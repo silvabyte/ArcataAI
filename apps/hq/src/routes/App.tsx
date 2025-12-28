@@ -30,6 +30,12 @@ import {
 } from "react-router-dom";
 import HQ, { loader as hqLoader } from "./hq/HQ";
 import { JobStreamPage, jobStreamLoader } from "./job-stream";
+import {
+  ProfileBuilderPage,
+  ProfilesPage,
+  profileBuilderLoader,
+  profilesLoader,
+} from "./profiles";
 import AccountSettings from "./settings/AccountSettings";
 
 type AppLoaderData = {
@@ -49,6 +55,16 @@ export const route: RouteObject = {
           path: "job-stream",
           element: <JobStreamPage />,
           loader: jobStreamLoader,
+        },
+        {
+          path: "profiles",
+          element: <ProfilesPage />,
+          loader: profilesLoader,
+        },
+        {
+          path: "profiles/:id",
+          element: <ProfileBuilderPage />,
+          loader: profileBuilderLoader,
         },
         {
           path: "settings/account",
@@ -107,10 +123,10 @@ export default function App() {
       current: false,
     },
     {
-      name: t("nav.autoApplication"),
-      href: "#",
-      icon: FiyaIcon,
-      current: false,
+      name: t("nav.profile"),
+      href: "/profiles",
+      icon: UserCircleIcon,
+      current: location.pathname.startsWith("/profiles"),
     },
   ];
 
@@ -143,9 +159,9 @@ export default function App() {
     },
     {
       name: t("nav.profile"),
-      href: "#",
+      href: "/profiles",
       icon: UserCircleIcon,
-      current: false,
+      current: location.pathname.startsWith("/profiles"),
     },
   ];
 

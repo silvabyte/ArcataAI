@@ -343,31 +343,31 @@ export type Database = {
         Row: {
           cover_letter_data: Json | null;
           created_at: string | null;
-          is_active: boolean | null;
           job_profile_id: number;
           name: string;
           profile_id: string;
           resume_data: Json | null;
+          status: Database["public"]["Enums"]["job_profile_status"];
           updated_at: string | null;
         };
         Insert: {
           cover_letter_data?: Json | null;
           created_at?: string | null;
-          is_active?: boolean | null;
           job_profile_id?: number;
           name: string;
           profile_id: string;
           resume_data?: Json | null;
+          status?: Database["public"]["Enums"]["job_profile_status"];
           updated_at?: string | null;
         };
         Update: {
           cover_letter_data?: Json | null;
           created_at?: string | null;
-          is_active?: boolean | null;
           job_profile_id?: number;
           name?: string;
           profile_id?: string;
           resume_data?: Json | null;
+          status?: Database["public"]["Enums"]["job_profile_status"];
           updated_at?: string | null;
         };
         Relationships: [
@@ -583,7 +583,7 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      job_profile_status: "draft" | "live";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -716,6 +716,8 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      job_profile_status: ["draft", "live"],
+    },
   },
 } as const;

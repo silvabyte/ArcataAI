@@ -117,12 +117,20 @@
       "notifications": {
         "saveSuccess": "Profile updated successfully",
         "saveError": "Failed to update profile",
-        "logoutError": "Failed to log out"
+        "logoutError": "Failed to log out",
+        "deleteError": "Failed to delete account"
       },
       "deleteAccount": {
         "title": "Delete account",
         "description": "No longer want to use our service? You can delete your account here. This action is not reversible. All information related to this account will be deleted permanently.",
         "button": "Yes, delete my account"
+      },
+      "deleteDialog": {
+        "title": "Delete account",
+        "description": "Are you sure you want to delete your account? All of your data will be permanently removed. This action cannot be undone.",
+        "confirm": "Delete",
+        "deleting": "Deleting...",
+        "cancel": "Cancel"
       }
     },
     "jobStream": {

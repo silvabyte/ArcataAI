@@ -7,6 +7,9 @@
  * import '@arcata/components/globals.css';
  */
 
+export { createDefaultResumeTemplate } from "./components/blocks/editor-00/defaultTemplate";
+/** Editor */
+export { Editor } from "./components/blocks/editor-00/editor";
 /** Kanban */
 export * from "./components/ui/shadcn-io/kanban";
 /** Alerts */

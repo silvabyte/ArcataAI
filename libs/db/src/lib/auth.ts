@@ -154,3 +154,41 @@ export async function getUserProfile(): Promise<{
 
   return { data, error };
 }
+
+/**
+ * Deletes the current user's account.
+ * This will:
+ * 1. Delete the user's profile from the profiles table (cascade should handle related data)
+ * 2. Sign out the user
+ *
+ * Note: Full user deletion from auth.users requires a server-side admin API call
+ * or a Supabase Edge Function. This function handles the client-side cleanup.
+ */
+export async function deleteAccount(): Promise<{ error: Error | null }> {
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) {
+    return { error: new Error("User not authenticated") };
+  }
+
+  // Delete profile data (this will cascade to related tables via foreign keys)
+  const { error: profileError } = await client
+    .from("profiles")
+    .delete()
+    .eq("id", user.id);
+
+  if (profileError) {
+    return { error: profileError };
+  }
+
+  // Sign out the user
+  const { error: signOutError } = await client.auth.signOut();
+
+  if (signOutError) {
+    return { error: signOutError };
+  }
+
+  return { error: null };
+}

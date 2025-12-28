@@ -13,6 +13,12 @@ export type JobStream = Database["public"]["Tables"]["job_stream"]["Row"];
 export type ApplicationAnswer =
   Database["public"]["Tables"]["application_answers"]["Row"];
 
+// === Enum Types ===
+
+/** Job profile status: draft (work in progress) or live (available for applications) */
+export type JobProfileStatus =
+  Database["public"]["Enums"]["job_profile_status"];
+
 // === Joined Types (for queries with relations) ===
 
 /** Job with nested company data */
