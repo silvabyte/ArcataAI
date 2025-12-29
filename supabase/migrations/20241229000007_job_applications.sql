@@ -1,12 +1,13 @@
 -- Migration: Create job_applications table
 -- Description: Core table for tracking job applications on the kanban board
--- Dependencies: Migrations 1-4 (profiles, companies_and_jobs, job_profiles, application_statuses)
+-- Dependencies: 20241229000002_profiles.sql, 20241229000004_jobs.sql, 
+--               20241229000005_job_profiles.sql, 20241229000006_application_statuses.sql
 
 -- ============================================================================
 -- TABLE: job_applications
 -- ============================================================================
--- The main table for tracking job applications through the kanban workflow
--- Links users, jobs, profiles, and status tracking together
+-- The main table for tracking job applications through the kanban workflow.
+-- Links users, jobs, profiles, and status tracking together.
 
 CREATE TABLE job_applications (
   application_id SERIAL PRIMARY KEY,
@@ -69,13 +70,8 @@ CREATE POLICY job_applications_delete_own
 -- INDEXES
 -- ============================================================================
 
--- Profile lookup index for efficient filtering by user
 CREATE INDEX job_applications_profile_id_idx ON job_applications(profile_id);
-
--- Status lookup index for kanban column queries
 CREATE INDEX job_applications_status_id_idx ON job_applications(status_id);
-
--- Job lookup index for finding applications by job
 CREATE INDEX job_applications_job_id_idx ON job_applications(job_id);
 
 -- ============================================================================

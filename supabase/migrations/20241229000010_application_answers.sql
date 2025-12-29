@@ -1,13 +1,13 @@
--- Migration 8: Create application_answers table
--- Created: 2024-12-20
--- Description: Stores historical Q&A data from previous applications for auto-fill feature
--- Dependencies: Migrations 1, 3, 5 (profiles, job_profiles, job_applications)
+-- Migration: Create application_answers table
+-- Description: Historical Q&A data from applications for auto-fill feature
+-- Dependencies: 20241229000002_profiles.sql, 20241229000005_job_profiles.sql, 
+--               20241229000007_job_applications.sql
 
 -- ============================================================================
 -- TABLE: application_answers
 -- ============================================================================
--- Stores user's answers to application questions for reuse and auto-fill
--- Tracks question similarity via hashing and usage statistics
+-- Stores user's answers to application questions for reuse and auto-fill.
+-- Tracks question similarity via hashing and usage statistics.
 
 CREATE TABLE application_answers (
   answer_id SERIAL PRIMARY KEY,
@@ -72,13 +72,8 @@ CREATE POLICY application_answers_delete_own
 -- INDEXES
 -- ============================================================================
 
--- Profile lookup index for efficient filtering by user
 CREATE INDEX application_answers_profile_id_idx ON application_answers(profile_id);
-
--- Question hash index for fast similarity matching
 CREATE INDEX application_answers_question_hash_idx ON application_answers(question_hash);
-
--- Job profile lookup index for filtering by profile type
 CREATE INDEX application_answers_job_profile_id_idx ON application_answers(job_profile_id);
 
 -- ============================================================================

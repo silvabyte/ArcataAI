@@ -1,12 +1,12 @@
--- Migration: Create application_statuses table with default seeding
+-- Migration: Create application_statuses table
 -- Description: Customizable kanban columns for job application tracking
--- Dependencies: Migration 1 (profiles table, update_updated_at_column function)
+-- Dependencies: 20241229000002_profiles.sql, 20241229000001_functions.sql (seed_default_statuses)
 
 -- ============================================================================
 -- TABLE: application_statuses
 -- ============================================================================
--- Customizable status columns for the kanban board
--- Each user gets their own set of statuses with default values seeded on signup
+-- Customizable status columns for the kanban board.
+-- Each user gets their own set of statuses with default values seeded on signup.
 
 CREATE TABLE application_statuses (
   status_id SERIAL PRIMARY KEY,
@@ -30,33 +30,9 @@ CREATE TRIGGER update_application_statuses_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
--- TRIGGER FUNCTION: seed_default_statuses
--- ============================================================================
--- Automatically creates default status columns when a new profile is created
--- Runs with SECURITY DEFINER to bypass RLS policies
-
-CREATE OR REPLACE FUNCTION seed_default_statuses()
-RETURNS TRIGGER
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  INSERT INTO public.application_statuses (profile_id, name, color, column_order, is_default)
-  VALUES
-    (NEW.id, 'Saved', '#6B7280', 0, TRUE),
-    (NEW.id, 'Applied', '#3B82F6', 1, FALSE),
-    (NEW.id, 'Phone Screen', '#8B5CF6', 2, FALSE),
-    (NEW.id, 'Interview', '#F59E0B', 3, FALSE),
-    (NEW.id, 'Offer', '#10B981', 4, FALSE),
-    (NEW.id, 'Rejected', '#EF4444', 5, FALSE),
-    (NEW.id, 'Withdrawn', '#9CA3AF', 6, FALSE);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- ============================================================================
 -- TRIGGER: Seed statuses on profile creation
 -- ============================================================================
+-- Uses seed_default_statuses() function defined in 20241229000001_functions.sql
 
 CREATE TRIGGER on_profile_created_seed_statuses
   AFTER INSERT ON profiles
@@ -102,7 +78,6 @@ CREATE POLICY application_statuses_delete_own
 -- INDEXES
 -- ============================================================================
 
--- Profile lookup index for efficient filtering
 CREATE INDEX application_statuses_profile_id_idx ON application_statuses(profile_id);
 
 -- ============================================================================
@@ -116,4 +91,3 @@ COMMENT ON COLUMN application_statuses.name IS 'Display name of the status (e.g.
 COMMENT ON COLUMN application_statuses.color IS 'Hex color code for UI display';
 COMMENT ON COLUMN application_statuses.column_order IS 'Order of columns in the kanban board (0-based)';
 COMMENT ON COLUMN application_statuses.is_default IS 'Whether this is the default status for new applications';
-COMMENT ON FUNCTION seed_default_statuses() IS 'Auto-seeds default status columns for new profiles (SECURITY DEFINER)';

@@ -156,15 +156,20 @@ export type Database = {
           company_name: string | null;
           company_phone: string | null;
           company_sic: string | null;
+          company_size: string | null;
           company_state: string | null;
           company_zip: string | null;
           created_at: string | null;
+          description: string | null;
           employee_count_max: number | null;
           employee_count_min: number | null;
+          headquarters: string | null;
+          industry: string | null;
           job_board_status: string | null;
           primary_industry: string | null;
           revenue_max: number | null;
           revenue_min: number | null;
+          source_company_id: number | null;
           updated_at: string | null;
         };
         Insert: {
@@ -180,15 +185,20 @@ export type Database = {
           company_name?: string | null;
           company_phone?: string | null;
           company_sic?: string | null;
+          company_size?: string | null;
           company_state?: string | null;
           company_zip?: string | null;
           created_at?: string | null;
+          description?: string | null;
           employee_count_max?: number | null;
           employee_count_min?: number | null;
+          headquarters?: string | null;
+          industry?: string | null;
           job_board_status?: string | null;
           primary_industry?: string | null;
           revenue_max?: number | null;
           revenue_min?: number | null;
+          source_company_id?: number | null;
           updated_at?: string | null;
         };
         Update: {
@@ -204,15 +214,20 @@ export type Database = {
           company_name?: string | null;
           company_phone?: string | null;
           company_sic?: string | null;
+          company_size?: string | null;
           company_state?: string | null;
           company_zip?: string | null;
           created_at?: string | null;
+          description?: string | null;
           employee_count_max?: number | null;
           employee_count_min?: number | null;
+          headquarters?: string | null;
+          industry?: string | null;
           job_board_status?: string | null;
           primary_industry?: string | null;
           revenue_max?: number | null;
           revenue_min?: number | null;
+          source_company_id?: number | null;
           updated_at?: string | null;
         };
         Relationships: [];
@@ -382,6 +397,7 @@ export type Database = {
       };
       job_stream: {
         Row: {
+          application_id: number | null;
           best_match_job_profile_id: number | null;
           best_match_score: number | null;
           created_at: string | null;
@@ -394,6 +410,7 @@ export type Database = {
           updated_at: string | null;
         };
         Insert: {
+          application_id?: number | null;
           best_match_job_profile_id?: number | null;
           best_match_score?: number | null;
           created_at?: string | null;
@@ -406,6 +423,7 @@ export type Database = {
           updated_at?: string | null;
         };
         Update: {
+          application_id?: number | null;
           best_match_job_profile_id?: number | null;
           best_match_score?: number | null;
           created_at?: string | null;
@@ -418,6 +436,13 @@ export type Database = {
           updated_at?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "job_stream_application_id_fkey";
+            columns: ["application_id"];
+            isOneToOne: false;
+            referencedRelation: "job_applications";
+            referencedColumns: ["application_id"];
+          },
           {
             foreignKeyName: "job_stream_best_match_job_profile_id_fkey";
             columns: ["best_match_job_profile_id"];
@@ -443,83 +468,83 @@ export type Database = {
       };
       jobs: {
         Row: {
-          application_email: string | null;
           application_url: string | null;
           benefits: string[] | null;
           category: string | null;
           closing_date: string | null;
           company_id: number;
-          contact_email: string | null;
-          contact_phone: string | null;
+          completion_state: string | null;
           created_at: string | null;
           description: string | null;
           education_level: string | null;
           experience_level: string | null;
+          is_remote: boolean | null;
           job_id: number;
           job_type: string | null;
           location: string | null;
           posted_date: string | null;
           preferred_qualifications: string[] | null;
           qualifications: string[] | null;
-          raw_html_object_id: string | null;
+          raw_attributes: Json | null;
           responsibilities: string[] | null;
-          salary_range: string | null;
+          salary_currency: string | null;
+          salary_max: number | null;
+          salary_min: number | null;
           source_url: string | null;
-          status: string | null;
           title: string;
           updated_at: string | null;
         };
         Insert: {
-          application_email?: string | null;
           application_url?: string | null;
           benefits?: string[] | null;
           category?: string | null;
           closing_date?: string | null;
           company_id: number;
-          contact_email?: string | null;
-          contact_phone?: string | null;
+          completion_state?: string | null;
           created_at?: string | null;
           description?: string | null;
           education_level?: string | null;
           experience_level?: string | null;
+          is_remote?: boolean | null;
           job_id?: number;
           job_type?: string | null;
           location?: string | null;
           posted_date?: string | null;
           preferred_qualifications?: string[] | null;
           qualifications?: string[] | null;
-          raw_html_object_id?: string | null;
+          raw_attributes?: Json | null;
           responsibilities?: string[] | null;
-          salary_range?: string | null;
+          salary_currency?: string | null;
+          salary_max?: number | null;
+          salary_min?: number | null;
           source_url?: string | null;
-          status?: string | null;
           title: string;
           updated_at?: string | null;
         };
         Update: {
-          application_email?: string | null;
           application_url?: string | null;
           benefits?: string[] | null;
           category?: string | null;
           closing_date?: string | null;
           company_id?: number;
-          contact_email?: string | null;
-          contact_phone?: string | null;
+          completion_state?: string | null;
           created_at?: string | null;
           description?: string | null;
           education_level?: string | null;
           experience_level?: string | null;
+          is_remote?: boolean | null;
           job_id?: number;
           job_type?: string | null;
           location?: string | null;
           posted_date?: string | null;
           preferred_qualifications?: string[] | null;
           qualifications?: string[] | null;
-          raw_html_object_id?: string | null;
+          raw_attributes?: Json | null;
           responsibilities?: string[] | null;
-          salary_range?: string | null;
+          salary_currency?: string | null;
+          salary_max?: number | null;
+          salary_min?: number | null;
           source_url?: string | null;
-          status?: string | null;
           title?: string;
           updated_at?: string | null;
         };

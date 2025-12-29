@@ -1,22 +1,19 @@
--- Migration 3: Create job_profiles table
--- Created: 2024-12-20
--- Description: Creates job_profiles table for storing user's application profiles with versioned JSONB data
--- Dependencies: Migration 1 (profiles table, update_updated_at_column function)
-
--- Ensure the update_updated_at_column trigger function exists (idempotent)
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Migration: Create job_profiles table with status enum
+-- Description: User application profiles with versioned resume/cover letter data
+-- Dependencies: 20241229000002_profiles.sql
 
 -- ============================================================================
--- JOB_PROFILES TABLE
+-- ENUM: job_profile_status
+-- ============================================================================
+-- Status for job profiles: draft (work in progress) or live (available for use)
+
+CREATE TYPE job_profile_status AS ENUM ('draft', 'live');
+
+-- ============================================================================
+-- TABLE: job_profiles
 -- ============================================================================
 -- Stores user application profiles (Frontend Dev, Backend Dev, etc.)
--- Uses versioned JSONB envelopes for resume and cover letter data
+-- Uses versioned JSONB envelopes for resume and cover letter data.
 
 CREATE TABLE job_profiles (
   job_profile_id SERIAL PRIMARY KEY,
@@ -24,10 +21,19 @@ CREATE TABLE job_profiles (
   name TEXT NOT NULL,
   resume_data JSONB,
   cover_letter_data JSONB,
-  is_active BOOLEAN DEFAULT TRUE,
+  status job_profile_status NOT NULL DEFAULT 'draft',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ============================================================================
+-- TRIGGER: Auto-update updated_at on job_profiles
+-- ============================================================================
+
+CREATE TRIGGER job_profiles_update_updated_at
+  BEFORE UPDATE ON job_profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
 -- ROW LEVEL SECURITY (RLS)
@@ -65,21 +71,11 @@ CREATE POLICY job_profiles_delete_own
   USING (auth.uid() = profile_id);
 
 -- ============================================================================
--- TRIGGERS
--- ============================================================================
-
--- Trigger: Auto-update updated_at on job_profiles
-CREATE TRIGGER job_profiles_update_updated_at
-  BEFORE UPDATE ON job_profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-
--- ============================================================================
 -- INDEXES
 -- ============================================================================
 
--- Index: profile_id foreign key for fast lookups
 CREATE INDEX job_profiles_profile_id_idx ON job_profiles(profile_id);
+CREATE INDEX job_profiles_status_idx ON job_profiles(status);
 
 -- ============================================================================
 -- COMMENTS
@@ -91,4 +87,4 @@ COMMENT ON COLUMN job_profiles.profile_id IS 'Foreign key to profiles.id';
 COMMENT ON COLUMN job_profiles.name IS 'Profile name (e.g., "Frontend Developer", "Backend Engineer")';
 COMMENT ON COLUMN job_profiles.resume_data IS 'Versioned JSONB envelope: {"version": 1, "data": {...}}';
 COMMENT ON COLUMN job_profiles.cover_letter_data IS 'Versioned JSONB envelope: {"version": 1, "data": {...}}';
-COMMENT ON COLUMN job_profiles.is_active IS 'Whether this profile is currently active';
+COMMENT ON COLUMN job_profiles.status IS 'Profile status: draft (work in progress) or live (available for use in applications)';

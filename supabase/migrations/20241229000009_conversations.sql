@@ -1,12 +1,12 @@
 -- Migration: Create conversations table
 -- Description: Multi-channel communication tracking (email, meetings, phone, chat)
--- Dependencies: Migrations 1-5 (profiles, job_applications)
+-- Dependencies: 20241229000002_profiles.sql, 20241229000007_job_applications.sql
 
 -- ============================================================================
 -- TABLE: conversations
 -- ============================================================================
--- Tracks all communication interactions across multiple channels
--- Links to specific job applications and user profiles
+-- Tracks all communication interactions across multiple channels.
+-- Links to specific job applications and user profiles.
 
 CREATE TABLE conversations (
   conversation_id SERIAL PRIMARY KEY,
@@ -69,10 +69,7 @@ CREATE POLICY conversations_delete_own
 -- INDEXES
 -- ============================================================================
 
--- Profile lookup index for efficient filtering by user
 CREATE INDEX conversations_profile_id_idx ON conversations(profile_id);
-
--- Application lookup index for finding conversations by job application
 CREATE INDEX conversations_application_id_idx ON conversations(application_id);
 
 -- ============================================================================
