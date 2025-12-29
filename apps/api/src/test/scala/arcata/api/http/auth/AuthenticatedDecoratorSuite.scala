@@ -2,25 +2,19 @@ package arcata.api.http.auth
 
 import cask.model.{Request, Response}
 import cask.router.Result
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import io.undertow.server.HttpServerExchange
-import io.undertow.util.{HeaderMap, HttpString}
+import io.undertow.util.HttpString
 import utest.*
 
 import java.io.ByteArrayOutputStream
-import java.util.Date
 
 /**
  * Tests for the authenticated decorator.
  *
- * Note: JWT validation requires SUPABASE_JWT_SECRET to be set. API key validation requires
- * API_KEYS to be set.
+ * Note: JWT validation tests are in JwtValidatorSuite with mocked EC keys. These tests focus on
+ * decorator behavior and API key authentication which can be tested without external dependencies.
  */
 object AuthenticatedDecoratorSuite extends TestSuite:
-  // Test secret - must match what's in SUPABASE_JWT_SECRET for tests to pass
-  private val testSecret =
-    sys.env.getOrElse("SUPABASE_JWT_SECRET", "test-jwt-secret-for-unit-tests")
 
   // Create a mock request with specified headers using Undertow's exchange
   private def mockRequest(headers: Map[String, String]): Request = {
@@ -41,30 +35,11 @@ object AuthenticatedDecoratorSuite extends TestSuite:
     out.toString("UTF-8")
   }
 
-  // Helper to create a valid JWT
-  private def createToken(
-      sub: String = "user-123",
-      email: Option[String] = Some("test@example.com")
-  ): String = {
-    val algorithm = Algorithm.HMAC256(testSecret)
-    val now = System.currentTimeMillis()
-
-    val builder = JWT
-      .create()
-      .withSubject(sub)
-      .withClaim("role", "authenticated")
-      .withAudience("authenticated")
-      .withIssuedAt(new Date(now))
-      .withExpiresAt(new Date(now + 3600000))
-
-    email.foreach(e => builder.withClaim("email", e))
-    builder.sign(algorithm)
-  }
-
   val tests = Tests {
     test("authenticated decorator") {
-      test("returns 401 when no auth headers present") {
-        val decorator = new authenticated()
+      test("returns 401 when no auth headers present (API key auth)") {
+        // Use API key auth type to avoid triggering JWKS provider
+        val decorator = new authenticated(Vector(AuthType.ApiKey))
         val request = mockRequest(Map.empty)
 
         // Create a simple delegate that returns success
@@ -78,16 +53,15 @@ object AuthenticatedDecoratorSuite extends TestSuite:
             assert(response.statusCode == 401)
             assert(responseBody(response).contains("error"))
           case _ =>
-            throw new java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
+            throw java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
       }
 
-      test("returns 401 for invalid JWT") {
-        // Skip if JWT secret not configured (can't validate tokens)
-        if sys.env.get("SUPABASE_JWT_SECRET").isEmpty then
-          println("Skipping - SUPABASE_JWT_SECRET not set")
+      test("returns 401 for invalid JWT format") {
+        // JWT tests require SUPABASE_URL to be set (for JWKS provider)
+        if sys.env.get("SUPABASE_URL").isEmpty then println("Skipping - SUPABASE_URL not set")
         else {
           val decorator = new authenticated()
-          val request = mockRequest(Map("Authorization" -> "Bearer invalid-token"))
+          val request = mockRequest(Map("Authorization" -> "Bearer not-a-valid-jwt"))
 
           val delegate: decorator.Delegate = (_, _) =>
             Result.Success(Response("ok", 200, Seq.empty))
@@ -99,43 +73,28 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(response.statusCode == 401)
               assert(responseBody(response).contains("Invalid token"))
             case _ =>
-              throw new java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
+              throw java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
         }
       }
 
-      test("passes AuthenticatedRequest to delegate for valid JWT") {
-        // Skip if JWT secret not configured
-        if sys.env.get("SUPABASE_JWT_SECRET").isEmpty then
-          println("Skipping - SUPABASE_JWT_SECRET not set")
+      test("returns 401 when Authorization header missing Bearer prefix") {
+        // JWT tests require SUPABASE_URL to be set (for JWKS provider)
+        if sys.env.get("SUPABASE_URL").isEmpty then println("Skipping - SUPABASE_URL not set")
         else {
-          // Only run if we have the right secret configured
-          val jwtSecretMatches =
-            sys.env.get("SUPABASE_JWT_SECRET").contains(testSecret)
+          val decorator = new authenticated()
+          val request = mockRequest(Map("Authorization" -> "some-token"))
 
-          if !jwtSecretMatches then println("Skipping - JWT secret mismatch")
-          else {
-            val decorator = new authenticated()
-            val token = createToken(sub = "test-user-456")
-            val request = mockRequest(Map("Authorization" -> s"Bearer $token"))
+          val delegate: decorator.Delegate = (_, _) =>
+            Result.Success(Response("ok", 200, Seq.empty))
 
-            var capturedAuthReq: Option[AuthenticatedRequest] = None // scalafix:ok DisableSyntax.var
+          val result = decorator.wrapFunction(request, delegate)
 
-            val delegate: decorator.Delegate = (_, args) => {
-              capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
-              Result.Success(Response("ok", 200, Seq.empty))
-            }
-
-            val result = decorator.wrapFunction(request, delegate)
-
-            result match
-              case Result.Success(response) =>
-                assert(response.statusCode == 200)
-                assert(capturedAuthReq.isDefined)
-                assert(capturedAuthReq.get.profileId == "test-user-456")
-                assert(capturedAuthReq.get.authType == AuthType.JWT)
-              case _ =>
-                throw new java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
-          }
+          result match
+            case Result.Success(response) =>
+              assert(response.statusCode == 401)
+              assert(responseBody(response).contains("Bearer"))
+            case _ =>
+              throw java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
         }
       }
     }
@@ -154,7 +113,24 @@ object AuthenticatedDecoratorSuite extends TestSuite:
           case Result.Success(response) =>
             assert(response.statusCode == 401)
           case _ =>
-            throw new java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
+            throw java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
+      }
+
+      test("returns 401 when X-API-Key header missing") {
+        val decorator = new authenticated(Vector(AuthType.ApiKey))
+        val request = mockRequest(Map.empty)
+
+        val delegate: decorator.Delegate = (_, _) =>
+          Result.Success(Response("ok", 200, Seq.empty))
+
+        val result = decorator.wrapFunction(request, delegate)
+
+        result match
+          case Result.Success(response) =>
+            assert(response.statusCode == 401)
+            assert(responseBody(response).contains("X-API-Key"))
+          case _ =>
+            throw java.lang.AssertionError("Expected Result.Success with 401") // scalafix:ok DisableSyntax.throw
       }
 
       test("accepts valid API key when ApiKey auth allowed") {
@@ -180,51 +156,20 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(response.statusCode == 200)
               assert(capturedAuthReq.isDefined)
               assert(capturedAuthReq.get.authType == AuthType.ApiKey)
+              assert(capturedAuthReq.get.profileId == "service")
             case _ =>
-              throw new java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
+              throw java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
         }
       }
     }
 
     test("authenticated with multiple auth types") {
-      test("tries JWT first when both allowed") {
-        // Skip if JWT secret not configured
-        if sys.env.get("SUPABASE_JWT_SECRET").isEmpty then
-          println("Skipping - SUPABASE_JWT_SECRET not set")
-        else {
-          // JWT secret must match for this test
-          val jwtSecretMatches =
-            sys.env.get("SUPABASE_JWT_SECRET").contains(testSecret)
-
-          if !jwtSecretMatches then println("Skipping - JWT secret mismatch")
-          else {
-            val decorator = new authenticated(Vector(AuthType.JWT, AuthType.ApiKey))
-            val token = createToken(sub = "jwt-user")
-            val request = mockRequest(Map("Authorization" -> s"Bearer $token"))
-
-            var capturedAuthReq: Option[AuthenticatedRequest] = None // scalafix:ok DisableSyntax.var
-
-            val delegate: decorator.Delegate = (_, args) => {
-              capturedAuthReq = args.get("authReq").map(_.asInstanceOf[AuthenticatedRequest])
-              Result.Success(Response("ok", 200, Seq.empty))
-            }
-
-            val result = decorator.wrapFunction(request, delegate)
-
-            result match
-              case Result.Success(response) =>
-                assert(response.statusCode == 200)
-                assert(capturedAuthReq.get.authType == AuthType.JWT)
-              case _ =>
-                throw new java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
-          }
-        }
-      }
-
-      test("falls back to API key when JWT missing but ApiKey present") {
+      test("falls back to API key when JWT fails but ApiKey present") {
         val apiKeysConfigured = sys.env.get("API_KEYS").exists(_.nonEmpty)
+        val supabaseConfigured = sys.env.get("SUPABASE_URL").isDefined
 
         if !apiKeysConfigured then println("Skipping - API_KEYS not set")
+        else if !supabaseConfigured then println("Skipping - SUPABASE_URL not set")
         else {
           val validKey = AuthConfig.validApiKeys.head
           val decorator = new authenticated(Vector(AuthType.JWT, AuthType.ApiKey))
@@ -244,7 +189,7 @@ object AuthenticatedDecoratorSuite extends TestSuite:
               assert(response.statusCode == 200)
               assert(capturedAuthReq.get.authType == AuthType.ApiKey)
             case _ =>
-              throw new java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
+              throw java.lang.AssertionError("Expected successful delegation") // scalafix:ok DisableSyntax.throw
         }
       }
     }
@@ -274,6 +219,11 @@ object AuthenticatedDecoratorSuite extends TestSuite:
       test("Failure can have custom status code") {
         val result = AuthResult.Failure("forbidden", 403)
         assert(result.statusCode == 403)
+      }
+
+      test("Failure can have 503 status code for service unavailable") {
+        val result = AuthResult.Failure("service unavailable", 503)
+        assert(result.statusCode == 503)
       }
     }
   }

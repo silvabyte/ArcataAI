@@ -13,9 +13,7 @@ object StreamLoaderSuite extends TestSuite:
   ) extends SupabaseClient(
         SupabaseConfig(
           url = "http://test",
-          anonKey = "test",
-          serviceRoleKey = "test",
-          jwtSecret = "test"
+          serviceRoleKey = "test"
         )
       ):
     override def insertJobStreamEntry(entry: JobStreamEntry): Option[JobStreamEntry] =

@@ -14,9 +14,7 @@ object JobLoaderSuite extends TestSuite:
   ) extends SupabaseClient(
         SupabaseConfig(
           url = "http://test",
-          anonKey = "test",
-          serviceRoleKey = "test",
-          jwtSecret = "test"
+          serviceRoleKey = "test"
         )
       ):
     override def findJobBySourceUrl(sourceUrl: String): Option[Job] = findJobResult

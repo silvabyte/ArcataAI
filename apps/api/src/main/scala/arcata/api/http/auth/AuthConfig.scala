@@ -10,30 +10,30 @@ import arcata.api.config.ConfigError
  * use the decorators.
  *
  * Environment variables:
- *   - SUPABASE_JWT_SECRET: Required for JWT validation
+ *   - SUPABASE_URL: Required - used to derive JWKS endpoint for JWT validation
  *   - API_KEYS: Optional comma-separated list of valid API keys for service auth
  */
 object AuthConfig:
 
-  /** JWT validator for user authentication via Supabase tokens. */
-  lazy val jwtValidator: JwtValidator = {
-    // scalafix:ok DisableSyntax.throw - Intentional fail-fast at startup for required config
-    val secret = sys.env.getOrElse(
-      "SUPABASE_JWT_SECRET",
-      throw ConfigError(
-        "Required environment variable 'SUPABASE_JWT_SECRET' is not set"
-      ) // scalafix:ok DisableSyntax.throw
+  /** JWKS provider for fetching Supabase public keys. */
+  private lazy val jwksProvider: JwksProvider = {
+    val supabaseUrl = sys.env.getOrElse(
+      "SUPABASE_URL",
+      // scalafix:ok DisableSyntax.throw - Intentional fail-fast at startup for required config
+      throw ConfigError("Required environment variable 'SUPABASE_URL' is not set")
     )
-    JwtValidator(secret)
+    JwksProvider(JwksProvider.jwksUrlFor(supabaseUrl))
   }
 
+  /** JWT validator for user authentication via Supabase tokens. */
+  lazy val jwtValidator: JwtValidator = JwtValidator(jwksProvider)
+
   /** Valid API keys for service-to-service authentication. */
-  lazy val validApiKeys: Set[String] = {
+  lazy val validApiKeys: Set[String] =
     sys.env
       .get("API_KEYS")
       .map(_.split(",").map(_.trim).filter(_.nonEmpty).toSet)
       .getOrElse(Set.empty)
-  }
 
   /** Check if API key authentication is configured. */
   def apiKeysConfigured: Boolean = validApiKeys.nonEmpty

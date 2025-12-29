@@ -12,13 +12,15 @@ import upickle.default.*
  * Client for interacting with Supabase REST API.
  *
  * Uses the PostgREST API exposed by Supabase to perform CRUD operations.
+ * Uses the new Supabase secret key format (sb_secret_...).
  */
 class SupabaseClient(config: SupabaseConfig) extends Logging:
   private val baseUrl = s"${config.url}/rest/v1"
 
+  // New secret keys: put the secret key in apikey header
+  // The Supabase API Gateway handles minting a short-lived JWT internally
   private def headers: Map[String, String] = Map(
-    "apikey" -> config.anonKey,
-    "Authorization" -> s"Bearer ${config.serviceRoleKey}",
+    "apikey" -> config.serviceRoleKey,
     "Content-Type" -> "application/json",
     "Prefer" -> "return=representation"
   )

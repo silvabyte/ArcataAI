@@ -80,6 +80,6 @@ class authenticated(
               )
             )
 
-          case JwtValidationResult.Invalid(reason) =>
-            AuthResult.Failure(s"Invalid token: $reason")
+          case JwtValidationResult.Invalid(reason, statusCode) =>
+            AuthResult.Failure(s"Invalid token: $reason", statusCode)
   }

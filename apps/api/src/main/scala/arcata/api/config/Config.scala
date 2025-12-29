@@ -22,12 +22,10 @@ final case class ServerConfig(
     corsOrigins: List[String]
 )
 
-/** Supabase configuration for database access and JWT validation. */
+/** Supabase configuration for database access. JWT validation uses JWKS from the URL. */
 final case class SupabaseConfig(
     url: String,
-    anonKey: String,
-    serviceRoleKey: String,
-    jwtSecret: String
+    serviceRoleKey: String
 )
 
 /** Object storage configuration for s3.audetic.link service. */
@@ -79,7 +77,10 @@ object Config:
   private def loadServerConfig(): Either[ConfigError, ServerConfig] = {
     val host = getEnvOrDefault("API_HOST", "0.0.0.0")
     val portStr = getEnvOrDefault("API_PORT", "4203")
-    val corsOriginsStr = getEnvOrDefault("CORS_ORIGINS", "http://localhost:4201,http://localhost:4200")
+    val corsOriginsStr = getEnvOrDefault(
+      "CORS_ORIGINS",
+      "http://localhost:4201,http://localhost:4200,https://f6c0bn-pical.spa.godeploy.app"
+    )
     val corsOrigins = corsOriginsStr.split(",").map(_.trim).filter(_.nonEmpty).toList
 
     Try(portStr.toInt) match
@@ -91,14 +92,10 @@ object Config:
   private def loadSupabaseConfig(): Either[ConfigError, SupabaseConfig] = {
     for
       url <- getEnvRequired("SUPABASE_URL")
-      anonKey <- getEnvRequired("SUPABASE_ANON_KEY")
       serviceRoleKey <- getEnvRequired("SUPABASE_SERVICE_ROLE_KEY")
-      jwtSecret <- getEnvRequired("SUPABASE_JWT_SECRET")
     yield SupabaseConfig(
       url = url,
-      anonKey = anonKey,
-      serviceRoleKey = serviceRoleKey,
-      jwtSecret = jwtSecret
+      serviceRoleKey = serviceRoleKey
     )
   }
 

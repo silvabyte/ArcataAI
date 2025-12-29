@@ -14,9 +14,7 @@ object ApplicationLoaderSuite extends TestSuite:
   ) extends SupabaseClient(
         SupabaseConfig(
           url = "http://test",
-          anonKey = "test",
-          serviceRoleKey = "test",
-          jwtSecret = "test"
+          serviceRoleKey = "test"
         )
       ):
     override def getDefaultStatusId(profileId: String): Option[Long] = defaultStatusId
