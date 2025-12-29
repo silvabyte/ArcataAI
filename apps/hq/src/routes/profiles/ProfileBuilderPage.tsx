@@ -1,4 +1,4 @@
-import { Editor } from "@arcata/components";
+import { downloadResumePDF, Editor } from "@arcata/components";
 import { db, type JobProfile, type JobProfileStatus } from "@arcata/db";
 import { ArrowDownTrayIcon, ArrowLeftIcon } from "@heroicons/react/20/solid";
 import type { SerializedEditorState } from "lexical";
@@ -51,19 +51,24 @@ function getStatusLabel(status: JobProfileStatus): string {
 }
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+type DownloadStatus = "idle" | "generating" | "error";
 
 type ProfileHeaderProps = {
   profile: JobProfile;
   saveStatus: SaveStatus;
+  downloadStatus: DownloadStatus;
   onNameChange: (name: string) => void;
   onStatusToggle: () => void;
+  onDownload: () => void;
 };
 
 function ProfileHeader({
   profile,
   saveStatus,
+  downloadStatus,
   onNameChange,
   onStatusToggle,
+  onDownload,
 }: ProfileHeaderProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(profile.name);
@@ -142,14 +147,15 @@ function ProfileHeader({
 
         {/* Download button */}
         <button
-          className="inline-flex items-center gap-x-1.5 rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-sm hover:bg-gray-700"
-          onClick={() => {
-            // TODO: Implement download - see ArcataAI-9jy
-          }}
+          className="inline-flex items-center gap-x-1.5 rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-sm hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={downloadStatus === "generating"}
+          onClick={onDownload}
           type="button"
         >
           <ArrowDownTrayIcon className="-ml-0.5 size-4" />
-          <span className="hidden sm:inline">Download</span>
+          <span className="hidden sm:inline">
+            {downloadStatus === "generating" ? "Generating..." : "Download"}
+          </span>
         </button>
       </div>
     </header>
@@ -160,6 +166,7 @@ export function ProfileBuilderPage() {
   const { profile, error } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [downloadStatus, setDownloadStatus] = useState<DownloadStatus>("idle");
   const [currentProfile, setCurrentProfile] = useState<JobProfile | null>(
     profile
   );
@@ -205,6 +212,25 @@ export function ProfileBuilderPage() {
     } catch (err) {
       console.error("Failed to update status:", err);
       setSaveStatus("error");
+    }
+  }, [currentProfile]);
+
+  const handleDownload = useCallback(async () => {
+    if (!currentProfile?.resume_data) {
+      return;
+    }
+
+    setDownloadStatus("generating");
+    try {
+      const editorState =
+        currentProfile.resume_data as unknown as SerializedEditorState;
+      const filename = `${currentProfile.name.toLowerCase().replace(/\s+/g, "-")}-resume.pdf`;
+      await downloadResumePDF(editorState, filename);
+      setDownloadStatus("idle");
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+      setDownloadStatus("error");
+      setTimeout(() => setDownloadStatus("idle"), 3000);
     }
   }, [currentProfile]);
 
@@ -305,6 +331,8 @@ export function ProfileBuilderPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <ProfileHeader
+        downloadStatus={downloadStatus}
+        onDownload={handleDownload}
         onNameChange={handleNameChange}
         onStatusToggle={handleStatusToggle}
         profile={currentProfile}
