@@ -1,0 +1,16 @@
+{
+  "apps": [
+    {
+      "name": "ArcataAI Auth",
+      "source_dir": "dist/apps/auth",
+      "description": "Auth SPA for Arcata AI",
+      "enabled": true
+    },
+    {
+      "name": "ArcataAI HQ",
+      "source_dir": "dist/apps/hq",
+      "description": "HQ SPA for Arcata AI",
+      "enabled": true
+    }
+  ]
+}

@@ -10,12 +10,12 @@
 export { createDefaultResumeTemplate } from "./components/blocks/editor-00/defaultTemplate";
 /** Editor */
 export { Editor } from "./components/blocks/editor-00/editor";
+export type { ResumeData } from "./components/blocks/editor-00/pdf";
 /** PDF Export */
 export {
   downloadResumePDF,
   generateResumePDF,
 } from "./components/blocks/editor-00/pdf";
-export type { ResumeData } from "./components/blocks/editor-00/pdf";
 /** Kanban */
 export * from "./components/ui/shadcn-io/kanban";
 /** Alerts */
