@@ -9,7 +9,7 @@ object ObjectStorageClientSuite extends TestSuite:
    * In-memory implementation of ObjectStorageClient for testing.
    * Simulates the storage operations without making real HTTP calls.
    */
-  class InMemoryObjectStorageClient extends ObjectStorageClient("http://test", "test"):
+  class InMemoryObjectStorageClient extends ObjectStorageClient("http://test", "test", "test-key"):
     private val storage = mutable.Map[String, (Array[Byte], StoredObject)]()
 
     override def upload(

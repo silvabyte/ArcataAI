@@ -38,7 +38,7 @@ class JwksProvider(jwksUrl: String) extends Logging:
   logger.info(s"JwksProvider initialized with URL: $jwksUrl")
 
   /** Fetch keys and find the one matching the given kid. */
-  def getKey(kid: String): Either[JwksError, ECPublicKey] =
+  def getKey(kid: String): Either[JwksError, ECPublicKey] = {
     fetchKeys().flatMap { keys =>
       logger.debug(s"JWKS contains ${keys.size} keys: ${keys.map(_.kid).mkString(", ")}")
       keys.find(_.kid == kid) match
@@ -49,9 +49,10 @@ class JwksProvider(jwksUrl: String) extends Logging:
           logger.warn(s"Key with kid '$kid' not found in JWKS. Available kids: ${keys.map(_.kid).mkString(", ")}")
           Left(JwksError(s"Key with kid '$kid' not found in JWKS"))
     }
+  }
 
   /** Fetch all keys from the JWKS endpoint. */
-  def fetchKeys(): Either[JwksError, Seq[JwkKey]] =
+  def fetchKeys(): Either[JwksError, Seq[JwkKey]] = {
     logger.debug(s"Fetching JWKS from: $jwksUrl")
     Try(requests.get(jwksUrl, readTimeout = 5000, connectTimeout = 5000)) match
       case Success(response) if response.is2xx =>
@@ -69,9 +70,10 @@ class JwksProvider(jwksUrl: String) extends Logging:
       case Failure(e) =>
         logger.error(s"Failed to fetch JWKS: ${e.getMessage}", e)
         Left(JwksError(s"Failed to fetch JWKS: ${e.getMessage}", Some(e)))
+  }
 
   /** Convert a JWK to an ECPublicKey. */
-  private def parseEcPublicKey(jwk: JwkKey): Either[JwksError, ECPublicKey] =
+  private def parseEcPublicKey(jwk: JwkKey): Either[JwksError, ECPublicKey] = {
     Try {
       require(jwk.kty == "EC", s"Expected kty=EC, got ${jwk.kty}")
       require(jwk.crv == "P-256", s"Expected crv=P-256, got ${jwk.crv}")
@@ -95,7 +97,8 @@ class JwksProvider(jwksUrl: String) extends Logging:
       KeyFactory.getInstance("EC").generatePublic(spec).asInstanceOf[ECPublicKey]
     } match
       case Success(key) => Right(key)
-      case Failure(e)   => Left(JwksError(s"Failed to parse EC key: ${e.getMessage}", Some(e)))
+      case Failure(e) => Left(JwksError(s"Failed to parse EC key: ${e.getMessage}", Some(e)))
+  }
 
 object JwksProvider:
   def apply(jwksUrl: String): JwksProvider = new JwksProvider(jwksUrl)

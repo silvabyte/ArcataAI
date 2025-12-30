@@ -51,12 +51,14 @@ object StorageError {
  */
 class ObjectStorageClient(
     baseUrl: String,
-    tenantId: String
+    tenantId: String,
+    apiKey: String
 ) extends Logging {
 
   private def tenantHeaders(userId: String): Map[String, String] = Map(
     "x-tenant-id" -> tenantId,
-    "x-user-id" -> userId
+    "x-user-id" -> userId,
+    "x-api-key" -> apiKey
   )
 
   /**
@@ -256,6 +258,6 @@ object ObjectStorageClient {
    * @param tenantId
    *   Tenant ID (e.g., "arcata")
    */
-  def apply(baseUrl: String, tenantId: String): ObjectStorageClient =
-    new ObjectStorageClient(baseUrl, tenantId)
+  def apply(baseUrl: String, tenantId: String, apiKey: String): ObjectStorageClient =
+    new ObjectStorageClient(baseUrl, tenantId, apiKey)
 }

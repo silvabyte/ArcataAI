@@ -31,7 +31,8 @@ final case class SupabaseConfig(
 /** Object storage configuration for s3.audetic.link service. */
 final case class ObjectStorageConfig(
     baseUrl: String,
-    tenantId: String
+    tenantId: String,
+    apiKey: String
 )
 
 /** AI provider configuration for job parsing and company enrichment. */
@@ -104,7 +105,8 @@ object Config:
       ObjectStorageConfig(
         baseUrl = getEnvOrDefault("OBJECT_STORAGE_URL", "https://s3.audetic.link/api/v1"),
         // this app does not have multi-tenancy, so just provide a fixed tenant here
-        tenantId = getEnvOrDefault("OBJECT_STORAGE_TENANT_ID", "arcata-ai")
+        tenantId = getEnvOrDefault("OBJECT_STORAGE_TENANT_ID", "arcata-ai"),
+        apiKey = getEnvOrDefault("OBJECT_STORAGE_API_KEY", "")
       )
     )
   }

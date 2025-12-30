@@ -48,7 +48,7 @@ final class JwtValidator(jwksProvider: JwksProvider) extends Logging:
    * @return
    *   Validation result with profile ID or error reason
    */
-  def validate(token: String): JwtValidationResult =
+  def validate(token: String): JwtValidationResult = {
     logger.debug(s"Validating JWT token (length: ${token.length})")
 
     // First, decode without verification to get the kid
@@ -71,8 +71,9 @@ final class JwtValidator(jwksProvider: JwksProvider) extends Logging:
           case None =>
             logger.warn("JWT missing algorithm header")
             JwtValidationResult.Invalid("Token missing algorithm header")
+  }
 
-  private def validateWithKey(token: String, kid: Option[String]): JwtValidationResult =
+  private def validateWithKey(token: String, kid: Option[String]): JwtValidationResult = {
     kid match
       case None =>
         logger.warn("JWT missing kid header")
@@ -97,8 +98,9 @@ final class JwtValidator(jwksProvider: JwksProvider) extends Logging:
           case Right(publicKey) =>
             logger.debug(s"Got public key for kid: $keyId, verifying signature...")
             verifySignature(token, publicKey)
+  }
 
-  private def verifySignature(token: String, publicKey: ECPublicKey): JwtValidationResult =
+  private def verifySignature(token: String, publicKey: ECPublicKey): JwtValidationResult = {
     Try {
       // scalafix:off DisableSyntax.null
       val algorithm = Algorithm.ECDSA256(publicKey, null) // null = no private key (verify only)
@@ -125,6 +127,7 @@ final class JwtValidator(jwksProvider: JwksProvider) extends Logging:
       case Failure(e) =>
         logger.error(s"Unexpected error during JWT verification: ${e.getMessage}", e)
         JwtValidationResult.Invalid(s"Unexpected error: ${e.getMessage}")
+  }
 
   /**
    * Validate a token from an Authorization header value.
@@ -134,10 +137,11 @@ final class JwtValidator(jwksProvider: JwksProvider) extends Logging:
    * @return
    *   Validation result
    */
-  def validateAuthHeader(authHeader: String): JwtValidationResult =
+  def validateAuthHeader(authHeader: String): JwtValidationResult = {
     val bearerPrefix = "Bearer "
     if authHeader.startsWith(bearerPrefix) then validate(authHeader.drop(bearerPrefix.length))
     else JwtValidationResult.Invalid("Authorization header must start with 'Bearer '")
+  }
 
 object JwtValidator:
   def apply(jwksProvider: JwksProvider): JwtValidator = new JwtValidator(jwksProvider)

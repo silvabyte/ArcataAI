@@ -19,8 +19,8 @@ object AuthConfig:
   private lazy val jwksProvider: JwksProvider = {
     val supabaseUrl = sys.env.getOrElse(
       "SUPABASE_URL",
-      // scalafix:ok DisableSyntax.throw - Intentional fail-fast at startup for required config
-      throw ConfigError("Required environment variable 'SUPABASE_URL' is not set")
+      throw ConfigError("Required environment variable 'SUPABASE_URL' is not set") // scalafix:ok DisableSyntax.throw
+
     )
     JwksProvider(JwksProvider.jwksUrlFor(supabaseUrl))
   }
@@ -29,11 +29,12 @@ object AuthConfig:
   lazy val jwtValidator: JwtValidator = JwtValidator(jwksProvider)
 
   /** Valid API keys for service-to-service authentication. */
-  lazy val validApiKeys: Set[String] =
+  lazy val validApiKeys: Set[String] = {
     sys.env
       .get("API_KEYS")
       .map(_.split(",").map(_.trim).filter(_.nonEmpty).toSet)
       .getOrElse(Set.empty)
+  }
 
   /** Check if API key authentication is configured. */
   def apiKeysConfigured: Boolean = validApiKeys.nonEmpty

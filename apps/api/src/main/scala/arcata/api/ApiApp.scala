@@ -26,7 +26,8 @@ object ApiApp extends cask.Main {
       Some(
         ObjectStorageClient(
           baseUrl = config.objectStorage.baseUrl,
-          tenantId = config.objectStorage.tenantId
+          tenantId = config.objectStorage.tenantId,
+          apiKey = config.objectStorage.apiKey
         )
       )
     } else {

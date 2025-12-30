@@ -22,9 +22,10 @@ object JwtValidatorSuite extends TestSuite:
 
   // Mock JwksProvider that returns our test key
   private class TestJwksProvider extends JwksProvider("http://test"):
-    override def getKey(kid: String): Either[JwksError, ECPublicKey] =
+    override def getKey(kid: String): Either[JwksError, ECPublicKey] = {
       if kid == testKid then Right(testPublicKey)
       else Left(JwksError(s"Key with kid '$kid' not found in JWKS"))
+    }
 
   // Mock that simulates JWKS endpoint being down
   private class UnavailableJwksProvider extends JwksProvider("http://test"):
@@ -70,7 +71,9 @@ object JwtValidatorSuite extends TestSuite:
             assert(claims.email == Some("test@example.com"))
             assert(claims.role == "authenticated")
           case JwtValidationResult.Invalid(reason, _) =>
-            throw new java.lang.AssertionError(s"Expected Valid, got Invalid: $reason") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              s"Expected Valid, got Invalid: $reason"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Valid for token without email") {
@@ -81,7 +84,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Valid(_, claims) =>
             assert(claims.email == None)
           case JwtValidationResult.Invalid(reason, _) =>
-            throw new java.lang.AssertionError(s"Expected Valid, got Invalid: $reason") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              s"Expected Valid, got Invalid: $reason"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Invalid for expired token") {
@@ -114,7 +119,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Invalid(reason, _) =>
             assert(reason.contains("Malformed"))
           case JwtValidationResult.Valid(_, _) =>
-            throw new java.lang.AssertionError("Expected Invalid for malformed token") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              "Expected Invalid for malformed token"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns 503 when JWKS unavailable") {
@@ -127,7 +134,9 @@ object JwtValidatorSuite extends TestSuite:
             assert(statusCode == 503)
             assert(reason.contains("unavailable"))
           case JwtValidationResult.Valid(_, _) =>
-            throw new java.lang.AssertionError("Expected Invalid when JWKS unavailable") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              "Expected Invalid when JWKS unavailable"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("rejects HS256 tokens") {
@@ -162,7 +171,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Invalid(reason, _) =>
             assert(reason.contains("kid"))
           case JwtValidationResult.Valid(_, _) =>
-            throw new java.lang.AssertionError("Expected Invalid for token without kid") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              "Expected Invalid for token without kid"
+            ) // scalafix:ok DisableSyntax.throw
       }
     }
 
@@ -175,7 +186,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Valid(profileId, _) =>
             assert(profileId == "user-123")
           case JwtValidationResult.Invalid(reason, _) =>
-            throw new java.lang.AssertionError(s"Expected Valid, got Invalid: $reason") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              s"Expected Valid, got Invalid: $reason"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Invalid without Bearer prefix") {
@@ -186,7 +199,9 @@ object JwtValidatorSuite extends TestSuite:
           case JwtValidationResult.Invalid(reason, _) =>
             assert(reason.contains("Bearer"))
           case JwtValidationResult.Valid(_, _) =>
-            throw new java.lang.AssertionError("Expected Invalid without Bearer prefix") // scalafix:ok DisableSyntax.throw
+            throw new java.lang.AssertionError(
+              "Expected Invalid without Bearer prefix"
+            ) // scalafix:ok DisableSyntax.throw
       }
 
       test("returns Invalid for empty Bearer token") {
