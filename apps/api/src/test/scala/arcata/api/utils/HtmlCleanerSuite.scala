@@ -6,7 +6,7 @@ object HtmlCleanerSuite extends TestSuite:
 
   val tests = Tests {
 
-    test("preserves script tags in body for embedded JSON data") {
+    test("removes non-JSON-LD script tags in body") {
       val html = """
         <html>
           <body>
@@ -18,9 +18,10 @@ object HtmlCleanerSuite extends TestSuite:
       """
       val result = HtmlCleaner.clean(html)
 
-      // Script tags in body are preserved (SPAs embed job data in them)
-      assert(result.contains("<script>"))
-      assert(result.contains("Engineer"))
+      // Non-JSON-LD scripts are removed to reduce AI token usage
+      assert(!result.contains("<script>"))
+      assert(!result.contains("window.__DATA__"))
+      assert(!result.contains("Engineer"))
       assert(result.contains("Job Title"))
       assert(result.contains("Description"))
     }
@@ -45,7 +46,7 @@ object HtmlCleanerSuite extends TestSuite:
       assert(result.contains("Job Title"))
     }
 
-    test("preserves JSON-LD script tags") {
+    test("preserves JSON-LD content as text") {
       val html = """
         <html>
           <body>
@@ -67,14 +68,15 @@ object HtmlCleanerSuite extends TestSuite:
       """
       val result = HtmlCleaner.clean(html)
 
-      assert(result.contains("application/ld+json"))
+      // JSON-LD content is extracted as plain text (no script tags)
+      assert(!result.contains("<script"))
       assert(result.contains("JobPosting"))
       assert(result.contains("Netflix"))
       assert(result.contains("talented engineer"))
     }
 
-    test("preserves embedded SPA state with job data") {
-      // This mimics what Netflix and similar SPAs do
+    test("removes embedded SPA state scripts (non-JSON-LD)") {
+      // SPA bootstrap state is removed - JSON-LD is the preferred structured data source
       val html = """
         <html>
           <body>
@@ -95,11 +97,10 @@ object HtmlCleanerSuite extends TestSuite:
       """
       val result = HtmlCleaner.clean(html)
 
-      assert(result.contains("positions"))
-      assert(result.contains("Software Engineer (L5)"))
-      assert(result.contains("Ads Media Planning"))
-      assert(result.contains("USA - Remote"))
-      assert(result.contains("job_description"))
+      // SPA state is removed to reduce token bloat
+      assert(!result.contains("__INITIAL_STATE__"))
+      assert(!result.contains("positions"))
+      assert(!result.contains("Software Engineer (L5)"))
     }
 
     test("removes style tags") {
@@ -262,13 +263,13 @@ object HtmlCleanerSuite extends TestSuite:
     }
 
     test("truncates content exceeding max length") {
-      // Create HTML with lots of content
-      val longContent = "x" * 150_000
+      // Create HTML with lots of content (MAX_CONTENT_LENGTH is 180_000)
+      val longContent = "x" * 200_000
       val html = s"<html><body><p>$longContent</p></body></html>"
 
       val result = HtmlCleaner.toMarkdown(html)
 
-      assert(result.length <= 100_000 + 50) // Allow for truncation message
+      assert(result.length <= 180_000 + 50) // Allow for truncation message
       assert(result.contains("[Content truncated...]"))
     }
 
@@ -341,5 +342,177 @@ object HtmlCleanerSuite extends TestSuite:
       assert(!result.contains("<input"))
       assert(result.contains("Job Title"))
       assert(result.contains("Description"))
+    }
+
+    test("removes link tags") {
+      val html = """
+        <html>
+          <body>
+            <link rel="stylesheet" href="styles.css">
+            <link rel="preload" href="font.woff2" as="font">
+            <h1>Job Title</h1>
+          </body>
+        </html>
+      """
+      val result = HtmlCleaner.clean(html)
+
+      assert(!result.contains("<link"))
+      assert(!result.contains("stylesheet"))
+      assert(!result.contains("preload"))
+      assert(result.contains("Job Title"))
+    }
+
+    test("removes code tags with hidden config") {
+      // Netflix/Eightfold pattern: hidden <code> elements with JSON config
+      val html = """
+        <html>
+          <body>
+            <code id="branding-data" style="display:none;">{"theme": {"colors": {"primary": "#ff0000"}}}</code>
+            <code id="smartApplyData" style="display:none;">{"domain": "company.com", "positions": [...]}</code>
+            <h1>Job Title</h1>
+          </body>
+        </html>
+      """
+      val result = HtmlCleaner.clean(html)
+
+      assert(!result.contains("<code"))
+      assert(!result.contains("branding-data"))
+      assert(!result.contains("smartApplyData"))
+      assert(!result.contains("theme"))
+      assert(result.contains("Job Title"))
+    }
+
+    test("strips nonce, crossorigin, and integrity attributes") {
+      val html = """
+        <html>
+          <body>
+            <script type="application/ld+json" nonce="abc123" crossorigin="anonymous" integrity="sha384-xyz">
+            {"@type": "JobPosting", "title": "Engineer"}
+            </script>
+            <div nonce="def456">Content</div>
+          </body>
+        </html>
+      """
+      val result = HtmlCleaner.clean(html)
+
+      assert(!result.contains("nonce="))
+      assert(!result.contains("crossorigin="))
+      assert(!result.contains("integrity="))
+      assert(result.contains("JobPosting"))
+      // Content div should still be there (stripped of attributes)
+      assert(result.contains("Content"))
+    }
+
+    test("decodes HTML entities in JSON-LD content") {
+      val html = """
+        <html>
+          <body>
+            <script type="application/ld+json">
+            {
+              "@type": "JobPosting",
+              "title": "Software Engineer",
+              "description": "&lt;p&gt;We are looking for a &lt;strong&gt;talented&lt;/strong&gt; engineer.&lt;/p&gt;"
+            }
+            </script>
+          </body>
+        </html>
+      """
+      val result = HtmlCleaner.clean(html)
+
+      // HTML entities should be decoded in the extracted JSON-LD text
+      assert(result.contains("<p>We are looking for"))
+      assert(result.contains("<strong>talented</strong>"))
+      assert(!result.contains("&lt;p&gt;"))
+      assert(!result.contains("&lt;strong&gt;"))
+    }
+
+    test("removes analytics and tracking scripts") {
+      val html = """
+        <html>
+          <body>
+            <h1>Job Title</h1>
+            <script src="https://www.googletagmanager.com/gtag/js"></script>
+            <script>
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+            </script>
+            <script src="https://static.example.com/sentry/bundle.js"></script>
+          </body>
+        </html>
+      """
+      val result = HtmlCleaner.clean(html)
+
+      assert(!result.contains("googletagmanager"))
+      assert(!result.contains("dataLayer"))
+      assert(!result.contains("sentry"))
+      assert(result.contains("Job Title"))
+    }
+
+    test("removes recaptcha scripts") {
+      val html = """
+        <html>
+          <body>
+            <h1>Job Title</h1>
+            <script defer src='https://www.recaptcha.net/recaptcha/api.js?render=abc123'></script>
+          </body>
+        </html>
+      """
+      val result = HtmlCleaner.clean(html)
+
+      assert(!result.contains("recaptcha"))
+      assert(result.contains("Job Title"))
+    }
+
+    test("handles multiple JSON-LD scripts") {
+      val html = """
+        <html>
+          <body>
+            <script type="application/ld+json">
+            {"@type": "JobPosting", "title": "Software Engineer"}
+            </script>
+            <script type="application/ld+json">
+            {"@type": "WebSite", "name": "Company Careers"}
+            </script>
+            <h1>Job Title</h1>
+          </body>
+        </html>
+      """
+      val result = HtmlCleaner.clean(html)
+
+      // All JSON-LD content should be extracted as text
+      assert(result.contains("JobPosting"))
+      assert(result.contains("Software Engineer"))
+      assert(result.contains("WebSite"))
+      assert(result.contains("Company Careers"))
+      assert(result.contains("Job Title"))
+      // Script tags should be removed
+      assert(!result.contains("<script"))
+    }
+
+    test("extracts JSON-LD from head before removing it") {
+      // This is the Ashby/Netflix pattern - JSON-LD in <head>
+      val html = """
+        <html>
+          <head>
+            <title>Job Title</title>
+            <script type="application/ld+json">
+            {"@type": "JobPosting", "title": "Software Engineer", "hiringOrganization": {"name": "Hopper"}}
+            </script>
+          </head>
+          <body>
+            <div id="root"></div>
+          </body>
+        </html>
+      """
+      val result = HtmlCleaner.clean(html)
+
+      // JSON-LD from head should be preserved
+      assert(result.contains("JobPosting"))
+      assert(result.contains("Software Engineer"))
+      assert(result.contains("Hopper"))
+      // Head content (except JSON-LD) should be removed
+      assert(!result.contains("<title>"))
+      assert(!result.contains("<script"))
     }
   }

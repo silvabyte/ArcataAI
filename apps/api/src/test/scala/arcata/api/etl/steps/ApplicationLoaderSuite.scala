@@ -37,7 +37,7 @@ object ApplicationLoaderSuite extends TestSuite:
       val loader = ApplicationLoader(client)
 
       val input = ApplicationLoaderInput(
-        job = Job(jobId = Some(123L), companyId = 1L, title = "Engineer"),
+        job = Job(jobId = Some(123L), companyId = Some(1L), title = "Engineer"),
         profileId = "user-1",
         notes = Some("Great opportunity")
       )
@@ -67,7 +67,7 @@ object ApplicationLoaderSuite extends TestSuite:
       val loader = ApplicationLoader(client)
 
       val input = ApplicationLoaderInput(
-        job = Job(jobId = Some(123L), companyId = 1L, title = "Engineer"),
+        job = Job(jobId = Some(123L), companyId = Some(1L), title = "Engineer"),
         profileId = "user-1"
       )
       val ctx = PipelineContext.create("test-profile")
@@ -82,7 +82,7 @@ object ApplicationLoaderSuite extends TestSuite:
       val loader = ApplicationLoader(client)
 
       val input = ApplicationLoaderInput(
-        job = Job(companyId = 1L, title = "Engineer"), // No jobId
+        job = Job(companyId = Some(1L), title = "Engineer"), // No jobId
         profileId = "user-1"
       )
       val ctx = PipelineContext.create("test-profile")
@@ -103,7 +103,7 @@ object ApplicationLoaderSuite extends TestSuite:
       val loader = ApplicationLoader(client)
 
       val input = ApplicationLoaderInput(
-        job = Job(jobId = Some(123L), companyId = 1L, title = "Engineer"),
+        job = Job(jobId = Some(123L), companyId = Some(1L), title = "Engineer"),
         profileId = "user-1"
       )
       val ctx = PipelineContext.create("test-profile")

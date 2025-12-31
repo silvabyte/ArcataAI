@@ -7,7 +7,7 @@ import arcata.api.etl.framework.*
 /** Input for the JobLoader step. */
 final case class JobLoaderInput(
     extractedData: Transformed[ExtractedJobData],
-    company: Company,
+    company: Option[Company],
     url: String,
     objectId: Option[String],
     completionState: Option[String] = None
@@ -16,13 +16,14 @@ final case class JobLoaderInput(
 /** Output from the JobLoader step. */
 final case class JobLoaderOutput(
     job: Job,
-    company: Company
+    company: Option[Company]
 )
 
 /**
  * Loads a job into the database.
  *
  * This is a load step that creates a job record from extracted data.
+ * Jobs can be created without a company (orphaned jobs) when company resolution fails.
  */
 final class JobLoader(supabaseClient: SupabaseClient)
     extends BaseStep[JobLoaderInput, JobLoaderOutput]:
@@ -48,14 +49,11 @@ final class JobLoader(supabaseClient: SupabaseClient)
         )
 
       case None =>
-        val companyId = input.company.companyId.getOrElse {
-          return Left(
-            StepError.ValidationError(
-              message = "Company must have an ID before creating a job",
-              stepName = name
-            )
-          )
-        }
+        // Get companyId if company was resolved (None for orphaned jobs)
+        val companyId: Option[Long] = input.company.flatMap(_.companyId)
+
+        if companyId.isEmpty then
+          logger.warn(s"[${ctx.runId}] Creating orphaned job (no company resolved): ${data.title}")
 
         val job = Job(
           companyId = companyId,
@@ -83,7 +81,7 @@ final class JobLoader(supabaseClient: SupabaseClient)
 
         supabaseClient.insertJob(job) match
           case Some(createdJob) =>
-            logger.info(s"[${ctx.runId}] Created job with ID: ${createdJob.jobId}")
+            logger.info(s"[${ctx.runId}] Created job with ID: ${createdJob.jobId}, companyId: ${createdJob.companyId}")
             Right(
               JobLoaderOutput(
                 job = createdJob,

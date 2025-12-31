@@ -3,6 +3,7 @@ package arcata.api.utils
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter
 import org.jsoup.Jsoup
 import org.jsoup.nodes.{Comment, Document, Node}
+import org.jsoup.parser.Parser
 import org.jsoup.select.NodeVisitor
 
 import scala.jdk.CollectionConverters.*
@@ -17,9 +18,6 @@ object HtmlCleaner:
 
   /** Elements to completely remove (including contents) */
   private val REMOVE_ELEMENTS = Set(
-    // Note: "script" is intentionally NOT removed - many SPAs embed job data as JSON in script tags.
-    // Scripts in <head> are removed when we remove the head element.
-    // Scripts in <body> are preserved for AI extraction.
     "style",
     "noscript",
     "iframe",
@@ -35,7 +33,9 @@ object HtmlCleaner:
     "footer",
     "nav",
     "aside",
-    "form"
+    "form",
+    "link", // stylesheet/preload links add noise
+    "code" // hidden JSON config blobs (Netflix/Eightfold pattern)
   )
 
   /** Attributes to strip from all elements */
@@ -49,16 +49,22 @@ object HtmlCleaner:
     "onmouseover",
     "onmouseout",
     "onfocus",
-    "onblur"
+    "onblur",
+    "nonce",
+    "crossorigin",
+    "integrity"
   )
 
   /** Maximum content length after cleaning (chars) */
-  private val MAX_CONTENT_LENGTH = 100_000
+  private val MAX_CONTENT_LENGTH = 180_000
 
   private val converter = FlexmarkHtmlConverter.builder().build()
 
   /**
    * Clean HTML by removing irrelevant elements and attributes.
+   *
+   * Preserves JSON-LD structured data (schema.org) while removing all other scripts,
+   * styles, navigation, and other non-content elements.
    *
    * @param html
    *   Raw HTML string
@@ -68,8 +74,19 @@ object HtmlCleaner:
   def clean(html: String): String = {
     val doc = Jsoup.parse(html)
 
-    // Remove unwanted elements entirely
+    // IMPORTANT: Extract JSON-LD from anywhere in the document BEFORE removing head
+    // Many sites (Ashby, etc.) put JSON-LD in <head>, which we otherwise remove
+    val jsonLdScripts = doc.select("script[type=application/ld+json]").asScala.toList
+    val jsonLdContents = jsonLdScripts.map { script =>
+      val rawContent = script.data()
+      Parser.unescapeEntities(rawContent, false)
+    }
+
+    // Remove unwanted elements entirely (including head, which may contain JSON-LD)
     REMOVE_ELEMENTS.foreach(tag => doc.select(tag).remove())
+
+    // Remove all remaining scripts (JSON-LD already extracted above)
+    doc.select("script").remove()
 
     // Remove HTML comments
     removeComments(doc)
@@ -78,7 +95,13 @@ object HtmlCleaner:
     stripAttributes(doc)
 
     // Get body content
-    Option(doc.body()).map(_.html()).getOrElse("")
+    val bodyContent = Option(doc.body()).map(_.html()).getOrElse("")
+
+    // Prepend JSON-LD content (as visible text for AI to parse)
+    if jsonLdContents.nonEmpty then
+      val jsonLdSection = jsonLdContents.mkString("\n\n")
+      s"$jsonLdSection\n\n$bodyContent"
+    else bodyContent
   }
 
   /**

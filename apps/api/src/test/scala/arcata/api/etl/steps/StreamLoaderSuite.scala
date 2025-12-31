@@ -32,7 +32,7 @@ object StreamLoaderSuite extends TestSuite:
       val loader = StreamLoader(client)
 
       val input = StreamLoaderInput(
-        job = Job(jobId = Some(123L), companyId = 1L, title = "Engineer"),
+        job = Job(jobId = Some(123L), companyId = Some(1L), title = "Engineer"),
         profileId = "user-1",
         source = "manual"
       )
@@ -53,7 +53,7 @@ object StreamLoaderSuite extends TestSuite:
       val loader = StreamLoader(client)
 
       val input = StreamLoaderInput(
-        job = Job(companyId = 1L, title = "Engineer"), // No jobId
+        job = Job(companyId = Some(1L), title = "Engineer"), // No jobId
         profileId = "user-1",
         source = "manual"
       )
@@ -72,7 +72,7 @@ object StreamLoaderSuite extends TestSuite:
       val loader = StreamLoader(client)
 
       val input = StreamLoaderInput(
-        job = Job(jobId = Some(123L), companyId = 1L, title = "Engineer"),
+        job = Job(jobId = Some(123L), companyId = Some(1L), title = "Engineer"),
         profileId = "user-1",
         source = "manual"
       )

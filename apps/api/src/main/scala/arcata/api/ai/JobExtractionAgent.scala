@@ -43,7 +43,7 @@ Guidelines:
    * Extract job data from content.
    *
    * @param content
-   *   The cleaned content (Markdown) of the job posting
+   *   The cleaned content (Markdown) of the job posting, with preserved JSON-LD structured data
    * @param url
    *   The source URL of the job posting
    * @return

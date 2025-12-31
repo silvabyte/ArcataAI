@@ -43,7 +43,7 @@ object DomainModelsSuite extends TestSuite:
       test("serializes to JSON and back") {
         val job = Job(
           jobId = Some(456L),
-          companyId = 123L,
+          companyId = Some(123L),
           title = "Software Engineer",
           description = Some("Build great things"),
           location = Some("Remote"),
@@ -57,13 +57,22 @@ object DomainModelsSuite extends TestSuite:
       }
 
       test("handles minimal required fields") {
-        val job = Job(companyId = 1L, title = "Engineer")
+        val job = Job(companyId = Some(1L), title = "Engineer")
         val json = write(job)
         val parsed = read[Job](json)
 
-        assert(parsed.companyId == 1L)
+        assert(parsed.companyId == Some(1L))
         assert(parsed.title == "Engineer")
         assert(parsed.salaryCurrency == Some("USD")) // default value
+      }
+
+      test("handles orphaned job (no company)") {
+        val job = Job(companyId = None, title = "Orphaned Job")
+        val json = write(job)
+        val parsed = read[Job](json)
+
+        assert(parsed.companyId == None)
+        assert(parsed.title == "Orphaned Job")
       }
     }
 

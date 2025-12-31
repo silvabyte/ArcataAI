@@ -37,6 +37,16 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     parseResponse[Seq[Company]](response).flatMap(_.headOption)
   }
 
+  /** Find a company by jobs URL. */
+  def findCompanyByJobsUrl(jobsUrl: String): Option[Company] = {
+    val response = requests.get(
+      s"$baseUrl/companies",
+      headers = headers,
+      params = Map("company_jobs_url" -> s"eq.$jobsUrl", "limit" -> "1")
+    )
+    parseResponse[Seq[Company]](response).flatMap(_.headOption)
+  }
+
   /** Insert a new company and return the created record. */
   def insertCompany(company: Company): Option[Company] = {
     val json = writeCompanyForInsert(company)
@@ -146,7 +156,8 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
   }
 
   private def writeJobForInsert(job: Job): String = {
-    val obj = ujson.Obj("company_id" -> job.companyId, "title" -> job.title)
+    val obj = ujson.Obj("title" -> job.title)
+    job.companyId.foreach(v => obj("company_id") = v)
     job.description.foreach(v => obj("description") = v)
     job.location.foreach(v => obj("location") = v)
     job.jobType.foreach(v => obj("job_type") = v)

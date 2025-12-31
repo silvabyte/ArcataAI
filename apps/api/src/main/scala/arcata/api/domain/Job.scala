@@ -8,7 +8,7 @@ import upickle.default.*
  * @param jobId
  *   Unique identifier (auto-generated)
  * @param companyId
- *   Foreign key to companies table
+ *   Foreign key to companies table. None for orphaned jobs (when company couldn't be resolved)
  * @param title
  *   Job title
  * @param description
@@ -52,7 +52,7 @@ import upickle.default.*
  */
 final case class Job(
     jobId: Option[Long] = None,
-    companyId: Long,
+    companyId: Option[Long] = None,
     title: String,
     description: Option[String] = None,
     location: Option[String] = None,
@@ -79,11 +79,9 @@ object Job:
   // Custom ReadWriter to handle snake_case from Supabase
   given ReadWriter[Job] = readwriter[ujson.Value].bimap[Job](
     job => {
-      val obj = ujson.Obj(
-        "company_id" -> ujson.Num(job.companyId.toDouble),
-        "title" -> job.title
-      )
+      val obj = ujson.Obj("title" -> job.title)
       job.jobId.foreach(v => obj("job_id") = ujson.Num(v.toDouble))
+      job.companyId.foreach(v => obj("company_id") = ujson.Num(v.toDouble))
       job.description.foreach(v => obj("description") = v)
       job.location.foreach(v => obj("location") = v)
       job.jobType.foreach(v => obj("job_type") = v)
@@ -109,7 +107,7 @@ object Job:
       val obj = json.obj
       Job(
         jobId = obj.get("job_id").flatMap(v => if v.isNull then None else Some(v.num.toLong)),
-        companyId = obj("company_id").num.toLong,
+        companyId = obj.get("company_id").flatMap(v => if v.isNull then None else Some(v.num.toLong)),
         title = obj("title").str,
         description = obj.get("description").flatMap(v => if v.isNull then None else Some(v.str)),
         location = obj.get("location").flatMap(v => if v.isNull then None else Some(v.str)),

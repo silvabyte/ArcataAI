@@ -2,8 +2,10 @@ package arcata.api.ai
 
 import arcata.api.config.AIConfig
 import arcata.api.domain.ExtractedCompanyData
+import arcata.api.logging.Log
 import boogieloops.ai.{Agent, RequestMetadata, SchemaError}
-import boogieloops.ai.providers.OpenAICompatibleProvider
+import boogieloops.ai.providers.{OpenAICompatibleProvider, ProviderTimeouts}
+import upickle.default.*
 
 /**
  * AI agent that enriches company data from job posting context.
@@ -17,22 +19,40 @@ final class CompanyEnrichmentAgent(config: AIConfig):
     baseUrl = config.baseUrl,
     apiKey = config.apiKey,
     modelId = config.model,
-    strictModelValidation = false
+    strictModelValidation = false,
+    timeouts = ProviderTimeouts(60_000 * 5, 60_000 * 5)
   )
 
   private val agent = Agent(
     name = "CompanyEnricher",
     instructions = """You extract and enrich company information from job posting context.
-Given the company name, job posting content, and URL, extract additional company details.
+Given the company name, job posting content, and source URL, extract company details.
 
-Guidelines:
-- Infer industry from the job posting content and company name
-- Estimate company size based on available clues (job volume, office locations, etc.)
-- Extract any company description or "about us" content
-- Identify headquarters location if mentioned
-- Extract the company domain from the URL if possible
+CRITICAL EXTRACTIONS:
+1. websiteUrl - The company's PRIMARY website URL (NOT the job board URL)
+   - Look for JSON-LD "hiringOrganization.sameAs" or "hiringOrganization.url"
+   - Look for "About Us", "Company", or footer links to the main company site
+   - Example: "https://www.hopper.com/" NOT "https://jobs.ashbyhq.com/hopper"
+
+2. domain - The company's primary domain, derived from websiteUrl
+   - Extract just the domain without "www." prefix
+   - Example: If websiteUrl is "https://www.hopper.com/", domain is "hopper.com"
+   - NEVER use ATS domains (ashbyhq.com, greenhouse.io, lever.co, workday.com, etc.)
+
+3. jobsUrl - The BASE URL for the company's job listings (the source URL without job-specific path)
+   - Example: Source "https://jobs.ashbyhq.com/hopper/abc-123" → jobsUrl "https://jobs.ashbyhq.com/hopper"
+   - Example: Source "https://boards.greenhouse.io/stripe/jobs/456" → jobsUrl "https://boards.greenhouse.io/stripe"
+
+OTHER EXTRACTIONS:
+- industry: Infer from job posting content and company name
+- size: Company size category (startup, small, medium, large, enterprise)
+- description: Brief company description or "about us" content
+- headquarters: Headquarters location if mentioned
+
+RULES:
 - Only include information that can be reasonably inferred - don't guess
-- For size, use: startup, small, medium, large, or enterprise""",
+- websiteUrl and domain are the MOST IMPORTANT fields - without them we cannot identify the company
+- If you cannot find the company's actual website, leave websiteUrl and domain as null""",
     provider = provider,
     model = config.model,
     temperature = Some(0.1)
@@ -55,7 +75,12 @@ Guidelines:
       content: String,
       url: String
   ): Either[SchemaError, ExtractedCompanyData] = {
-    agent
+    Log.info(
+      s"CompanyEnrichmentAgent: Starting enrichment for '$companyName'",
+      Map("url" -> url, "contentLength" -> content.length)
+    )
+
+    val result = agent
       .generateObjectWithoutHistory[ExtractedCompanyData](
         s"""Extract and enrich company information for '$companyName' from this job posting.
 
@@ -65,7 +90,31 @@ Content:
 $content""",
         RequestMetadata()
       )
-      .map(_.data)
+
+    result match
+      case Right(response) =>
+        val dataJson = write(response.data)
+        Log.info(
+          s"CompanyEnrichmentAgent: Raw AI response for '$companyName'",
+          Map(
+            "rawData" -> dataJson,
+            "name" -> response.data.name,
+            "domain" -> response.data.domain.getOrElse("null"),
+            "websiteUrl" -> response.data.websiteUrl.getOrElse("null"),
+            "jobsUrl" -> response.data.jobsUrl.getOrElse("null"),
+            "industry" -> response.data.industry.getOrElse("null"),
+            "size" -> response.data.size.getOrElse("null"),
+            "description" -> response.data.description.map(_.take(100)).getOrElse("null"),
+            "headquarters" -> response.data.headquarters.getOrElse("null")
+          )
+        )
+      case Left(error) =>
+        Log.error(
+          s"CompanyEnrichmentAgent: Failed to enrich '$companyName'",
+          Map("error" -> error.toString, "url" -> url)
+        )
+
+    result.map(_.data)
   }
 
 object CompanyEnrichmentAgent:

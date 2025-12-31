@@ -24,7 +24,7 @@ object JobLoaderSuite extends TestSuite:
     test("returns existing job when found by source URL") {
       val existingJob = Job(
         jobId = Some(123L),
-        companyId = 1L,
+        companyId = Some(1L),
         title = "Existing Job",
         sourceUrl = Some("https://example.com/job")
       )
@@ -33,7 +33,7 @@ object JobLoaderSuite extends TestSuite:
 
       val input = JobLoaderInput(
         extractedData = Transformed(ExtractedJobData(title = "New Job")),
-        company = Company(companyId = Some(1L)),
+        company = Some(Company(companyId = Some(1L))),
         url = "https://example.com/job",
         objectId = None
       )
@@ -48,10 +48,10 @@ object JobLoaderSuite extends TestSuite:
       }
     }
 
-    test("creates new job when not found") {
+    test("creates new job with company") {
       val createdJob = Job(
         jobId = Some(456L),
-        companyId = 1L,
+        companyId = Some(1L),
         title = "Software Engineer"
       )
       val client = MockSupabaseClient(
@@ -68,7 +68,7 @@ object JobLoaderSuite extends TestSuite:
             location = Some("Remote")
           )
         ),
-        company = Company(companyId = Some(1L)),
+        company = Some(Company(companyId = Some(1L))),
         url = "https://example.com/new-job",
         objectId = Some("obj-123")
       )
@@ -79,16 +79,55 @@ object JobLoaderSuite extends TestSuite:
       assert(result.isRight)
       result.foreach { output =>
         assert(output.job.jobId == Some(456L))
+        assert(output.job.companyId == Some(1L))
       }
     }
 
-    test("fails when company has no ID") {
-      val client = MockSupabaseClient()
+    test("creates orphaned job when company is None") {
+      val orphanedJob = Job(
+        jobId = Some(789L),
+        companyId = None, // Orphaned - no company
+        title = "Orphaned Job"
+      )
+      val client = MockSupabaseClient(
+        findJobResult = None,
+        insertJobResult = Some(orphanedJob)
+      )
       val loader = JobLoader(client)
 
       val input = JobLoaderInput(
-        extractedData = Transformed(ExtractedJobData(title = "Job")),
-        company = Company(), // No companyId
+        extractedData = Transformed(ExtractedJobData(title = "Orphaned Job")),
+        company = None, // No company resolved
+        url = "https://example.com/orphaned-job",
+        objectId = None
+      )
+      val ctx = PipelineContext.create("test-profile")
+
+      val result = loader.run(input, ctx)
+
+      assert(result.isRight)
+      result.foreach { output =>
+        assert(output.job.jobId == Some(789L))
+        assert(output.job.companyId == None)
+        assert(output.company == None)
+      }
+    }
+
+    test("creates orphaned job when company has no ID") {
+      val orphanedJob = Job(
+        jobId = Some(101L),
+        companyId = None,
+        title = "Job Without Company ID"
+      )
+      val client = MockSupabaseClient(
+        findJobResult = None,
+        insertJobResult = Some(orphanedJob)
+      )
+      val loader = JobLoader(client)
+
+      val input = JobLoaderInput(
+        extractedData = Transformed(ExtractedJobData(title = "Job Without Company ID")),
+        company = Some(Company()), // Company present but no companyId
         url = "https://example.com/job",
         objectId = None
       )
@@ -96,9 +135,9 @@ object JobLoaderSuite extends TestSuite:
 
       val result = loader.run(input, ctx)
 
-      assert(result.isLeft)
-      result.left.foreach { error =>
-        assert(error.message.contains("Company must have an ID"))
+      assert(result.isRight)
+      result.foreach { output =>
+        assert(output.job.companyId == None)
       }
     }
 
@@ -111,7 +150,7 @@ object JobLoaderSuite extends TestSuite:
 
       val input = JobLoaderInput(
         extractedData = Transformed(ExtractedJobData(title = "Job")),
-        company = Company(companyId = Some(1L)),
+        company = Some(Company(companyId = Some(1L))),
         url = "https://example.com/job",
         objectId = None
       )

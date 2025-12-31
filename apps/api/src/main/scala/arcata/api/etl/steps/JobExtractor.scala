@@ -8,7 +8,7 @@ import arcata.api.extraction.{CompletionScorer, CompletionState}
 
 /** Input for the JobExtractor step. */
 final case class JobExtractorInput(
-    html: String,
+    content: String,
     url: String,
     objectId: Option[String]
 )
@@ -22,16 +22,17 @@ final case class JobExtractorOutput(
 )
 
 /**
- * Extracts job data from HTML using direct AI extraction.
+ * Extracts job data from cleaned content using AI extraction.
  *
  * Uses the JobExtractionAgent to intelligently parse job posting content
- * and extract structured data. The AI reads the HTML/content directly
- * and outputs structured ExtractedJobData.
+ * and extract structured data. The AI reads cleaned markdown (with preserved
+ * JSON-LD structured data) and outputs structured ExtractedJobData.
  *
  * This approach works better than config-driven extraction because:
  * - AI understands content semantically, not just structurally
  * - No need to generate/maintain CSS selectors or JSONPath rules
  * - Handles varied page structures automatically
+ * - JSON-LD schema.org data provides high-quality structured hints
  */
 final class JobExtractor(aiConfig: AIConfig) extends BaseStep[JobExtractorInput, JobExtractorOutput]:
 
@@ -44,8 +45,10 @@ final class JobExtractor(aiConfig: AIConfig) extends BaseStep[JobExtractorInput,
       ctx: PipelineContext
   ): Either[StepError, JobExtractorOutput] = {
     logger.info(s"[${ctx.runId}] Extracting job data from: ${input.url}")
+    logger.debug(s"[${ctx.runId}] Content length: ${input.content.length} chars")
+    logger.debug(input.content)
 
-    extractionAgent.extract(input.html, input.url) match
+    extractionAgent.extract(input.content, input.url) match
       case Right(extractedData) =>
         val scoringResult = CompletionScorer.scoreExtractedData(extractedData)
         logger.info(s"[${ctx.runId}] Extraction successful: ${scoringResult.summary}")

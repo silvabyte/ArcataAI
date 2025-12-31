@@ -27,8 +27,8 @@ final case class JobIngestionOutput(
  *
  * Steps:
  * 1. Fetch HTML from URL
- * 2. Extract job data using AI-powered extraction
- * 3. Clean HTML to markdown (for company enrichment only)
+ * 2. Clean HTML to markdown (strips bloat, preserves JSON-LD)
+ * 3. Extract job data using AI-powered extraction
  * 4. Resolve/create company
  * 5. Load job into database
  * 6. Add to user's job stream
@@ -46,7 +46,7 @@ final class JobIngestionPipeline(
   // Initialize steps
   private val htmlFetcher = HtmlFetcher(storageClient)
   private val jobExtractor = JobExtractor(aiConfig)
-  private val htmlCleaner = HtmlCleaner() // Still needed for company enrichment
+  private val htmlCleaner = HtmlCleaner()
   private val jobTransformer = JobTransformer
   private val companyResolver = CompanyResolver(supabaseClient, aiConfig)
   private val jobLoader = JobLoader(supabaseClient)
@@ -137,11 +137,11 @@ final class JobIngestionPipeline(
           ctx
         )
 
-        // Step 2: Extract job data using AI
-        extractorOutput <- {
-          progressEmitter.emit(2, totalSteps, "extracting", "Extracting job details...")
-          jobExtractor.run(
-            JobExtractorInput(
+        // Step 2: Clean HTML to markdown
+        cleanerOutput <- {
+          progressEmitter.emit(2, totalSteps, "cleaning", "Processing content...")
+          htmlCleaner.run(
+            HtmlCleanerInput(
               html = fetcherOutput.html,
               url = fetcherOutput.url,
               objectId = fetcherOutput.objectId
@@ -150,14 +150,14 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 3: Clean HTML to markdown (for company enrichment only)
-        cleanerOutput <- {
-          progressEmitter.emit(3, totalSteps, "cleaning", "Processing content...")
-          htmlCleaner.run(
-            HtmlCleanerInput(
-              html = fetcherOutput.html,
-              url = fetcherOutput.url,
-              objectId = fetcherOutput.objectId
+        // Step 3: Extract job data using AI (now uses cleaned markdown)
+        extractorOutput <- {
+          progressEmitter.emit(3, totalSteps, "extracting", "Extracting job details...")
+          jobExtractor.run(
+            JobExtractorInput(
+              content = cleanerOutput.markdown,
+              url = cleanerOutput.url,
+              objectId = cleanerOutput.objectId
             ),
             ctx
           )
@@ -191,13 +191,13 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 6: Load job
+        // Step 6: Load job (company is Option[Company] from CompanyResolver)
         jobOutput <- {
           progressEmitter.emit(6, totalSteps, "loading", "Creating job record...")
           jobLoader.run(
             JobLoaderInput(
               extractedData = companyOutput.extractedData,
-              company = companyOutput.company,
+              company = companyOutput.company, // Option[Company] - JobLoader validates this
               url = companyOutput.url,
               objectId = companyOutput.objectId,
               completionState = Some(transformerOutput.completionState.toString)
