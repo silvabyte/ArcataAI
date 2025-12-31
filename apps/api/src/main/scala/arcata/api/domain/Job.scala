@@ -49,6 +49,14 @@ import upickle.default.*
  *   Application deadline
  * @param completionState
  *   Quality of extraction: Complete, Sufficient, Partial, Minimal, Failed, Unknown
+ * @param status
+ *   Job posting status: open (active), closed (no longer accepting applications)
+ * @param closedReason
+ *   Why job was marked closed (e.g., HTTP 404, page contains closure signal)
+ * @param closedAt
+ *   Timestamp when job was marked as closed
+ * @param lastStatusCheck
+ *   Timestamp when job status was last verified
  */
 final case class Job(
     jobId: Option[Long] = None,
@@ -72,7 +80,11 @@ final case class Job(
     isRemote: Option[Boolean] = None,
     postedDate: Option[String] = None,
     closingDate: Option[String] = None,
-    completionState: Option[String] = None
+    completionState: Option[String] = None,
+    status: Option[String] = Some("open"),
+    closedReason: Option[String] = None,
+    closedAt: Option[String] = None,
+    lastStatusCheck: Option[String] = None
 )
 
 object Job:
@@ -101,6 +113,10 @@ object Job:
       job.postedDate.foreach(v => obj("posted_date") = v)
       job.closingDate.foreach(v => obj("closing_date") = v)
       job.completionState.foreach(v => obj("completion_state") = v)
+      job.status.foreach(v => obj("status") = v)
+      job.closedReason.foreach(v => obj("closed_reason") = v)
+      job.closedAt.foreach(v => obj("closed_at") = v)
+      job.lastStatusCheck.foreach(v => obj("last_status_check") = v)
       obj
     },
     json => {
@@ -130,7 +146,11 @@ object Job:
         isRemote = obj.get("is_remote").flatMap(v => if v.isNull then None else Some(v.bool)),
         postedDate = obj.get("posted_date").flatMap(v => if v.isNull then None else Some(v.str)),
         closingDate = obj.get("closing_date").flatMap(v => if v.isNull then None else Some(v.str)),
-        completionState = obj.get("completion_state").flatMap(v => if v.isNull then None else Some(v.str))
+        completionState = obj.get("completion_state").flatMap(v => if v.isNull then None else Some(v.str)),
+        status = obj.get("status").flatMap(v => if v.isNull then None else Some(v.str)),
+        closedReason = obj.get("closed_reason").flatMap(v => if v.isNull then None else Some(v.str)),
+        closedAt = obj.get("closed_at").flatMap(v => if v.isNull then None else Some(v.str)),
+        lastStatusCheck = obj.get("last_status_check").flatMap(v => if v.isNull then None else Some(v.str))
       )
     }
   )

@@ -19,7 +19,8 @@ final case class Config(
 final case class ServerConfig(
     host: String,
     port: Int,
-    corsOrigins: List[String]
+    corsOrigins: List[String],
+    cronSecret: Option[String]
 )
 
 /** Supabase configuration for database access. JWT validation uses JWKS from the URL. */
@@ -83,9 +84,11 @@ object Config:
       "http://localhost:4201,http://localhost:4200,https://f6c0bn-pical.spa.godeploy.app"
     )
     val corsOrigins = corsOriginsStr.split(",").map(_.trim).filter(_.nonEmpty).toList
+    val cronSecret = sys.env.get("CRON_SECRET").filter(_.nonEmpty)
 
     Try(portStr.toInt) match
-      case Success(port) => Right(ServerConfig(host = host, port = port, corsOrigins = corsOrigins))
+      case Success(port) =>
+        Right(ServerConfig(host = host, port = port, corsOrigins = corsOrigins, cronSecret = cronSecret))
       case Failure(_) =>
         Left(ConfigError(s"API_PORT must be a valid integer, got: '$portStr'"))
   }

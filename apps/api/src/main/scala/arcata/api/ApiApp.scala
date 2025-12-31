@@ -1,10 +1,13 @@
 package arcata.api
 
+import scala.concurrent.ExecutionContext
+
 import arcata.api.clients.{ObjectStorageClient, SupabaseClient}
 import arcata.api.config.Config
 import arcata.api.etl.JobIngestionPipeline
+import arcata.api.etl.workflows.JobStatusWorkflow
 import arcata.api.http.middleware.{CorsConfig, CorsRoutes}
-import arcata.api.http.routes.{IndexRoutes, JobRoutes}
+import arcata.api.http.routes.{CronRoutes, IndexRoutes, JobRoutes}
 import arcata.api.logging.Log
 
 /**
@@ -17,6 +20,13 @@ object ApiApp extends cask.Main {
 
   // Load configuration from environment (throws on missing required vars)
   lazy val config: Config = Config.loadOrThrow()
+
+  // Override the actor context for async workflows (Castor)
+  // Uses global execution context and logs actor errors
+  override val actorContext: castor.Context = new castor.Context.Simple(
+    ExecutionContext.global,
+    (e: Throwable) => Log.error(s"Actor error: ${e.getMessage}", Map("exception" -> e.toString))
+  )
 
   // Initialize clients
   lazy val supabaseClient: SupabaseClient = SupabaseClient(config.supabase)
@@ -48,6 +58,12 @@ object ApiApp extends cask.Main {
     storageClient = storageClient
   )
 
+  // Initialize async workflows
+  lazy val jobStatusWorkflow: JobStatusWorkflow = {
+    given castor.Context = actorContext
+    JobStatusWorkflow(supabaseClient)
+  }
+
   // Initialize routes
   lazy val indexRoutes: IndexRoutes = IndexRoutes()
 
@@ -57,6 +73,13 @@ object ApiApp extends cask.Main {
     corsConfig = corsConfig
   )
 
+  // Cron routes for background workflows
+  lazy val cronRoutes: CronRoutes = CronRoutes(
+    jobStatusWorkflow = jobStatusWorkflow,
+    corsConfig = corsConfig,
+    cronSecret = config.server.cronSecret
+  )
+
   // CORS routes (handles OPTIONS preflight requests)
   lazy val corsRoutes: CorsRoutes = CorsRoutes(corsConfig)
 
@@ -64,7 +87,8 @@ object ApiApp extends cask.Main {
   override def allRoutes: Seq[cask.Routes] = Seq(
     corsRoutes,
     indexRoutes,
-    jobRoutes
+    jobRoutes,
+    cronRoutes
   )
 
   // Server configuration

@@ -81,6 +81,82 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     parseResponse[Seq[Job]](response).flatMap(_.headOption)
   }
 
+  /**
+   * Find open jobs that need their status checked.
+   *
+   * @param batchSize
+   *   Maximum number of jobs to return
+   * @param olderThanDays
+   *   Only include jobs not checked in this many days (or never checked)
+   * @return
+   *   Sequence of jobs to check
+   */
+  def findJobsToCheck(batchSize: Int, olderThanDays: Int): Seq[Job] = {
+    val threshold = java.time.Instant.now().minus(java.time.Duration.ofDays(olderThanDays)).toString
+    // Query: status = 'open' AND source_url IS NOT NULL AND (last_status_check IS NULL OR last_status_check < threshold)
+    val response = requests.get(
+      s"$baseUrl/jobs",
+      headers = headers,
+      params = Map(
+        "status" -> "eq.open",
+        "source_url" -> "not.is.null",
+        "or" -> s"(last_status_check.is.null,last_status_check.lt.$threshold)",
+        "limit" -> batchSize.toString,
+        "order" -> "last_status_check.asc.nullsfirst"
+      )
+    )
+    parseResponse[Seq[Job]](response).getOrElse(Seq.empty)
+  }
+
+  /**
+   * Update a job's status to closed.
+   *
+   * @param jobId
+   *   The job ID to update
+   * @param closedReason
+   *   Why the job was marked closed
+   * @return
+   *   true if update succeeded
+   */
+  def updateJobStatusClosed(jobId: Long, closedReason: Option[String]): Boolean = {
+    val now = java.time.Instant.now().toString
+    val obj = ujson.Obj(
+      "status" -> "closed",
+      "closed_at" -> now,
+      "last_status_check" -> now
+    )
+    closedReason.foreach(v => obj("closed_reason") = v)
+
+    val response = requests.patch(
+      s"$baseUrl/jobs",
+      headers = headers,
+      params = Map("job_id" -> s"eq.$jobId"),
+      data = ujson.write(obj)
+    )
+    response.is2xx
+  }
+
+  /**
+   * Update a job's last status check timestamp (job is still open).
+   *
+   * @param jobId
+   *   The job ID to update
+   * @return
+   *   true if update succeeded
+   */
+  def updateJobLastCheck(jobId: Long): Boolean = {
+    val now = java.time.Instant.now().toString
+    val obj = ujson.Obj("last_status_check" -> now)
+
+    val response = requests.patch(
+      s"$baseUrl/jobs",
+      headers = headers,
+      params = Map("job_id" -> s"eq.$jobId"),
+      data = ujson.write(obj)
+    )
+    response.is2xx
+  }
+
   // Job Stream operations
 
   /** Insert a job stream entry. */

@@ -54,16 +54,18 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
     val enrichedData = enrichmentAgent.enrich(companyName, input.content, input.url) match
       case Right(data) =>
         logger.info(s"[${ctx.runId}] AI extracted company data: $data")
-        logger.info(s"[${ctx.runId}] AI extraction summary: domain=${data.domain}, websiteUrl=${data.websiteUrl}, jobsUrl=${data.jobsUrl}")
+        logger.info(
+          s"[${ctx.runId}] AI extraction summary: domain=${data.domain}, websiteUrl=${data.websiteUrl}, jobsUrl=${data.jobsUrl}"
+        )
         Some(data)
       case Left(error: SchemaError) =>
         val errorMessage: String = error match
           case SchemaError.ModelNotSupported(model, prov, _) => s"Model $model not supported by $prov"
-          case SchemaError.NetworkError(msg, _)              => msg
-          case SchemaError.ParseError(msg, _)                => msg
-          case SchemaError.ApiError(msg, _, _)               => msg
-          case SchemaError.SchemaConversionError(msg, _)     => msg
-          case SchemaError.ConfigurationError(msg)           => msg
+          case SchemaError.NetworkError(msg, _) => msg
+          case SchemaError.ParseError(msg, _) => msg
+          case SchemaError.ApiError(msg, _, _) => msg
+          case SchemaError.SchemaConversionError(msg, _) => msg
+          case SchemaError.ConfigurationError(msg) => msg
         logger.warn(s"[${ctx.runId}] Company enrichment failed: $errorMessage")
         None
 
@@ -78,7 +80,9 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
 
         byDomain match
           case Some(existing) =>
-            logger.info(s"[${ctx.runId}] Found existing company by domain: ${existing.companyName.getOrElse("?")} (id=${existing.companyId})")
+            logger.info(
+              s"[${ctx.runId}] Found existing company by domain: ${existing.companyName.getOrElse("?")} (id=${existing.companyId})"
+            )
             Some(existing)
 
           case None =>
@@ -90,7 +94,9 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
 
             byJobsUrl match
               case Some(existing) =>
-                logger.info(s"[${ctx.runId}] Found existing company by jobsUrl: ${existing.companyName.getOrElse("?")} (id=${existing.companyId})")
+                logger.info(
+                  s"[${ctx.runId}] Found existing company by jobsUrl: ${existing.companyName.getOrElse("?")} (id=${existing.companyId})"
+                )
                 Some(existing)
 
               case None =>

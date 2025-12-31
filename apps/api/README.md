@@ -34,6 +34,28 @@ make help     # All commands
 
 ## ETL Architecture
 
+### Pipelines vs Workflows
+
+| Concept | Execution | Use Case |
+|---------|-----------|----------|
+| **Pipeline** | Synchronous | API requests expecting immediate response |
+| **Workflow** | Async (actor) | Cron jobs, long-running tasks, fire-and-forget |
+
+Workflows extend `BaseWorkflow` which combines:
+- `SimpleActor` from Castor for async message processing
+- `BasePipeline` for step orchestration
+
+### Triggering Workflows
+
+```
+POST /api/v1/cron/<workflow-name>
+→ 202 Accepted { "runId": "..." }
+```
+
+Workflows process in background. Results logged, not returned to caller.
+
+### Job Ingestion Pipeline
+
 The job ingestion pipeline processes URLs into structured job data using a
 **config-driven extraction system** that learns over time:
 
@@ -121,6 +143,27 @@ Found       Found
 
 See [Config-Driven Extraction Architecture](../../docs/plans/2024-12-24-config-driven-extraction.md)
 for full details.
+
+### Job Status Workflow
+
+Async workflow that checks if tracked jobs are still active:
+
+```
+POST /api/v1/cron/job-status-check
+Content-Type: application/json
+X-Cron-Secret: <optional secret>
+
+{ "batchSize": 100, "olderThanDays": 7 }
+
+→ 202 Accepted
+```
+
+Pipeline steps:
+1. `JobsToCheckFetcher` - Query open jobs not checked recently
+2. `JobStatusChecker` - Re-fetch job URLs, detect if closed
+3. `JobStatusUpdater` - Update job status in database
+
+Closed jobs are filtered from user job streams.
 
 ## External Dependencies
 
