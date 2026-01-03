@@ -53,7 +53,7 @@ export function AddJobPopover({
         leaveFrom="opacity-100 translate-y-0"
         leaveTo="opacity-0 translate-y-1"
       >
-        <Popover.Panel className="absolute left-3/4 z-10 mt-5 flex w-screen max-w-max -translate-x-full px-4">
+        <Popover.Panel className="fixed top-16 right-4 z-50 w-[min(24rem,calc(100vw-2.5rem))] px-4 sm:top-20 sm:right-6 sm:px-0">
           {({ close }) => (
             <div className="w-screen max-w-sm flex-auto rounded-3xl bg-white p-4 text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
               <div className="space-y-6">
