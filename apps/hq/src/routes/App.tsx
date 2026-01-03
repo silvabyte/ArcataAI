@@ -180,7 +180,7 @@ export default function App() {
   };
 
   return (
-    <div>
+    <div className="flex min-h-full flex-1 flex-col bg-gray-50">
       <Transition.Root as={Fragment} show={sidebarOpen}>
         <Dialog
           as="div"
@@ -360,7 +360,7 @@ export default function App() {
         </Link>
       </div>
 
-      <main className="pb-16 lg:pb-0 lg:pl-72">
+      <main className="flex-1 pb-16 lg:pb-0 lg:pl-72">
         <Outlet />
       </main>
 
