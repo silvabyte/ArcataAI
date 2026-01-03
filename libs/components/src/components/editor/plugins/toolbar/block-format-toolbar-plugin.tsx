@@ -24,6 +24,7 @@ export function BlockFormatDropDown({
 }) {
   const { activeEditor, blockType, setBlockType } = useToolbarContext();
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Lexical toolbar update logic requires nested conditions
   function $updateToolbar(selection: BaseSelection) {
     if ($isRangeSelection(selection)) {
       const anchorNode = selection.anchor.getNode();

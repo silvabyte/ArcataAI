@@ -27,6 +27,7 @@ function ButtonGroup({
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof buttonGroupVariants>) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: ButtonGroup is a visual grouping component, not a form fieldset
     <div
       className={cn(buttonGroupVariants({ orientation }), className)}
       data-orientation={orientation}

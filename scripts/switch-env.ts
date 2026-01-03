@@ -56,6 +56,7 @@ type ParsedArgs = {
   help?: boolean;
 };
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: CLI script with straightforward control flow
 function parseArgs(args: string[]): ParsedArgs {
   const result: ParsedArgs = {};
 
@@ -212,6 +213,7 @@ type Change = {
   newValue: string;
 };
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: CLI script with straightforward control flow
 async function switchDatabase(
   apps: App[],
   env: Environment
