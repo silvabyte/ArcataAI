@@ -2,131 +2,133 @@
 
 ## Core Belief
 
-> **Getting hired has more to do with probabilities and serendipity than your actual experience and skillset.**
+> **Getting hired is driven more by probability and luck than by raw skill or experience.**
 
-The job market isn't a meritocracy—it's a numbers game. The best candidate doesn't always win; the candidate who stacks the odds in their favor does. Arcata exists to help candidates play the probability game smarter.
+The job market is not a meritocracy. It is a numbers game. The best candidate does not always win. The candidate who puts themselves in the best position does. Arcata exists to help candidates improve the odds.
 
-**The TLDR: Probability > Skills and Experience**
+**TLDR: Probability beats skills and experience**
 
-## Mission Statement
+## Mission
 
-> We believe in a job market where the right opportunities find you, and our technology makes this a reality.
+> We believe the right opportunities should find you, and our technology makes that possible.
 
-## The Problem We Solve
+## The Problem
 
-### 1. Big Tech Dominates Hiring Channels
+### 1. Big Tech Owns the Hiring Surface Area
 
-Large companies dominate job boards and recruiting platforms due to massive budgets. They're everywhere you look, drowning out smaller opportunities. This means:
+Large companies dominate job boards and recruiting platforms because they can afford to. They crowd out smaller companies. The result:
 
-- You're competing against thousands of applicants for every posting
-- The math (statistically) isn't in your favor
-- Hidden opportunities at great companies rarely surface
+* Thousands of applicants per role
+* The math is stacked against you
+* High-quality roles at smaller companies stay hidden
 
-### 2. The Process is Tedious and Demoralizing
+### 2. The Process Is Brutal
 
-Job hunting is exhausting:
+Job hunting is time-consuming and draining:
 
-- Manually searching, filtering, and tracking applications
-- Writing custom cover letters for each role
-- Losing track of where you applied and what stage you're at
-- Getting rejected repeatedly with no feedback loop
+* Searching and filtering jobs manually
+* Rewriting resumes and cover letters for every role
+* Losing track of applications and timelines
+* Rejection with no feedback and no signal
 
-### 3. Your Experience Gets Lost in Translation
+### 3. Your Experience Is Hard to Use When It Matters
 
-Candidates struggle to recall and articulate their accomplishments during interviews. Years of experience sit in scattered notes, impossible to quickly reference when a hiring manager asks "tell me about a time when..."
+Most candidates cannot quickly recall or articulate past wins. Experience lives in scattered notes and half-remembered stories. When asked “tell me about a time when,” the signal gets lost.
 
-## Two Strategies: Fast Track vs Long Poll
+## Two Strategies: Long Poll vs Fast Track
 
-Not all job opportunities are created equal. We recognize two distinct strategies for approaching the job market:
+Not all opportunities are equal. There are two distinct paths.
 
-### Long Poll (Big Tech / FAANG)
+### Long Poll (Big Tech, FAANG)
 
-- Lengthy, systematized interview processes
-- Dominate recruiting channels due to large budgets
-- Result in significantly more applicants per role
-- Requires patience and persistence—the math isn't in most folks' favor
+* Slow, rigid interview processes
+* Heavy presence on job boards
+* Massive applicant pools
+* Requires patience and persistence
+* Odds are not great for most people
 
 ### Fast Track (Startups)
 
-- Need talent *yesterday*
-- Interview processes are ad-hoc and vary by company
-- Can't compete with Big Tech for candidate pipeline—they lack both budget and recruiting team
-- Less competition, faster decisions, more serendipity
+* Hiring needs are immediate
+* Interview processes are inconsistent but fast
+* Limited recruiting budgets and teams
+* Fewer applicants per role
+* Faster decisions and more luck involved
 
-**Arcata doesn't prescribe one strategy over the other.** Candidates choose their focus—we help them execute whichever approach they pursue. The key insight is that most candidates only see Long Poll opportunities because Big Tech dominates hiring channels. We surface the Fast Track opportunities that would otherwise stay hidden.
+Arcata does not force a strategy. Candidates choose. We help them execute. The real issue is visibility. Most candidates only see Long Poll roles because Big Tech dominates distribution. Arcata surfaces Fast Track roles that never hit the mainstream.
 
 ## Value Proposition
 
 ### What Arcata Enables
 
-1. **Apply to many high-quality jobs within minutes** — Not hours of manual searching and form-filling
-2. **Track all opportunities in one place** — A command center for your entire job hunt
-3. **Transform stale resumes into hiring manager eye candy** — AI-powered materials tailored to each role
+1. **Apply to many high-quality roles in minutes**
+2. **Track everything in one place**
+3. **Turn generic resumes into role-specific materials that get attention**
 
-### The Emotional Journey
+### The Shift
 
-| From | To |
-|------|-----|
-| Overwhelmed by tedious processes | Having fun slaying the job market |
-| Competing against thousands | Stacking opportunities in your favor |
-| Demoralized by rejection | Understanding it's a numbers game |
-| Scattered and disorganized | In control at your command center |
+| From                     | To                     |
+| ------------------------ | ---------------------- |
+| Overwhelmed              | In control             |
+| Competing with thousands | Improving your odds    |
+| Discouraged by rejection | Understanding the math |
+| Disorganized             | Running a system       |
 
-## Product Suite
+## Product
 
-### Implemented
+### Live
 
 **Tracker HQ**
-A kanban-style board for tracking all job applications. Monitor progress, never miss updates or deadlines, and keep your entire pipeline visible at a glance.
+A kanban-style board for tracking every application. Clear visibility into status, next steps, and deadlines.
 
 **Job Stream**
-Continuous feed of job opportunities matched to your criteria. Jobs are scraped from company career pages and enriched with structured data.
+A continuously updated feed of jobs pulled directly from company career pages and structured for fast evaluation.
 
 ### Roadmap
 
 **Profile+**
-AI-powered generation of personalized cover letters and resumes. Analyzes job descriptions and matches them with your profile, skills, and experiences to create tailored application materials.
+AI-generated resumes and cover letters tailored to each role using your actual experience, not templates.
 
 **Auto-Apply**
-Browser extension that accelerates the application process. Right-click on any application prompt and let AI craft tailored responses informed by your resume, accomplishments, and the specific job role. Stores preferences for common qualifiers (gender, veteran status, disability, etc.) to auto-fill forms.
+A browser extension that speeds up applications. Right-click prompts generate tailored answers based on your resume and the role. Stores common demographic and eligibility answers for reuse.
 
 **Inbox**
-Centralized tracking of all job-related communications. Links emails to specific applications, tracks conversation history, and surfaces action items.
+One place for all job-related communication. Emails are tied to applications with history and next actions surfaced.
 
 **Job Scanner**
-Automated bot that continuously scans company career pages for new openings matching your criteria. Updates your job stream in real-time and archives stale listings.
+Automated monitoring of company career pages. New roles are added in real time and stale ones removed.
 
 ## Experience Principles
 
-### Rejection is Part of the Game
+### Rejection Is Expected
 
-Getting rejected stings. When a user marks an application as rejected, acknowledge the moment:
+Rejection is normal. When a user marks a role as rejected:
 
-- Surface encouraging statistics that normalize rejection
-- *"Don't sweat it—this is one 'no' closer to the 'yes'."*
-- Reinforce that job hunting is a numbers game, not a referendum on their worth
+* Normalize it with real statistics
+* Reinforce that rejection is progress
+* Emphasize that this is not personal
 
-### Help Candidates Grow
+### Help Users Get Better
 
-The job hunt is a skill. Help users get better at it:
+Job hunting is a skill:
 
-- Surface patterns from their applications (which roles get responses, which don't)
-- Integrate feedback to refine future applications
-- Guide iteration rather than just tracking status
+* Surface patterns across applications
+* Highlight what is working and what is not
+* Encourage iteration, not blind repetition
 
-### Users Know Things We Don't
+### Users Know More Than We Do
 
-Candidates discover opportunities we haven't indexed. Respect that knowledge:
+Candidates find roles we miss:
 
-- Let users import job listings they've found
-- Allow them to flag application fields Arcata doesn't recognize
-- Build a system that learns from users and gets smarter over time
+* Allow manual job imports
+* Let users flag unrecognized fields
+* Improve the system by learning from usage
 
 ## Marketing Copy
 
 ### Elevator Pitch
 
-> Arcata is your job opportunity command center that helps you stack opportunities in your favor.
+> Arcata is a job opportunity command center built to help you stack the odds in your favor.
 
 ### Tagline
 
@@ -134,12 +136,17 @@ Candidates discover opportunities we haven't indexed. Respect that knowledge:
 
 ### Value Props
 
-1. **AI-Enhanced Job Applications** — Maximize success with AI-driven cover letter and resume tools, tailored to each specific role.
+1. **AI-Enhanced Applications**
+   Role-specific resumes and cover letters that actually match the job.
 
-2. **Streamlined Job Discovery** — Find and apply to tailored opportunities that align with your skills and career aspirations, effortlessly.
+2. **Focused Job Discovery**
+   Relevant opportunities without the noise.
 
-3. **Automated Application Process** — Save time and increase your reach. Apply to multiple jobs without the manual grind.
+3. **Faster Applications**
+   Apply broadly without the manual grind.
 
-4. **Comprehensive Job Management** — Track applications, manage responses, and stay on top of every opportunity in one place.
+4. **Centralized Management**
+   Every application, response, and follow-up in one place.
 
-5. **Fast Track Strategy** — Gain a competitive edge by targeting opportunities where you're competing against dozens, not thousands.
+5. **Fast Track Advantage**
+   Target roles where you compete with dozens, not thousands.
