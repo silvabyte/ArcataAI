@@ -12,7 +12,8 @@ final case class JobIngestionInput(
     profileId: String,
     source: String = "manual",
     createApplication: Boolean = false,
-    notes: Option[String] = None
+    notes: Option[String] = None,
+    skipStream: Boolean = false
 )
 
 /** Output from the job ingestion pipeline. */
@@ -80,6 +81,12 @@ final class JobIngestionPipeline(
       input: JobIngestionInput,
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
+    // For service calls (skipStream=true), just return the existing job
+    if input.skipStream then
+      logger.info(s"[${ctx.runId}] Service call - returning existing job without stream/application")
+      progressEmitter.emit(1, 1, "complete", "Job already exists")
+      return Right(JobIngestionOutput(job = job, streamEntry = None, application = None))
+
     val totalSteps = if input.createApplication then 3 else 2
 
     progressEmitter.emit(0, totalSteps, "checking", "Job found!")
@@ -125,7 +132,13 @@ final class JobIngestionPipeline(
       input: JobIngestionInput,
       ctx: PipelineContext
   ): Either[StepError, JobIngestionOutput] = {
-    val totalSteps = if input.createApplication then 9 else 8
+    // For service calls (skipStream=true), we only do steps 1-6 (fetch, clean, extract, transform, resolve, load)
+    val baseSteps = 6
+    val totalSteps = {
+      if input.skipStream then baseSteps
+      else if input.createApplication then baseSteps + 3 // +stream +app
+      else baseSteps + 2 // +stream
+    }
 
     progressEmitter.emit(1, totalSteps, "fetching", "Getting job page...")
 
@@ -206,39 +219,48 @@ final class JobIngestionPipeline(
           )
         }
 
-        // Step 7: Add to stream
-        streamOutput <- {
-          progressEmitter.emit(7, totalSteps, "streaming", "Adding to your feed...")
-          streamLoader.run(
-            StreamLoaderInput(
-              job = jobOutput.job,
-              profileId = input.profileId,
-              source = input.source
-            ),
-            ctx
-          )
-        }
+        // For service calls, skip stream and application - just return the job
+        finalOutput <-
+          if input.skipStream then
+            logger.info(s"[${ctx.runId}] Service call - skipping stream and application creation")
+            Right(JobIngestionOutput(job = jobOutput.job, streamEntry = None, application = None))
+          else {
+            // Step 7: Add to stream
+            for
+              streamOutput <- {
+                progressEmitter.emit(7, totalSteps, "streaming", "Adding to your feed...")
+                streamLoader.run(
+                  StreamLoaderInput(
+                    job = jobOutput.job,
+                    profileId = input.profileId,
+                    source = input.source
+                  ),
+                  ctx
+                )
+              }
 
-        // Step 8: Optionally create application
-        applicationOutput <-
-          if input.createApplication then
-            progressEmitter.emit(8, totalSteps, "tracking", "Creating application...")
-            applicationLoader
-              .run(
-                ApplicationLoaderInput(
-                  job = jobOutput.job,
-                  profileId = input.profileId,
-                  notes = input.notes
-                ),
-                ctx
-              )
-              .map(out => Some(out.application))
-          else Right(None)
-      yield JobIngestionOutput(
-        job = streamOutput.job,
-        streamEntry = Some(streamOutput.streamEntry),
-        application = applicationOutput
-      )
+              // Step 8: Optionally create application
+              applicationOutput <-
+                if input.createApplication then
+                  progressEmitter.emit(8, totalSteps, "tracking", "Creating application...")
+                  applicationLoader
+                    .run(
+                      ApplicationLoaderInput(
+                        job = jobOutput.job,
+                        profileId = input.profileId,
+                        notes = input.notes
+                      ),
+                      ctx
+                    )
+                    .map(out => Some(out.application))
+                else Right(None)
+            yield JobIngestionOutput(
+              job = streamOutput.job,
+              streamEntry = Some(streamOutput.streamEntry),
+              application = applicationOutput
+            )
+          }
+      yield finalOutput
     }
 
     result.foreach(_ => progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added successfully"))

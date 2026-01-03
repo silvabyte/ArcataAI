@@ -2,6 +2,7 @@ package arcata.api.http.routes
 
 import arcata.api.etl.framework.WorkflowRun
 import arcata.api.etl.workflows.{JobDiscoveryInput, JobDiscoveryWorkflow, JobStatusInput, JobStatusWorkflow}
+import arcata.api.http.auth.{AuthType, AuthenticatedRequest, authenticated}
 import arcata.api.http.middleware.CorsConfig
 import boogieloops.schema.derivation.Schematic
 import boogieloops.web.*
@@ -71,35 +72,26 @@ final case class JobDiscoveryRequest(
  * These endpoints return 202 Accepted immediately. Actual processing happens asynchronously via
  * Castor actors. Results are logged but not returned to the caller.
  *
+ * Authentication is via API key (X-API-Key header). Configure valid keys via the API_KEYS
+ * environment variable.
+ *
  * @param jobStatusWorkflow
  *   The job status checker workflow actor
  * @param jobDiscoveryWorkflow
  *   The job discovery workflow actor
  * @param corsConfig
  *   CORS configuration for response headers
- * @param cronSecret
- *   Optional secret key for authentication (X-Cron-Secret header)
  */
 class CronRoutes(
     jobStatusWorkflow: JobStatusWorkflow,
     jobDiscoveryWorkflow: JobDiscoveryWorkflow,
-    corsConfig: CorsConfig,
-    cronSecret: Option[String] = None
+    corsConfig: CorsConfig
 ) extends cask.Routes {
   private val jsonHeaders = Seq("Content-Type" -> "application/json")
 
   private def withCors(request: cask.Request, headers: Seq[(String, String)]): Seq[(String, String)] = {
     val origin = request.headers.get("origin").flatMap(_.headOption).getOrElse("")
     headers ++ corsConfig.headersFor(origin)
-  }
-
-  /**
-   * Validate the cron secret if configured.
-   */
-  private def validateCronSecret(request: cask.Request): Boolean = {
-    cronSecret match
-      case None => true // No secret configured, allow all
-      case Some(secret) => request.headers.get("x-cron-secret").flatMap(_.headOption).contains(secret)
   }
 
   /**
@@ -110,6 +102,7 @@ class CronRoutes(
    *
    * Returns 202 Accepted immediately; processing happens in background.
    */
+  @authenticated(Vector(AuthType.ApiKey))
   @Web.post(
     "/api/v1/cron/job-status-check",
     RouteSchema(
@@ -123,18 +116,11 @@ class CronRoutes(
       body = Some(Schematic[JobStatusCheckRequest]),
       responses = Map(
         202 -> ApiResponse("Workflow accepted", Schematic[WorkflowAcceptedResponse]),
-        401 -> ApiResponse("Unauthorized - invalid cron secret", Schematic[CronErrorResponse])
+        401 -> ApiResponse("Unauthorized - invalid API key", Schematic[CronErrorResponse])
       )
     )
   )
-  def triggerJobStatusCheck(r: ValidatedRequest): Response[String] = {
-    if !validateCronSecret(r.original) then
-      val response = CronErrorResponse(
-        accepted = false,
-        error = "Invalid or missing X-Cron-Secret header"
-      )
-      return Response(write(response), 401, withCors(r.original, jsonHeaders))
-
+  def triggerJobStatusCheck(r: ValidatedRequest)(authReq: AuthenticatedRequest): Response[String] = {
     r.getBody[JobStatusCheckRequest] match {
       case Left(validationError) =>
         val response = CronErrorResponse(
@@ -151,7 +137,7 @@ class CronRoutes(
         )
 
         // Fire and forget - send to actor
-        jobStatusWorkflow.send(WorkflowRun(input, profileId = "system"))
+        jobStatusWorkflow.send(WorkflowRun(input, profileId = authReq.profileId))
 
         val response = WorkflowAcceptedResponse(
           accepted = true,
@@ -172,6 +158,7 @@ class CronRoutes(
    *
    * Returns 202 Accepted immediately; processing happens in background.
    */
+  @authenticated(Vector(AuthType.ApiKey))
   @Web.post(
     "/api/v1/cron/job-discovery",
     RouteSchema(
@@ -185,18 +172,11 @@ class CronRoutes(
       body = Some(Schematic[JobDiscoveryRequest]),
       responses = Map(
         202 -> ApiResponse("Workflow accepted", Schematic[WorkflowAcceptedResponse]),
-        401 -> ApiResponse("Unauthorized - invalid cron secret", Schematic[CronErrorResponse])
+        401 -> ApiResponse("Unauthorized - invalid API key", Schematic[CronErrorResponse])
       )
     )
   )
-  def triggerJobDiscovery(r: ValidatedRequest): Response[String] = {
-    if !validateCronSecret(r.original) then
-      val response = CronErrorResponse(
-        accepted = false,
-        error = "Invalid or missing X-Cron-Secret header"
-      )
-      return Response(write(response), 401, withCors(r.original, jsonHeaders))
-
+  def triggerJobDiscovery(r: ValidatedRequest)(authReq: AuthenticatedRequest): Response[String] = {
     r.getBody[JobDiscoveryRequest] match {
       case Left(validationError) =>
         val response = CronErrorResponse(
@@ -210,7 +190,7 @@ class CronRoutes(
         val input = JobDiscoveryInput(sourceId = body.sourceId)
 
         // Fire and forget - send to actor
-        jobDiscoveryWorkflow.send(WorkflowRun(input, profileId = "system"))
+        jobDiscoveryWorkflow.send(WorkflowRun(input, profileId = authReq.profileId))
 
         val sourceMsg = body.sourceId match
           case Some(id) => s"source=$id"
@@ -233,7 +213,6 @@ object CronRoutes:
   def apply(
       jobStatusWorkflow: JobStatusWorkflow,
       jobDiscoveryWorkflow: JobDiscoveryWorkflow,
-      corsConfig: CorsConfig,
-      cronSecret: Option[String] = None
+      corsConfig: CorsConfig
   ): CronRoutes =
-    new CronRoutes(jobStatusWorkflow, jobDiscoveryWorkflow, corsConfig, cronSecret)
+    new CronRoutes(jobStatusWorkflow, jobDiscoveryWorkflow, corsConfig)

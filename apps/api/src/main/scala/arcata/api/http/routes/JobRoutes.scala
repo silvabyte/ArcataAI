@@ -1,7 +1,7 @@
 package arcata.api.http.routes
 
 import arcata.api.etl.{JobIngestionInput, JobIngestionPipeline}
-import arcata.api.http.auth.{AuthenticatedRequest, authenticated}
+import arcata.api.http.auth.{AuthType, AuthenticatedRequest, authenticated}
 import arcata.api.http.middleware.CorsConfig
 import boogieloops.schema.derivation.Schematic
 import boogieloops.web.*
@@ -77,16 +77,23 @@ class JobRoutes(
    * POST /api/v1/jobs/ingest - Ingest a job from a URL.
    *
    * Fetches the job posting from the provided URL, extracts job details using AI, and adds it to
-   * the user's job stream.
+   * the user's job stream. Supports both JWT (user) and API key (service) authentication.
+   *
+   * When authenticated via API key (service-to-service):
+   *   - Only saves the job and company to the database
+   *   - Skips job stream creation (no user to stream to)
+   *   - Ignores createApplication flag
    */
-  @authenticated()
+  @authenticated(Vector(AuthType.JWT, AuthType.ApiKey))
   @Web.post(
     s"$basePath/jobs/ingest",
     RouteSchema(
       summary = Some("Ingest job from URL"),
       description = Some(
         "Fetches the job posting from the provided URL, extracts job details using AI, " +
-          "and adds it to the user's job stream. Optionally creates a job application."
+          "and adds it to the user's job stream. Optionally creates a job application. " +
+          "Supports both JWT (user) and API key (service) authentication. " +
+          "Service calls skip stream/application creation."
       ),
       tags = List("Jobs"),
       body = Some(Schematic[IngestJobRequest]),
@@ -112,12 +119,16 @@ class JobRoutes(
         Response(write(response), 400, withCors(r.original, jsonHeaders))
 
       case Right(body) =>
+        // For API key auth (service calls), skip stream and application creation
+        val isServiceCall = authReq.authType == AuthType.ApiKey
+
         val input = JobIngestionInput(
           url = body.url,
           profileId = authReq.profileId,
-          source = body.source.getOrElse("manual"),
-          createApplication = body.createApplication.getOrElse(false),
-          notes = body.notes
+          source = body.source.getOrElse(if isServiceCall then "service" else "manual"),
+          createApplication = if isServiceCall then false else body.createApplication.getOrElse(false),
+          notes = if isServiceCall then None else body.notes,
+          skipStream = isServiceCall
         )
 
         val result = pipeline.run(input, authReq.profileId)

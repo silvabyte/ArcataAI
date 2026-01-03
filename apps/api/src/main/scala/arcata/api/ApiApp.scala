@@ -78,12 +78,11 @@ object ApiApp extends cask.Main {
     corsConfig = corsConfig
   )
 
-  // Cron routes for background workflows
+  // Cron routes for background workflows (authenticated via API key)
   lazy val cronRoutes: CronRoutes = CronRoutes(
     jobStatusWorkflow = jobStatusWorkflow,
     jobDiscoveryWorkflow = jobDiscoveryWorkflow,
-    corsConfig = corsConfig,
-    cronSecret = config.server.cronSecret
+    corsConfig = corsConfig
   )
 
   // CORS routes (handles OPTIONS preflight requests)

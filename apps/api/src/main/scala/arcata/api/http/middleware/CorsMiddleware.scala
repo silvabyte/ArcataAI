@@ -8,7 +8,7 @@ import cask.model.Response
 final case class CorsConfig(
     allowedOrigins: List[String],
     allowedMethods: String = "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-    allowedHeaders: String = "Content-Type, Authorization, X-Requested-With",
+    allowedHeaders: String = "Content-Type, Authorization, X-Requested-With, X-API-Key",
     maxAge: String = "86400"
 ):
   /** Check if an origin is allowed */
