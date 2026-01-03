@@ -1,7 +1,7 @@
 package arcata.api.http.routes
 
 import arcata.api.etl.framework.WorkflowRun
-import arcata.api.etl.workflows.{JobStatusInput, JobStatusWorkflow}
+import arcata.api.etl.workflows.{JobDiscoveryInput, JobDiscoveryWorkflow, JobStatusInput, JobStatusWorkflow}
 import arcata.api.http.middleware.CorsConfig
 import boogieloops.schema.derivation.Schematic
 import boogieloops.web.*
@@ -53,6 +53,19 @@ final case class CronErrorResponse(
       ReadWriter
 
 /**
+ * Request body for triggering job discovery workflow.
+ */
+@Schematic.title("JobDiscoveryRequest")
+@Schematic.description("Request to trigger the job discovery workflow")
+final case class JobDiscoveryRequest(
+    @Schematic.description(
+      "Optional source ID to filter to a specific source (e.g., 'greenhouse'). If omitted, all sources are processed."
+    )
+    sourceId: Option[String] = None
+) derives Schematic,
+      ReadWriter
+
+/**
  * Routes for triggering cron/background workflows.
  *
  * These endpoints return 202 Accepted immediately. Actual processing happens asynchronously via
@@ -60,6 +73,8 @@ final case class CronErrorResponse(
  *
  * @param jobStatusWorkflow
  *   The job status checker workflow actor
+ * @param jobDiscoveryWorkflow
+ *   The job discovery workflow actor
  * @param corsConfig
  *   CORS configuration for response headers
  * @param cronSecret
@@ -67,6 +82,7 @@ final case class CronErrorResponse(
  */
 class CronRoutes(
     jobStatusWorkflow: JobStatusWorkflow,
+    jobDiscoveryWorkflow: JobDiscoveryWorkflow,
     corsConfig: CorsConfig,
     cronSecret: Option[String] = None
 ) extends cask.Routes {
@@ -148,13 +164,76 @@ class CronRoutes(
     }
   }
 
+  /**
+   * POST /api/v1/cron/job-discovery - Trigger job discovery workflow.
+   *
+   * Discovers new jobs from registered ATS sources (e.g., Greenhouse). Jobs are added to the
+   * system-level jobs table for later matching with user profiles.
+   *
+   * Returns 202 Accepted immediately; processing happens in background.
+   */
+  @Web.post(
+    "/api/v1/cron/job-discovery",
+    RouteSchema(
+      summary = Some("Trigger job discovery workflow"),
+      description = Some(
+        "Discovers new jobs from registered ATS sources (e.g., Greenhouse). " +
+          "Jobs are added to the system-level jobs table for later matching with user profiles. " +
+          "Returns 202 Accepted immediately; processing happens in background."
+      ),
+      tags = List("Cron", "Workflows"),
+      body = Some(Schematic[JobDiscoveryRequest]),
+      responses = Map(
+        202 -> ApiResponse("Workflow accepted", Schematic[WorkflowAcceptedResponse]),
+        401 -> ApiResponse("Unauthorized - invalid cron secret", Schematic[CronErrorResponse])
+      )
+    )
+  )
+  def triggerJobDiscovery(r: ValidatedRequest): Response[String] = {
+    if !validateCronSecret(r.original) then
+      val response = CronErrorResponse(
+        accepted = false,
+        error = "Invalid or missing X-Cron-Secret header"
+      )
+      return Response(write(response), 401, withCors(r.original, jsonHeaders))
+
+    r.getBody[JobDiscoveryRequest] match {
+      case Left(validationError) =>
+        val response = CronErrorResponse(
+          accepted = false,
+          error = s"Invalid request body: ${validationError.message}"
+        )
+        Response(write(response), 400, withCors(r.original, jsonHeaders))
+
+      case Right(body) =>
+        val runId = java.util.UUID.randomUUID().toString
+        val input = JobDiscoveryInput(sourceId = body.sourceId)
+
+        // Fire and forget - send to actor
+        jobDiscoveryWorkflow.send(WorkflowRun(input, profileId = "system"))
+
+        val sourceMsg = body.sourceId match
+          case Some(id) => s"source=$id"
+          case None => "all sources"
+
+        val response = WorkflowAcceptedResponse(
+          accepted = true,
+          runId = runId,
+          workflow = "JobDiscoveryWorkflow",
+          message = s"Job discovery workflow started for $sourceMsg"
+        )
+        Response(write(response), 202, withCors(r.original, jsonHeaders))
+    }
+  }
+
   initialize()
 }
 
 object CronRoutes:
   def apply(
       jobStatusWorkflow: JobStatusWorkflow,
+      jobDiscoveryWorkflow: JobDiscoveryWorkflow,
       corsConfig: CorsConfig,
       cronSecret: Option[String] = None
   ): CronRoutes =
-    new CronRoutes(jobStatusWorkflow, corsConfig, cronSecret)
+    new CronRoutes(jobStatusWorkflow, jobDiscoveryWorkflow, corsConfig, cronSecret)

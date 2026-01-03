@@ -33,6 +33,8 @@ import upickle.default.*
  *   Brief company description from AI
  * @param headquarters
  *   Headquarters location (e.g., "San Francisco, CA")
+ * @param companyJobsSource
+ *   ATS platform type (greenhouse, lever, ashby, workday, icims, workable, custom)
  */
 final case class Company(
     companyId: Option[Long] = None,
@@ -45,11 +47,13 @@ final case class Company(
     primaryIndustry: Option[String] = None,
     employeeCountMin: Option[Int] = None,
     employeeCountMax: Option[Int] = None,
-    // New enrichment fields
+    // Enrichment fields
     industry: Option[String] = None,
     companySize: Option[String] = None,
     description: Option[String] = None,
-    headquarters: Option[String] = None
+    headquarters: Option[String] = None,
+    // Job source tracking
+    companyJobsSource: Option[String] = None
 )
 
 object Company:
@@ -75,6 +79,7 @@ object Company:
       company.companySize.foreach(v => obj("company_size") = v)
       company.description.foreach(v => obj("description") = v)
       company.headquarters.foreach(v => obj("headquarters") = v)
+      company.companyJobsSource.foreach(v => obj("company_jobs_source") = v)
       obj
     },
     json => {
@@ -93,7 +98,8 @@ object Company:
         industry = obj.get("industry").flatMap(v => if v.isNull then None else Some(v.str)),
         companySize = obj.get("company_size").flatMap(v => if v.isNull then None else Some(v.str)),
         description = obj.get("description").flatMap(v => if v.isNull then None else Some(v.str)),
-        headquarters = obj.get("headquarters").flatMap(v => if v.isNull then None else Some(v.str))
+        headquarters = obj.get("headquarters").flatMap(v => if v.isNull then None else Some(v.str)),
+        companyJobsSource = obj.get("company_jobs_source").flatMap(v => if v.isNull then None else Some(v.str))
       )
     }
   )

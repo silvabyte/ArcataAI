@@ -165,6 +165,73 @@ Pipeline steps:
 
 Closed jobs are filtered from user job streams.
 
+### Job Discovery Workflow
+
+Async workflow that discovers new jobs from registered ATS sources:
+
+```
+POST /api/v1/cron/job-discovery
+Content-Type: application/json
+X-Cron-Secret: <optional secret>
+
+{ "sourceId": "greenhouse" }  // Optional - omit for all sources
+
+→ 202 Accepted
+```
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    JobDiscoveryWorkflow                         │
+│  Iterates through JobSource enum, respects rate limits          │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼ for each JobSource
+┌─────────────────────────────────────────────────────────────────┐
+│                JobSource.discoverJobs()                         │
+│  e.g., Greenhouse → GreenhouseDiscovery.discoverJobs()          │
+│  - Queries companies by source type (company_jobs_source)       │
+│  - Calls ATS API for job listings                               │
+│  - Returns DiscoveredJob with source, apiUrl, metadata          │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼ for each job (with rate limiting delay)
+┌─────────────────────────────────────────────────────────────────┐
+│                    ROUTING DECISION                             │
+│                                                                 │
+│  (job.source, job.apiUrl) match:                                │
+│    │                                                            │
+│    ├── (Greenhouse, Some(apiUrl)) ──────────────────────────┐   │
+│    │                                                        │   │
+│    │   GreenhouseIngestionPipeline (NO AI)                  │   │
+│    │   ├── GreenhouseJobFetcher (GET API + pay_transparency)│   │
+│    │   ├── GreenhouseJobParser (JSON → ExtractedJobData)    │   │
+│    │   ├── JobTransformer                                   │   │
+│    │   ├── JobLoader (uses known companyId)                 │   │
+│    │   └── StreamLoader                                     │   │
+│    │                                                        │   │
+│    └── (_, _) ──────────────────────────────────────────────┘   │
+│                                                                 │
+│        JobIngestionPipeline (AI-POWERED fallback)               │
+│        ├── HtmlFetcher                                          │
+│        ├── HtmlCleaner                                          │
+│        ├── JobExtractor (LLM)                                   │
+│        ├── CompanyResolver                                      │
+│        ├── JobLoader                                            │
+│        └── StreamLoader                                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Registered Sources:**
+| Source | API | Ingestion |
+|--------|-----|-----------|
+| `greenhouse` | `boards-api.greenhouse.io` | Optimized (no AI) |
+
+**Key optimization:** Greenhouse jobs use structured API data directly, eliminating AI extraction costs and latency.
+
+See:
+- [Job Sources README](src/main/scala/arcata/api/etl/sources/README.md) - Source registry
+- [Greenhouse README](src/main/scala/arcata/api/etl/greenhouse/README.md) - Optimized pipeline details
+
 ## External Dependencies
 
 - [ObjectStorage](https://github.com/silvabyte/ObjectStorage) - Raw HTML storage

@@ -47,6 +47,30 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     parseResponse[Seq[Company]](response).flatMap(_.headOption)
   }
 
+  /**
+   * Find companies that use a specific job board source.
+   *
+   * @param source
+   *   The job source type (e.g., "greenhouse", "lever")
+   * @param limit
+   *   Maximum companies to return
+   * @return
+   *   Companies with matching company_jobs_source and a valid company_jobs_url
+   */
+  def findCompaniesByJobSource(source: String, limit: Int): Seq[Company] = {
+    val response = requests.get(
+      s"$baseUrl/companies",
+      headers = headers,
+      params = Map(
+        "company_jobs_source" -> s"eq.$source",
+        "company_jobs_url" -> "not.is.null",
+        "limit" -> limit.toString,
+        "order" -> "company_id.asc"
+      )
+    )
+    parseResponse[Seq[Company]](response).getOrElse(Seq.empty)
+  }
+
   /** Insert a new company and return the created record. */
   def insertCompany(company: Company): Option[Company] = {
     val json = writeCompanyForInsert(company)

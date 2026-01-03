@@ -5,7 +5,7 @@ import scala.concurrent.ExecutionContext
 import arcata.api.clients.{ObjectStorageClient, SupabaseClient}
 import arcata.api.config.Config
 import arcata.api.etl.JobIngestionPipeline
-import arcata.api.etl.workflows.JobStatusWorkflow
+import arcata.api.etl.workflows.{JobDiscoveryWorkflow, JobStatusWorkflow}
 import arcata.api.http.middleware.{CorsConfig, CorsRoutes}
 import arcata.api.http.routes.{CronRoutes, IndexRoutes, JobRoutes}
 import arcata.api.logging.Log
@@ -64,6 +64,11 @@ object ApiApp extends cask.Main {
     JobStatusWorkflow(supabaseClient)
   }
 
+  lazy val jobDiscoveryWorkflow: JobDiscoveryWorkflow = {
+    given castor.Context = actorContext
+    JobDiscoveryWorkflow(supabaseClient, config.ai, storageClient)
+  }
+
   // Initialize routes
   lazy val indexRoutes: IndexRoutes = IndexRoutes()
 
@@ -76,6 +81,7 @@ object ApiApp extends cask.Main {
   // Cron routes for background workflows
   lazy val cronRoutes: CronRoutes = CronRoutes(
     jobStatusWorkflow = jobStatusWorkflow,
+    jobDiscoveryWorkflow = jobDiscoveryWorkflow,
     corsConfig = corsConfig,
     cronSecret = config.server.cronSecret
   )

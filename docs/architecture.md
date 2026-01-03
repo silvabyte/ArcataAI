@@ -35,17 +35,22 @@ The primary interface users interact with.
 
 ### API (`apps/api/`)
 
-Scala 3 backend handling job ingestion. Uses a **config-driven extraction
-system** that learns over time:
+Scala 3 backend handling job ingestion and discovery. 
 
+**Job Ingestion Pipeline:**
 - Fetches job postings and stores raw HTML in ObjectStorage
-- Matches pages to saved extraction configs for deterministic extraction
-- Falls back to AI when no config exists, then saves the generated config
-- Tracks extraction quality with CompletionState (Complete, Sufficient, Partial, etc.)
+- Uses config-driven extraction with AI fallback
+- Tracks extraction quality with CompletionState
 - Persists job data to Supabase
 
+**Cron Workflows (async via Castor actors):**
+- `JobStatusWorkflow` - Checks if tracked jobs are still active
+- `JobDiscoveryWorkflow` - Discovers new jobs from ATS platforms (Greenhouse, etc.)
+
+Workflows are triggered via HTTP (`POST /api/v1/cron/<workflow>`) and return 202 Accepted immediately. Processing happens in background.
+
 See [API Architecture](../apps/api/README.md) for ETL pipeline details.  
-See [Config-Driven Extraction](./plans/2024-12-24-config-driven-extraction.md) for the extraction system architecture.
+See [Job Sources README](../apps/api/src/main/scala/arcata/api/etl/sources/README.md) for adding new job sources.
 
 ## Shared Libraries (`libs/`)
 
