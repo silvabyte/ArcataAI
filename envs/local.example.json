@@ -1,0 +1,15 @@
+{
+  "supabase": {
+    "url": "http://127.0.0.1:54335",
+    "anonKey": "your-local-anon-key",
+    "serviceRoleKey": "your-local-service-role-key"
+  },
+  "api": {
+    "url": "http://localhost:4203",
+    "corsOrigins": "http://localhost:4201,http://localhost:4200"
+  },
+  "apps": {
+    "hqUrl": "http://localhost:4201",
+    "authUrl": "http://localhost:4200"
+  }
+}

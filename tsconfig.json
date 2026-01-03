@@ -1,11 +1,26 @@
 {
   "files": [],
   "references": [
-    { "path": "apps/auth" },
-    { "path": "apps/hq" },
-    { "path": "libs/components" },
-    { "path": "libs/db" },
-    { "path": "libs/envs" },
-    { "path": "libs/translate" }
+    {
+      "path": "apps/auth"
+    },
+    {
+      "path": "apps/hq"
+    },
+    {
+      "path": "libs/components"
+    },
+    {
+      "path": "libs/db"
+    },
+    {
+      "path": "libs/envs"
+    },
+    {
+      "path": "libs/translate"
+    },
+    {
+      "path": "scripts"
+    }
   ]
 }

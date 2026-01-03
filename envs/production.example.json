@@ -1,0 +1,15 @@
+{
+  "supabase": {
+    "url": "https://your-project.supabase.co",
+    "anonKey": "your-production-anon-key",
+    "serviceRoleKey": "your-production-service-role-key"
+  },
+  "api": {
+    "url": "https://api.your-domain.com",
+    "corsOrigins": "https://hq.your-domain.com,https://auth.your-domain.com"
+  },
+  "apps": {
+    "hqUrl": "https://hq.your-domain.com",
+    "authUrl": "https://auth.your-domain.com"
+  }
+}

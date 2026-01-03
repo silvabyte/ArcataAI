@@ -1,0 +1,7 @@
+# Ignore actual environment configs (contain secrets)
+local.json
+production.json
+staging.json
+
+# Keep example files
+!*.example.json
