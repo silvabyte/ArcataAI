@@ -73,12 +73,12 @@ function classNames(...classes: (string | boolean | undefined)[]) {
 
 function SectionHeader({ title, label }: { title: string; label: string }) {
   return (
-    <div className="mb-8 border-gray-700 border-b pb-5">
+    <div className="mb-8 border-gray-200 border-b pb-5">
       <div className="-mt-2 -ml-2 flex flex-wrap items-baseline">
-        <h3 className="mt-2 ml-2 font-semibold text-base text-white">
+        <h3 className="mt-2 ml-2 font-semibold text-base text-gray-900">
           {title}
         </h3>
-        <p className="mt-1 ml-2 truncate text-gray-400 text-sm">{label}</p>
+        <p className="mt-1 ml-2 truncate text-gray-500 text-sm">{label}</p>
       </div>
     </div>
   );
@@ -96,7 +96,7 @@ function StepConnector({
   return (
     <div
       aria-hidden="true"
-      className="absolute top-4 left-4 mt-0.5 -ml-px h-full w-0.5 bg-gray-600"
+      className="absolute top-4 left-4 mt-0.5 -ml-px h-full w-0.5 bg-gray-300"
     />
   );
 }
@@ -134,8 +134,8 @@ function CompleteStep({
           </span>
         </span>
         <span className="ml-4 flex min-w-0 flex-col">
-          <span className="font-medium text-sm text-white">{step.name}</span>
-          <span className="text-gray-400 text-sm">{step.description}</span>
+          <span className="font-medium text-gray-900 text-sm">{step.name}</span>
+          <span className="text-gray-500 text-sm">{step.description}</span>
         </span>
       </div>
     </>
@@ -155,7 +155,7 @@ function CurrentStep({
       <div aria-current="step" className="group relative flex items-start">
         <span aria-hidden="true" className="flex h-9 items-center">
           <span
-            className="relative z-10 flex size-8 items-center justify-center rounded-full border-2 bg-gray-900"
+            className="relative z-10 flex size-8 items-center justify-center rounded-full border-2 bg-white"
             style={{ borderColor: "#273655" }}
           >
             <span
@@ -165,10 +165,10 @@ function CurrentStep({
           </span>
         </span>
         <span className="ml-4 flex min-w-0 flex-col">
-          <span className="font-medium text-sm" style={{ color: "#5a7cb5" }}>
+          <span className="font-medium text-sm" style={{ color: "#273655" }}>
             {step.name}
           </span>
-          <span className="text-gray-400 text-sm">{step.description}</span>
+          <span className="text-gray-500 text-sm">{step.description}</span>
         </span>
       </div>
     </>
@@ -187,12 +187,12 @@ function UpcomingStep({
       <StepConnector show={showConnector} />
       <div className="group relative flex items-start">
         <span aria-hidden="true" className="flex h-9 items-center">
-          <span className="relative z-10 flex size-8 items-center justify-center rounded-full border-2 border-gray-600 bg-gray-900 group-hover:border-gray-500">
-            <span className="size-2.5 rounded-full bg-transparent group-hover:bg-gray-500" />
+          <span className="relative z-10 flex size-8 items-center justify-center rounded-full border-2 border-gray-300 bg-white group-hover:border-gray-400">
+            <span className="size-2.5 rounded-full bg-transparent group-hover:bg-gray-300" />
           </span>
         </span>
         <span className="ml-4 flex min-w-0 flex-col">
-          <span className="font-medium text-gray-400 text-sm">{step.name}</span>
+          <span className="font-medium text-gray-500 text-sm">{step.name}</span>
           <span className="text-gray-500 text-sm">{step.description}</span>
         </span>
       </div>
@@ -236,13 +236,13 @@ function StepsList({ steps }: { steps: Step[] }) {
 
 export default function RoadmapPage() {
   return (
-    <div className="min-h-screen bg-gray-900 px-6 py-10 lg:px-8">
+    <div className="min-h-full bg-gray-50 px-6 py-10 lg:px-8">
       <div className="mx-auto max-w-2xl">
         <div className="mb-12">
-          <h1 className="font-bold text-3xl text-white tracking-tight">
+          <h1 className="font-bold text-3xl text-gray-900 tracking-tight">
             Product Roadmap
           </h1>
-          <p className="mt-2 text-gray-400">
+          <p className="mt-2 text-gray-600">
             Follow our journey as we build the future of job hunting. Your
             feedback shapes what comes next.
           </p>
@@ -263,15 +263,15 @@ export default function RoadmapPage() {
 
           {/* GA v1.0 Section */}
           <section>
-            <div className="mb-8 border-gray-700 border-b pb-5">
+            <div className="mb-8 border-gray-200 border-b pb-5">
               <div className="-mt-2 -ml-2 flex flex-wrap items-center gap-2">
                 <SparklesIcon className="mt-2 ml-2 h-6 w-6 text-yellow-500" />
-                <h3 className="mt-2 font-semibold text-base text-white">
+                <h3 className="mt-2 font-semibold text-base text-gray-900">
                   GA v1.0
                 </h3>
               </div>
             </div>
-            <p className="text-gray-400">
+            <p className="text-gray-600">
               All features stable, battle-tested, and refined by community
               feedback. We're building this together.
             </p>

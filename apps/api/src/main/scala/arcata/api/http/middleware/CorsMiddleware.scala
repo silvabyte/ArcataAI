@@ -1,11 +1,12 @@
 package arcata.api.http.middleware
 
+import arcata.api.logging.Log
 import cask.model.Response
 
 /**
  * CORS configuration for the API.
  */
-final case class CorsConfig(
+final case class CorsConfig private (
     allowedOrigins: List[String],
     allowedMethods: String = "GET, POST, PUT, DELETE, OPTIONS, PATCH",
     allowedHeaders: String = "Content-Type, Authorization, X-Requested-With, X-API-Key",
@@ -17,7 +18,16 @@ final case class CorsConfig(
 
   /** Get CORS headers for an allowed origin */
   def headersFor(origin: String): Seq[(String, String)] = {
-    if isAllowed(origin) then
+    val allowed = isAllowed(origin)
+    Log.debug(
+      "CORS headers check",
+      Map(
+        "origin" -> origin,
+        "allowed" -> allowed.toString,
+        "allowedOrigins" -> allowedOrigins.mkString(", ")
+      )
+    )
+    if allowed then
       Seq(
         "Access-Control-Allow-Origin" -> origin,
         "Access-Control-Allow-Methods" -> allowedMethods,
@@ -37,8 +47,19 @@ class CorsRoutes(config: CorsConfig) extends cask.Routes:
     request.headers.get("origin").flatMap(_.headOption)
 
   private def preflightResponse(request: cask.Request): Response[String] = {
-    getOrigin(request).filter(config.isAllowed) match
-      case Some(origin) => Response("", statusCode = 204, headers = config.headersFor(origin))
+    val origin = getOrigin(request)
+    val path = request.exchange.getRequestPath
+    Log.debug(
+      "CORS preflight request",
+      Map(
+        "path" -> path,
+        "origin" -> origin.getOrElse("(none)"),
+        "allowed" -> origin.exists(config.isAllowed).toString,
+        "allowedOrigins" -> config.allowedOrigins.mkString(", ")
+      )
+    )
+    origin.filter(config.isAllowed) match
+      case Some(o) => Response("", statusCode = 204, headers = config.headersFor(o))
       case None => Response("", statusCode = 204, headers = Seq.empty)
   }
 
@@ -53,6 +74,20 @@ class CorsRoutes(config: CorsConfig) extends cask.Routes:
   def optionsHealth(request: cask.Request): Response[String] = preflightResponse(request)
 
   initialize()
+
+object CorsConfig:
+  def apply(
+      allowedOrigins: List[String],
+      allowedMethods: String = "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+      allowedHeaders: String = "Content-Type, Authorization, X-Requested-With, X-API-Key",
+      maxAge: String = "86400"
+  ): CorsConfig = {
+    Log.info(
+      "CORS config initialized",
+      Map("allowedOrigins" -> allowedOrigins.mkString(", "))
+    )
+    new CorsConfig(allowedOrigins, allowedMethods, allowedHeaders, maxAge)
+  }
 
 object CorsRoutes:
   def apply(config: CorsConfig): CorsRoutes = new CorsRoutes(config)

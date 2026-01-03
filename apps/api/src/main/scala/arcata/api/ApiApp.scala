@@ -105,7 +105,8 @@ object ApiApp extends cask.Main {
       s"Starting Arcata API server",
       Map(
         "host" -> config.server.host,
-        "port" -> config.server.port.toString
+        "port" -> config.server.port.toString,
+        "corsOrigins" -> config.server.corsOrigins.mkString(", ")
       )
     )
     super.main(args)
