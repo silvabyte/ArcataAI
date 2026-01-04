@@ -1,6 +1,6 @@
 import { createDefaultResumeTemplate } from "@arcata/components";
 import { db, type JobProfile } from "@arcata/db";
-import { EyeIcon, PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { DocumentPlusIcon } from "@heroicons/react/24/outline";
 import { useCallback, useState } from "react";
 import {
@@ -89,13 +89,12 @@ function EmptyState({ onCreateProfile, isCreating }: EmptyStateProps) {
 
 type ProfileCardProps = {
   profile: JobProfile;
-  onView: (id: number) => void;
   onEdit: (id: number) => void;
 };
 
-function ProfileCard({ profile, onView, onEdit }: ProfileCardProps) {
+function ProfileCard({ profile, onEdit }: ProfileCardProps) {
   return (
-    <li className="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow-sm">
+    <li className="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="flex w-full items-center justify-between space-x-6 p-6">
         <div className="flex-1 truncate">
           <div className="flex items-center space-x-3">
@@ -117,22 +116,12 @@ function ProfileCard({ profile, onView, onEdit }: ProfileCardProps) {
         <div className="-mt-px flex divide-x divide-gray-200">
           <div className="flex w-0 flex-1">
             <button
-              className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 font-semibold text-gray-900 text-sm"
-              onClick={() => onView(profile.job_profile_id)}
-              type="button"
-            >
-              <EyeIcon aria-hidden="true" className="size-5 text-gray-400" />
-              View
-            </button>
-          </div>
-          <div className="-ml-px flex w-0 flex-1">
-            <button
-              className="relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 font-semibold text-gray-900 text-sm"
+              className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-b-lg border border-transparent py-4 font-semibold text-gray-900 text-sm hover:bg-gray-50"
               onClick={() => onEdit(profile.job_profile_id)}
               type="button"
             >
               <PencilIcon aria-hidden="true" className="size-5 text-gray-400" />
-              Edit
+              Edit Profile
             </button>
           </div>
         </div>
@@ -143,7 +132,6 @@ function ProfileCard({ profile, onView, onEdit }: ProfileCardProps) {
 
 type ProfileGridProps = {
   profiles: JobProfile[];
-  onView: (id: number) => void;
   onEdit: (id: number) => void;
   onCreateProfile: () => void;
   isCreating: boolean;
@@ -151,7 +139,6 @@ type ProfileGridProps = {
 
 function ProfileGrid({
   profiles,
-  onView,
   onEdit,
   onCreateProfile,
   isCreating,
@@ -184,7 +171,6 @@ function ProfileGrid({
           <ProfileCard
             key={profile.job_profile_id}
             onEdit={onEdit}
-            onView={onView}
             profile={profile}
           />
         ))}
@@ -227,14 +213,6 @@ export function ProfilesPage() {
     }
   }, [navigate]);
 
-  const handleView = useCallback(
-    (id: number) => {
-      // For now, view just navigates to edit
-      navigate(`/profiles/${id}`);
-    },
-    [navigate]
-  );
-
   const handleEdit = useCallback(
     (id: number) => {
       navigate(`/profiles/${id}`);
@@ -269,7 +247,6 @@ export function ProfilesPage() {
       isCreating={isCreating}
       onCreateProfile={handleCreateProfile}
       onEdit={handleEdit}
-      onView={handleView}
       profiles={profiles}
     />
   );

@@ -3,6 +3,7 @@ import {
   GlobeAltIcon,
   MapPinIcon,
   PhoneIcon,
+  TrashIcon,
   UserIcon,
 } from "@heroicons/react/20/solid";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
@@ -62,6 +63,16 @@ function ContactNodeComponent({
     [editor, nodeKey]
   );
 
+  const deleteSection = useCallback(() => {
+    editor.update(() => {
+      const node = $getContactNodeByKey(nodeKey);
+      if (node) {
+        node.remove();
+      }
+    });
+    editor.dispatchCommand(DECORATOR_NODE_CHANGED_COMMAND, undefined);
+  }, [editor, nodeKey]);
+
   const handleChange = (field: keyof ContactData, value: string) => {
     const newData = { ...data, [field]: value };
     setData(newData);
@@ -75,13 +86,23 @@ function ContactNodeComponent({
           <h3 className="font-semibold text-gray-900 text-lg">
             Contact Information
           </h3>
-          <button
-            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50"
-            onClick={() => setIsEditing(false)}
-            type="button"
-          >
-            Done
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-lg border border-red-200 bg-white px-3 py-1.5 font-medium text-red-600 text-sm shadow-sm hover:bg-red-50"
+              onClick={deleteSection}
+              title="Delete section"
+              type="button"
+            >
+              <TrashIcon className="size-4" />
+            </button>
+            <button
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50"
+              onClick={() => setIsEditing(false)}
+              type="button"
+            >
+              Done
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -250,7 +271,7 @@ function ContactNodeComponent({
 
   return (
     <button
-      className="w-full cursor-pointer py-2 text-left transition-colors hover:bg-gray-50"
+      className="group w-full cursor-pointer rounded-lg p-4 text-left transition-all hover:bg-gray-50"
       onClick={() => setIsEditing(true)}
       type="button"
     >

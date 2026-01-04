@@ -153,6 +153,16 @@ function LanguagesNodeComponent({
     [editor, nodeKey]
   );
 
+  const deleteSection = useCallback(() => {
+    editor.update(() => {
+      const node = $getLanguagesNodeByKey(nodeKey);
+      if (node) {
+        node.remove();
+      }
+    });
+    editor.dispatchCommand(DECORATOR_NODE_CHANGED_COMMAND, undefined);
+  }, [editor, nodeKey]);
+
   const handleUpdateEntry = (index: number, updated: LanguageEntry) => {
     const newEntries = [...data.entries];
     newEntries[index] = updated;
@@ -184,13 +194,23 @@ function LanguagesNodeComponent({
       <div className="border-gray-100 border-t py-4">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-semibold text-gray-900 text-lg">Languages</h3>
-          <button
-            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50"
-            onClick={() => setIsEditing(false)}
-            type="button"
-          >
-            Done
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-lg border border-red-200 bg-white px-3 py-1.5 font-medium text-red-600 text-sm shadow-sm hover:bg-red-50"
+              onClick={deleteSection}
+              title="Delete section"
+              type="button"
+            >
+              <TrashIcon className="size-4" />
+            </button>
+            <button
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50"
+              onClick={() => setIsEditing(false)}
+              type="button"
+            >
+              Done
+            </button>
+          </div>
         </div>
         <div className="space-y-4">
           {data.entries.map((entry, index) => (

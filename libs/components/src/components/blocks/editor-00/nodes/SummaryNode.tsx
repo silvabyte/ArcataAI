@@ -1,3 +1,4 @@
+import { TrashIcon } from "@heroicons/react/20/solid";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -51,6 +52,16 @@ function SummaryNodeComponent({
     [editor, nodeKey]
   );
 
+  const deleteSection = useCallback(() => {
+    editor.update(() => {
+      const node = $getSummaryNodeByKey(nodeKey);
+      if (node) {
+        node.remove();
+      }
+    });
+    editor.dispatchCommand(DECORATOR_NODE_CHANGED_COMMAND, undefined);
+  }, [editor, nodeKey]);
+
   const handleChange = (field: keyof SummaryData, value: string) => {
     const newData = { ...data, [field]: value };
     setData(newData);
@@ -64,13 +75,23 @@ function SummaryNodeComponent({
           <h3 className="font-semibold text-gray-900 text-lg">
             Professional Summary
           </h3>
-          <button
-            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50"
-            onClick={() => setIsEditing(false)}
-            type="button"
-          >
-            Done
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-lg border border-red-200 bg-white px-3 py-1.5 font-medium text-red-600 text-sm shadow-sm hover:bg-red-50"
+              onClick={deleteSection}
+              title="Delete section"
+              type="button"
+            >
+              <TrashIcon className="size-4" />
+            </button>
+            <button
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50"
+              onClick={() => setIsEditing(false)}
+              type="button"
+            >
+              Done
+            </button>
+          </div>
         </div>
         <div className="space-y-4">
           <div>
