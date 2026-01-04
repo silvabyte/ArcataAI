@@ -12,6 +12,7 @@ import {
   type Spread,
 } from "lexical";
 import { useCallback, useId, useState } from "react";
+import { DECORATOR_NODE_CHANGED_COMMAND } from "../commands";
 
 export type AwardEntry = {
   id: string;
@@ -181,6 +182,8 @@ function AwardsNodeComponent({
           node.setEntries(newEntries);
         }
       });
+      // Dispatch command to trigger save (DecoratorNode changes aren't detected by update listener)
+      editor.dispatchCommand(DECORATOR_NODE_CHANGED_COMMAND, undefined);
     },
     [editor, nodeKey]
   );

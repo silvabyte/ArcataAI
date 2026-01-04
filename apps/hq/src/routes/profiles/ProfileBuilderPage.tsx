@@ -10,7 +10,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-const DEBOUNCE_MS = 2000;
+const DEBOUNCE_MS = 500;
 
 type LoaderData = {
   profile: JobProfile | null;
@@ -283,23 +283,51 @@ export function ProfileBuilderPage() {
     [saveEditorContent]
   );
 
-  // Cleanup timeout on unmount
+  // Save pending changes immediately (used for beforeunload)
+  const savePendingChanges = useCallback(() => {
+    if (pendingStateRef.current && currentProfile) {
+      // Use navigator.sendBeacon for reliable saving on page unload
+      const data = JSON.stringify({
+        resume_data: pendingStateRef.current,
+      });
+      // Fallback to sync XHR if sendBeacon not available
+      db.job_profiles.update(currentProfile.job_profile_id, {
+        resume_data: pendingStateRef.current as unknown as Record<
+          string,
+          unknown
+        >,
+      });
+      pendingStateRef.current = null;
+    }
+  }, [currentProfile]);
+
+  // Handle page unload - save pending changes
   useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-        // Save any pending changes before unmount
-        if (pendingStateRef.current && currentProfile) {
-          db.job_profiles.update(currentProfile.job_profile_id, {
-            resume_data: pendingStateRef.current as unknown as Record<
-              string,
-              unknown
-            >,
-          });
-        }
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (pendingStateRef.current) {
+        savePendingChanges();
+        // Show browser's default "unsaved changes" warning
+        e.preventDefault();
+        e.returnValue = "";
       }
     };
-  }, [currentProfile]);
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [savePendingChanges]);
+
+  // Cleanup timeout on unmount
+  useEffect(
+    () => () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        savePendingChanges();
+      }
+    },
+    [savePendingChanges]
+  );
 
   if (error || !currentProfile) {
     return (

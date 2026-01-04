@@ -17,6 +17,7 @@ import {
   type Spread,
 } from "lexical";
 import { useCallback, useId, useState } from "react";
+import { DECORATOR_NODE_CHANGED_COMMAND } from "../commands";
 
 export type ContactData = {
   name: string;
@@ -55,6 +56,8 @@ function ContactNodeComponent({
           node.setContactData(newData);
         }
       });
+      // Dispatch command to trigger save (DecoratorNode changes aren't detected by update listener)
+      editor.dispatchCommand(DECORATOR_NODE_CHANGED_COMMAND, undefined);
     },
     [editor, nodeKey]
   );
@@ -262,7 +265,9 @@ function ContactNodeComponent({
             {contactItems.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 text-gray-600 text-sm">
                 {contactItems.reduce((prev, curr, index) => {
-                  if (index === 0) return [curr];
+                  if (index === 0) {
+                    return [curr];
+                  }
                   return [
                     ...prev,
                     <span className="text-gray-300" key={`sep-${index}`}>
@@ -276,7 +281,9 @@ function ContactNodeComponent({
             {hasLinks && linkItems.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 text-gray-500 text-sm">
                 {linkItems.reduce((prev, curr, index) => {
-                  if (index === 0) return [curr];
+                  if (index === 0) {
+                    return [curr];
+                  }
                   return [
                     ...prev,
                     <span className="text-gray-300" key={`sep-link-${index}`}>

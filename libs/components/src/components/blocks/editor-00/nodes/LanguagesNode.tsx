@@ -12,6 +12,7 @@ import {
   type Spread,
 } from "lexical";
 import { useCallback, useId, useState } from "react";
+import { DECORATOR_NODE_CHANGED_COMMAND } from "../commands";
 
 export type LanguageProficiency =
   | "native"
@@ -146,6 +147,8 @@ function LanguagesNodeComponent({
           node.setLanguagesData(newData);
         }
       });
+      // Dispatch command to trigger save (DecoratorNode changes aren't detected by update listener)
+      editor.dispatchCommand(DECORATOR_NODE_CHANGED_COMMAND, undefined);
     },
     [editor, nodeKey]
   );
