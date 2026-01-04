@@ -9,3 +9,6 @@ out/
 
 # OS
 .DS_Store
+
+# Docker secrets
+docker/docker.env

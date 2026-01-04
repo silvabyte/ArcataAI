@@ -32,6 +32,35 @@ make test     # Run tests
 make help     # All commands
 ```
 
+## Docker
+
+Build and push Docker images to `ghcr.io/silvabyte/arcata-api`.
+
+### Setup
+
+```bash
+cp docker/docker.env.example docker/docker.env
+# Edit docker/docker.env with your GHCR credentials:
+# CR_NAMESPACE=silvabyte
+# CR_USER=<github-username>
+# CR_PAT=<github-personal-access-token>
+```
+
+### Commands (from repo root)
+
+```bash
+bun run docker:build:api       # Build locally as arcata-api:local
+bun run docker:build-push:api  # Build and push to ghcr.io
+bun run docker:run:api         # Run local container on port 4203
+bun run docker:stop:api        # Stop local container
+```
+
+### Image Tags
+
+Images are tagged as:
+- `ghcr.io/silvabyte/arcata-api:latest`
+- `ghcr.io/silvabyte/arcata-api:<git-sha>`
+
 ## ETL Architecture
 
 ### Pipelines vs Workflows

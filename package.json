@@ -37,7 +37,12 @@
     "env:prod": "bun run scripts/switch-env.ts production",
     "env:status": "bun run scripts/switch-env.ts --status",
     "deploy:hq": "godeploy deploy --project=\"ArcataAI HQ\"",
-    "deploy:auth": "godeploy deploy --project=\"ArcataAI Auth\""
+    "deploy:auth": "godeploy deploy --project=\"ArcataAI Auth\"",
+    "docker:build:api": "bun run scripts/docker.ts build --app=api",
+    "docker:push:api": "bun run scripts/docker.ts push --app=api",
+    "docker:build-push:api": "bun run scripts/docker.ts build-push --app=api",
+    "docker:run:api": "bun run scripts/docker.ts run --app=api",
+    "docker:stop:api": "bun run scripts/docker.ts stop --app=api"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",
