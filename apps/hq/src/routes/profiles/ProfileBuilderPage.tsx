@@ -287,7 +287,7 @@ export function ProfileBuilderPage() {
   const savePendingChanges = useCallback(() => {
     if (pendingStateRef.current && currentProfile) {
       // Use navigator.sendBeacon for reliable saving on page unload
-      const data = JSON.stringify({
+      const _data = JSON.stringify({
         resume_data: pendingStateRef.current,
       });
       // Fallback to sync XHR if sendBeacon not available

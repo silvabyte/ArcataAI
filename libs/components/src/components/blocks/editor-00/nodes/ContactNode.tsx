@@ -16,7 +16,7 @@ import {
   type SerializedLexicalNode,
   type Spread,
 } from "lexical";
-import { useCallback, useId, useState } from "react";
+import { Fragment, useCallback, useId, useState } from "react";
 import { DECORATOR_NODE_CHANGED_COMMAND } from "../commands";
 
 export type ContactData = {
@@ -264,34 +264,22 @@ function ContactNodeComponent({
           <div className="mt-3 space-y-2">
             {contactItems.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 text-gray-600 text-sm">
-                {contactItems.reduce((prev, curr, index) => {
-                  if (index === 0) {
-                    return [curr];
-                  }
-                  return [
-                    ...prev,
-                    <span className="text-gray-300" key={`sep-${index}`}>
-                      |
-                    </span>,
-                    curr,
-                  ];
-                }, [] as React.ReactNode[])}
+                {contactItems.map((item, index) => (
+                  <Fragment key={`contact-${index}`}>
+                    {index > 0 && <span className="text-gray-300">|</span>}
+                    {item}
+                  </Fragment>
+                ))}
               </div>
             )}
             {hasLinks && linkItems.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 text-gray-500 text-sm">
-                {linkItems.reduce((prev, curr, index) => {
-                  if (index === 0) {
-                    return [curr];
-                  }
-                  return [
-                    ...prev,
-                    <span className="text-gray-300" key={`sep-link-${index}`}>
-                      |
-                    </span>,
-                    curr,
-                  ];
-                }, [] as React.ReactNode[])}
+                {linkItems.map((item, index) => (
+                  <Fragment key={`link-${index}`}>
+                    {index > 0 && <span className="text-gray-300">|</span>}
+                    {item}
+                  </Fragment>
+                ))}
               </div>
             )}
           </div>

@@ -14,6 +14,9 @@ import {
 import { useCallback, useId, useState } from "react";
 import { DECORATOR_NODE_CHANGED_COMMAND } from "../commands";
 
+/** Regex to strip http:// or https:// protocol from URLs for display */
+const URL_PROTOCOL_REGEX = /^https?:\/\//;
+
 export type ProjectEntry = {
   id: string;
   name: string;
@@ -450,7 +453,7 @@ function ProjectsNodeComponent({
                   <h4 className="font-bold text-base text-gray-900">
                     {entry.name || "Untitled Project"}
                   </h4>
-                  {entry.url && (
+                  {entry.url ? (
                     <a
                       className="text-blue-600 text-sm hover:underline"
                       href={entry.url}
@@ -458,9 +461,9 @@ function ProjectsNodeComponent({
                       rel="noopener noreferrer"
                       target="_blank"
                     >
-                      {entry.url.replace(/^https?:\/\//, "")}
+                      {entry.url.replace(URL_PROTOCOL_REGEX, "")}
                     </a>
-                  )}
+                  ) : null}
                 </div>
                 <div className="shrink-0 font-medium text-gray-500 text-sm tabular-nums">
                   {formatDateRange(
@@ -471,11 +474,11 @@ function ProjectsNodeComponent({
                 </div>
               </div>
 
-              {entry.description && (
+              {entry.description ? (
                 <p className="mt-2 text-gray-600 text-sm">
                   {entry.description}
                 </p>
-              )}
+              ) : null}
 
               {entry.technologies.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">

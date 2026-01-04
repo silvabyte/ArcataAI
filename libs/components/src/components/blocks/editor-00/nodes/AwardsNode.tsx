@@ -275,11 +275,11 @@ function AwardsNodeComponent({
                 </div>
               </div>
 
-              {entry.description && (
+              {entry.description ? (
                 <p className="mt-2 text-gray-600 text-sm leading-relaxed">
                   {entry.description}
                 </p>
-              )}
+              ) : null}
             </div>
           ))}
         </div>

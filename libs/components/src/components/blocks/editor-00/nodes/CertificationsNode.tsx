@@ -14,6 +14,9 @@ import {
 import { useCallback, useId, useState } from "react";
 import { DECORATOR_NODE_CHANGED_COMMAND } from "../commands";
 
+/** Regex to strip http:// or https:// protocol prefix from URLs */
+const STRIP_PROTOCOL_REGEX = /^https?:\/\//;
+
 export type CertificationEntry = {
   id: string;
   name: string;
@@ -355,7 +358,7 @@ function CertificationsNodeComponent({
                 </div>
               </div>
 
-              {entry.credentialUrl && (
+              {entry.credentialUrl ? (
                 <a
                   className="mt-1 block truncate text-blue-600 text-sm hover:underline"
                   href={entry.credentialUrl}
@@ -363,9 +366,9 @@ function CertificationsNodeComponent({
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  {entry.credentialUrl.replace(/^https?:\/\//, "")}
+                  {entry.credentialUrl.replace(STRIP_PROTOCOL_REGEX, "")}
                 </a>
-              )}
+              ) : null}
             </div>
           ))}
         </div>
