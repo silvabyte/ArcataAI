@@ -1,8 +1,17 @@
 import { downloadResumePDF, Editor } from "@arcata/components";
 import { db, type JobProfile, type JobProfileStatus } from "@arcata/db";
-import { ArrowDownTrayIcon, ArrowLeftIcon } from "@heroicons/react/20/solid";
+import { Menu, Switch, Transition } from "@headlessui/react";
+import {
+  ArrowDownTrayIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  XMarkIcon,
+} from "@heroicons/react/20/solid";
 import type { SerializedEditorState } from "lexical";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   Link,
   type LoaderFunctionArgs,
@@ -39,16 +48,9 @@ export async function loader({
   }
 }
 
-function getStatusBadgeClasses(status: JobProfileStatus): string {
-  if (status === "live") {
-    return "bg-green-50 text-green-700 ring-green-600/20";
-  }
-  return "bg-yellow-50 text-yellow-700 ring-yellow-600/20";
-}
-
-function getStatusLabel(status: JobProfileStatus): string {
-  return status === "live" ? "Live" : "Draft";
-}
+// Remove unused helper functions since we now render status inline
+// function getStatusBadgeClasses(status: JobProfileStatus): string { ... }
+// function getStatusLabel(status: JobProfileStatus): string { ... }
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type DownloadStatus = "idle" | "generating" | "error";
@@ -60,6 +62,7 @@ type ProfileHeaderProps = {
   onNameChange: (name: string) => void;
   onStatusToggle: () => void;
   onDownload: () => void;
+  onDelete: () => void;
 };
 
 function ProfileHeader({
@@ -69,6 +72,7 @@ function ProfileHeader({
   onNameChange,
   onStatusToggle,
   onDownload,
+  onDelete,
 }: ProfileHeaderProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(profile.name);
@@ -93,57 +97,114 @@ function ProfileHeader({
 
   return (
     <header className="flex items-center justify-between border-gray-200 border-b bg-white px-4 py-3 lg:px-6 lg:py-4">
-      {/* Left side: Back + Name */}
-      <div className="flex min-w-0 items-center gap-x-4">
+      {/* Left side: Back + Name + Status */}
+      <div className="flex min-w-0 flex-1 items-center gap-x-4">
         <Link
-          className="flex items-center gap-x-2 text-gray-500 text-sm hover:text-gray-700"
+          className="group flex flex-col items-center justify-center rounded-md border border-gray-200 bg-white p-2 hover:bg-gray-50 hover:text-gray-900"
+          title="Back to Profiles"
           to="/profiles"
         >
-          <ArrowLeftIcon className="size-4" />
-          <span className="hidden sm:inline">Profiles</span>
+          <ArrowLeftIcon className="size-4 text-gray-500 group-hover:text-gray-900" />
         </Link>
 
-        <div className="h-6 w-px bg-gray-200" />
-
-        {isEditingName ? (
-          <input
-            autoFocus
-            className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-2 py-1 font-semibold text-gray-900 text-lg ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-gray-400"
-            onBlur={handleNameSubmit}
-            onChange={(e) => setEditedName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            type="text"
-            value={editedName}
-          />
-        ) : (
-          <button
-            className="min-w-0 truncate font-semibold text-gray-900 text-lg hover:text-gray-600"
-            onClick={() => setIsEditingName(true)}
-            type="button"
-          >
-            {profile.name}
-          </button>
-        )}
+        <div className="flex min-w-0 flex-col">
+          <div className="flex items-center gap-x-2">
+            {isEditingName ? (
+              <div className="flex items-center gap-x-1">
+                <input
+                  autoFocus
+                  className="block w-full min-w-[200px] rounded-lg border-0 bg-transparent px-2 py-1 font-bold text-gray-900 text-xl ring-1 ring-gray-900/5 transition-all duration-200 ease-in-out placeholder:text-gray-400 focus:bg-white focus:shadow-md focus:ring-1 focus:ring-gray-900/10 sm:leading-6"
+                  onBlur={handleNameSubmit}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  type="text"
+                  value={editedName}
+                />
+                <button
+                  className="rounded-full p-1 text-green-600 hover:bg-gray-100"
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // Prevent blur
+                    handleNameSubmit();
+                  }}
+                  type="button"
+                >
+                  <CheckIcon className="size-5" />
+                </button>
+                <button
+                  className="rounded-full p-1 text-red-500 hover:bg-gray-100"
+                  onClick={() => {
+                    setIsEditingName(false);
+                    setEditedName(profile.name);
+                  }}
+                  type="button"
+                >
+                  <XMarkIcon className="size-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="group flex items-center gap-x-2">
+                <button
+                  className="cursor-pointer truncate rounded-lg border border-transparent px-2 py-1 text-left font-bold text-gray-900 text-xl transition-colors duration-200 hover:bg-gray-50"
+                  onClick={() => setIsEditingName(true)}
+                  title="Click to edit"
+                  type="button"
+                >
+                  {profile.name}
+                </button>
+                <button
+                  className="hidden rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 group-hover:block"
+                  onClick={() => setIsEditingName(true)}
+                  title="Edit name"
+                  type="button"
+                >
+                  <PencilIcon className="size-4" />
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-x-2 text-xs">
+            <span className="text-gray-500">
+              {saveStatus === "saving" && "Saving..."}
+              {saveStatus === "saved" && "Saved"}
+              {saveStatus === "error" && "Error saving"}
+              {saveStatus === "idle" && "All changes saved"}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Right side: Status + Actions */}
-      <div className="flex shrink-0 items-center gap-x-3">
-        {/* Save status indicator */}
-        <span className="text-gray-500 text-sm">
-          {saveStatus === "saving" && "Saving..."}
-          {saveStatus === "saved" && "Saved"}
-          {saveStatus === "error" && "Error saving"}
-        </span>
+      {/* Right side: Actions */}
+      <div className="flex shrink-0 items-center gap-x-4">
+        {/* Status Switch */}
+        <div className="flex items-center gap-x-2">
+          <span
+            className={`text-sm ${profile.status === "draft" ? "font-medium text-gray-900" : "text-gray-500"}`}
+          >
+            Draft
+          </span>
+          <Switch
+            checked={profile.status === "live"}
+            className={`${
+              profile.status === "live" ? "bg-green-600" : "bg-gray-200"
+            } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2`}
+            onChange={onStatusToggle}
+          >
+            <span className="sr-only">Use setting</span>
+            <span
+              aria-hidden="true"
+              className={`${
+                profile.status === "live" ? "translate-x-5" : "translate-x-0"
+              } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+            />
+          </Switch>
+          <span
+            className={`text-sm ${profile.status === "live" ? "font-medium text-gray-900" : "text-gray-500"}`}
+          >
+            Live
+          </span>
+        </div>
 
-        {/* Status badge (clickable) */}
-        <button
-          className={`inline-flex shrink-0 cursor-pointer items-center rounded-full px-2 py-1 font-medium text-xs ring-1 ring-inset transition-opacity hover:opacity-80 ${getStatusBadgeClasses(profile.status)}`}
-          onClick={onStatusToggle}
-          title={`Click to change to ${profile.status === "draft" ? "Live" : "Draft"}`}
-          type="button"
-        >
-          {getStatusLabel(profile.status)}
-        </button>
+        <div className="h-6 w-px bg-gray-200" />
 
         {/* Download button */}
         <button
@@ -154,9 +215,49 @@ function ProfileHeader({
         >
           <ArrowDownTrayIcon className="-ml-0.5 size-4" />
           <span className="hidden sm:inline">
-            {downloadStatus === "generating" ? "Generating..." : "Download"}
+            {downloadStatus === "generating" ? "Generating..." : "Download PDF"}
           </span>
         </button>
+
+        {/* More Menu */}
+        <Menu as="div" className="relative inline-block text-left">
+          <Menu.Button className="flex items-center rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100">
+            <span className="sr-only">Open options</span>
+            <EllipsisVerticalIcon aria-hidden="true" className="size-5" />
+          </Menu.Button>
+
+          <Transition
+            as={Fragment}
+            enter="transition ease-out duration-100"
+            enterFrom="transform opacity-0 scale-95"
+            enterTo="transform opacity-100 scale-100"
+            leave="transition ease-in duration-75"
+            leaveFrom="transform opacity-100 scale-100"
+            leaveTo="transform opacity-0 scale-95"
+          >
+            <Menu.Items className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div className="py-1">
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      className={`${
+                        active ? "bg-red-50 text-red-700" : "text-red-600"
+                      } group flex w-full items-center px-4 py-2 text-sm`}
+                      onClick={onDelete}
+                      type="button"
+                    >
+                      <TrashIcon
+                        aria-hidden="true"
+                        className="mr-3 size-5 text-red-500 group-hover:text-red-600"
+                      />
+                      Delete Profile
+                    </button>
+                  )}
+                </Menu.Item>
+              </div>
+            </Menu.Items>
+          </Transition>
+        </Menu>
       </div>
     </header>
   );
@@ -233,6 +334,28 @@ export function ProfileBuilderPage() {
       setTimeout(() => setDownloadStatus("idle"), 3000);
     }
   }, [currentProfile]);
+
+  const handleDelete = useCallback(async () => {
+    if (!currentProfile) {
+      return;
+    }
+
+    if (
+      // biome-ignore lint/suspicious/noAlert: Simple confirmation for now
+      window.confirm(
+        "Are you sure you want to delete this profile? This action cannot be undone."
+      )
+    ) {
+      try {
+        await db.job_profiles.remove(currentProfile.job_profile_id);
+        navigate("/profiles");
+      } catch (err) {
+        console.error("Failed to delete profile:", err);
+        // biome-ignore lint/suspicious/noAlert: Simple error handling
+        alert("Failed to delete profile");
+      }
+    }
+  }, [currentProfile, navigate]);
 
   // Debounced auto-save for editor content
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -360,6 +483,7 @@ export function ProfileBuilderPage() {
     <div className="flex h-full flex-col overflow-hidden">
       <ProfileHeader
         downloadStatus={downloadStatus}
+        onDelete={handleDelete}
         onDownload={handleDownload}
         onNameChange={handleNameChange}
         onStatusToggle={handleStatusToggle}
