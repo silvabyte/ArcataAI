@@ -18,6 +18,11 @@ import {
   useLoaderData,
   useNavigate,
 } from "react-router-dom";
+import { CoverLettersManager } from "./CoverLettersManager";
+
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(" ");
+}
 
 const DEBOUNCE_MS = 500;
 
@@ -52,6 +57,7 @@ export async function loader({
 // function getStatusBadgeClasses(status: JobProfileStatus): string { ... }
 // function getStatusLabel(status: JobProfileStatus): string { ... }
 
+// Status types
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type DownloadStatus = "idle" | "generating" | "error";
 
@@ -270,6 +276,9 @@ export function ProfileBuilderPage() {
   const [downloadStatus, setDownloadStatus] = useState<DownloadStatus>("idle");
   const [currentProfile, setCurrentProfile] = useState<JobProfile | null>(
     profile
+  );
+  const [currentTab, setCurrentTab] = useState<"resume" | "cover-letters">(
+    "resume"
   );
 
   const handleNameChange = useCallback(
@@ -491,15 +500,53 @@ export function ProfileBuilderPage() {
         saveStatus={saveStatus}
       />
 
-      {/* Editor Container */}
-      <main className="flex-1 overflow-y-auto bg-gray-100 p-4 pb-20 lg:p-6 lg:pb-6">
-        <div className="mx-auto max-w-4xl">
-          <Editor
-            editorSerializedState={initialEditorState}
-            onSerializedChange={handleEditorChange}
-          />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="shrink-0 border-gray-200 border-b bg-white px-4 lg:px-6">
+          <div className="-mb-px flex space-x-8">
+            <button
+              className={classNames(
+                currentTab === "resume"
+                  ? "border-gray-900 text-gray-900"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
+                "whitespace-nowrap border-b-2 px-1 py-4 font-medium text-sm focus:outline-none"
+              )}
+              onClick={() => setCurrentTab("resume")}
+              type="button"
+            >
+              Resume
+            </button>
+            <button
+              className={classNames(
+                currentTab === "cover-letters"
+                  ? "border-gray-900 text-gray-900"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
+                "whitespace-nowrap border-b-2 px-1 py-4 font-medium text-sm focus:outline-none"
+              )}
+              onClick={() => setCurrentTab("cover-letters")}
+              type="button"
+            >
+              Cover Letters
+            </button>
+          </div>
         </div>
-      </main>
+
+        <div className="flex-1 overflow-hidden bg-gray-100">
+          {currentTab === "resume" ? (
+            <div className="h-full overflow-y-auto p-4 pb-20 lg:p-6 lg:pb-6">
+              <div className="mx-auto max-w-4xl">
+                <Editor
+                  editorSerializedState={initialEditorState}
+                  onSerializedChange={handleEditorChange}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="h-full p-4 lg:p-6">
+              <CoverLettersManager />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
