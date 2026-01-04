@@ -45,6 +45,9 @@ type EnvConfig = {
     hqUrl: string;
     authUrl: string;
   };
+  resume: {
+    maxFileSizeMb: number;
+  };
 };
 
 type ParsedArgs = {
@@ -259,6 +262,19 @@ async function switchDatabase(
         });
         envMap.set("CORS_ORIGINS", config.api.corsOrigins);
       }
+
+      // Resume config
+      const oldMaxFileSize = envMap.get("RESUME_MAX_FILE_SIZE_MB") ?? "";
+      const newMaxFileSize = String(config.resume.maxFileSizeMb);
+      if (oldMaxFileSize !== newMaxFileSize) {
+        changes.push({
+          app,
+          key: "RESUME_MAX_FILE_SIZE_MB",
+          oldValue: oldMaxFileSize,
+          newValue: newMaxFileSize,
+        });
+        envMap.set("RESUME_MAX_FILE_SIZE_MB", newMaxFileSize);
+      }
     } else {
       // Frontend apps (hq, auth)
       const oldUrl = envMap.get("VITE_SUPABASE_URL") ?? "";
@@ -369,12 +385,15 @@ async function showStatus(): Promise<void> {
       const supabaseUrl = envMap.get("SUPABASE_URL") ?? "(not set)";
       const serviceKey = envMap.get("SUPABASE_SERVICE_ROLE_KEY") ?? "(not set)";
       const corsOrigins = envMap.get("CORS_ORIGINS") ?? "(not set)";
+      const resumeMaxSize =
+        envMap.get("RESUME_MAX_FILE_SIZE_MB") ?? "(not set)";
 
       console.log(
         `  Database:     ${detectEnvironment(supabaseUrl)} (${supabaseUrl})`
       );
       console.log(`  Service Key:  ${maskSecret(serviceKey)}`);
       console.log(`  CORS Origins: ${corsOrigins}`);
+      console.log(`  Resume Max Size: ${resumeMaxSize}MB`);
     } else {
       const supabaseUrl = envMap.get("VITE_SUPABASE_URL") ?? "(not set)";
       const anonKey = envMap.get("VITE_SUPABASE_KEY") ?? "(not set)";

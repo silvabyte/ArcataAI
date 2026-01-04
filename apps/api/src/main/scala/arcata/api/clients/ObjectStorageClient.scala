@@ -2,6 +2,7 @@ package arcata.api.clients
 
 import scala.util.{Failure, Success, Try}
 
+import geny.Readable
 import scribe.Logging
 import upickle.default.*
 
@@ -91,6 +92,52 @@ class ObjectStorageClient(
         s"$baseUrl/files",
         headers = headers,
         data = content
+      )
+    } match {
+      case Failure(e) =>
+        Left(StorageError.NetworkError(e.getMessage, Some(e)))
+
+      case Success(response) if response.statusCode == 201 || response.statusCode == 200 =>
+        parseFileResponse(response.text())
+
+      case Success(response) =>
+        parseErrorResponse(response)
+    }
+  }
+
+  /**
+   * Upload a file to storage from a stream.
+   *
+   * This method streams data directly without loading the entire file into memory, making it
+   * suitable for large files. The stream is read once and sent directly to the storage service.
+   *
+   * @param data
+   *   File content as a geny.Readable stream
+   * @param fileName
+   *   Name for the file
+   * @param mimeType
+   *   Optional MIME type
+   * @param userId
+   *   User ID for multi-tenant isolation
+   * @return
+   *   StoredObject on success, StorageError on failure
+   */
+  def uploadStream(
+      data: Readable,
+      fileName: String,
+      mimeType: Option[String],
+      userId: String
+  ): Either[StorageError, StoredObject] = {
+    val headers = tenantHeaders(userId) ++ Map(
+      "x-file-name" -> fileName,
+      "Content-Type" -> mimeType.getOrElse("application/octet-stream")
+    ) ++ mimeType.map(m => "x-mimetype" -> m)
+
+    Try {
+      requests.post(
+        s"$baseUrl/files",
+        headers = headers,
+        data = data
       )
     } match {
       case Failure(e) =>

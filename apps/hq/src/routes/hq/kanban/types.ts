@@ -20,9 +20,9 @@ export function toKanbanApplication(
 ): KanbanApplication {
   return {
     // Required by Shadcn KanbanItemProps
-    id: String(app.application_id),
+    id: `card-${app.application_id}`,
     name: app.jobs?.title ?? "Unknown",
-    column: String(app.status_id),
+    column: `col-${app.status_id}`,
     // Full domain data
     application: app,
   };
@@ -31,7 +31,7 @@ export function toKanbanApplication(
 export function toKanbanStatus(status: ApplicationStatus): KanbanStatus {
   return {
     // Required by Shadcn KanbanColumnProps
-    id: String(status.status_id),
+    id: `col-${status.status_id}`,
     name: status.name,
     // Full domain data
     status,

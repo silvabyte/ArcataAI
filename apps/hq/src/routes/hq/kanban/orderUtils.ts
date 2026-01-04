@@ -46,7 +46,7 @@ export function findChangedItem(
 ): KanbanApplication | null {
   for (const newItem of newData) {
     // Compare the kanban's `column` (string) against the original status_id from DB
-    const originalStatusId = String(newItem.application.status_id);
+    const originalStatusId = `col-${newItem.application.status_id}`;
 
     // Check if column changed (card moved to different column)
     if (newItem.column !== originalStatusId) {

@@ -11,5 +11,8 @@
   "apps": {
     "hqUrl": "https://hq.your-domain.com",
     "authUrl": "https://auth.your-domain.com"
+  },
+  "resume": {
+    "maxFileSizeMb": 10
   }
 }

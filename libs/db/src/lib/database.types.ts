@@ -362,6 +362,7 @@ export type Database = {
           name: string;
           profile_id: string;
           resume_data: Json | null;
+          resume_file_id: string | null;
           status: Database["public"]["Enums"]["job_profile_status"];
           updated_at: string | null;
         };
@@ -372,6 +373,7 @@ export type Database = {
           name: string;
           profile_id: string;
           resume_data?: Json | null;
+          resume_file_id?: string | null;
           status?: Database["public"]["Enums"]["job_profile_status"];
           updated_at?: string | null;
         };
@@ -382,6 +384,7 @@ export type Database = {
           name?: string;
           profile_id?: string;
           resume_data?: Json | null;
+          resume_file_id?: string | null;
           status?: Database["public"]["Enums"]["job_profile_status"];
           updated_at?: string | null;
         };

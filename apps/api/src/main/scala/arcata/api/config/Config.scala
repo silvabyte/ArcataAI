@@ -12,7 +12,8 @@ final case class Config(
     server: ServerConfig,
     supabase: SupabaseConfig,
     objectStorage: ObjectStorageConfig,
-    ai: AIConfig
+    ai: AIConfig,
+    resume: ResumeConfig
 )
 
 /** HTTP server configuration. */
@@ -42,6 +43,11 @@ final case class AIConfig(
     model: String // anthropic/claude-sonnet-4-20250514
 )
 
+/** Resume parsing configuration. */
+final case class ResumeConfig(
+    maxFileSizeMb: Int // Maximum allowed resume file size in megabytes
+)
+
 object Config:
   /**
    * Load configuration from environment variables.
@@ -55,11 +61,13 @@ object Config:
       supabase <- loadSupabaseConfig()
       objectStorage <- loadObjectStorageConfig()
       ai <- loadAIConfig()
+      resume <- loadResumeConfig()
     yield Config(
       server = server,
       supabase = supabase,
       objectStorage = objectStorage,
-      ai = ai
+      ai = ai,
+      resume = resume
     )
   }
 
@@ -120,6 +128,17 @@ object Config:
       apiKey = apiKey,
       model = getEnvOrDefault("AI_MODEL", "anthropic/claude-haiku-4.5")
     )
+  }
+
+  private def loadResumeConfig(): Either[ConfigError, ResumeConfig] = {
+    val maxFileSizeStr = getEnvOrDefault("RESUME_MAX_FILE_SIZE_MB", "10")
+    Try(maxFileSizeStr.toInt) match
+      case Success(maxSize) if maxSize > 0 =>
+        Right(ResumeConfig(maxFileSizeMb = maxSize))
+      case Success(_) =>
+        Left(ConfigError("RESUME_MAX_FILE_SIZE_MB must be a positive integer"))
+      case Failure(_) =>
+        Left(ConfigError(s"RESUME_MAX_FILE_SIZE_MB must be a valid integer, got: '$maxFileSizeStr'"))
   }
 
   private def getEnvRequired(name: String): Either[ConfigError, String] = {

@@ -8,7 +8,7 @@ import type {
   DragStartEvent,
 } from "@dnd-kit/core";
 import {
-  closestCorners,
+  closestCenter,
   DndContext,
   DragOverlay,
   KeyboardSensor,
@@ -158,7 +158,11 @@ export const KanbanCards = <T extends KanbanItemProps = KanbanItemProps>({
 }: KanbanCardsProps<T>) => {
   const { data } = useContext(KanbanContext) as KanbanContextProps<T>;
   const filteredData = data.filter((item) => item.column === props.id);
-  const items = filteredData.map((item) => item.id);
+  const isEmpty = filteredData.length === 0;
+
+  // Create a placeholder ID for empty columns
+  const placeholderId = `placeholder-${props.id}`;
+  const items = isEmpty ? [placeholderId] : filteredData.map((item) => item.id);
 
   return (
     <ScrollArea className="overflow-hidden">
@@ -168,11 +172,40 @@ export const KanbanCards = <T extends KanbanItemProps = KanbanItemProps>({
           // biome-ignore lint/suspicious/noExplicitAny: spreading props from shadcn component
           {...(props as any)}
         >
-          {filteredData.map(children)}
+          {isEmpty ? (
+            // Invisible placeholder to enable drop detection on empty columns
+            <PlaceholderCard id={placeholderId} />
+          ) : (
+            filteredData.map(children)
+          )}
         </div>
       </SortableContext>
       <ScrollBar orientation="vertical" />
     </ScrollArea>
+  );
+};
+
+// Invisible placeholder card for empty columns
+const PlaceholderCard = ({ id }: { id: string }) => {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({
+      id,
+    });
+
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      aria-hidden="true"
+      className="h-24 w-full"
+    />
   );
 };
 
@@ -217,17 +250,8 @@ export const KanbanProvider = <
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 8, // Require 8px movement before drag starts
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200, // 200ms delay before drag starts on touch
-        tolerance: 5,
-      },
-    }),
+    useSensor(MouseSensor),
+    useSensor(TouchSensor),
     useSensor(KeyboardSensor)
   );
 
@@ -254,7 +278,15 @@ export const KanbanProvider = <
     }
 
     const activeColumn = activeItem.column;
+
+    // Check if dropping on a placeholder (empty column)
+    const isOverPlaceholder = String(over.id).startsWith("placeholder-");
+    const placeholderColumn = isOverPlaceholder
+      ? String(over.id).replace("placeholder-", "")
+      : null;
+
     const overColumn =
+      placeholderColumn ||
       overItem?.column ||
       columns.find((col) => col.id === over.id)?.id ||
       columns[0]?.id;
@@ -262,10 +294,15 @@ export const KanbanProvider = <
     if (activeColumn !== overColumn) {
       let newData = [...data];
       const activeIndex = newData.findIndex((item) => item.id === active.id);
-      const overIndex = newData.findIndex((item) => item.id === over.id);
 
+      // When dropping on placeholder, just move to end of that column
       newData[activeIndex].column = overColumn;
-      newData = arrayMove(newData, activeIndex, overIndex);
+
+      // Only do arrayMove if there's a real item to swap with
+      if (!isOverPlaceholder && overItem) {
+        const overIndex = newData.findIndex((item) => item.id === over.id);
+        newData = arrayMove(newData, activeIndex, overIndex);
+      }
 
       onDataChange?.(newData);
     }
@@ -284,14 +321,21 @@ export const KanbanProvider = <
       return;
     }
 
+    // Check if dropping on a placeholder - if so, the move was already handled in dragOver
+    const isOverPlaceholder = String(over.id).startsWith("placeholder-");
+    if (isOverPlaceholder) {
+      return;
+    }
+
     let newData = [...data];
 
     const oldIndex = newData.findIndex((item) => item.id === active.id);
     const newIndex = newData.findIndex((item) => item.id === over.id);
 
-    newData = arrayMove(newData, oldIndex, newIndex);
-
-    onDataChange?.(newData);
+    if (newIndex >= 0) {
+      newData = arrayMove(newData, oldIndex, newIndex);
+      onDataChange?.(newData);
+    }
   };
 
   const announcements: Announcements = {
@@ -323,7 +367,7 @@ export const KanbanProvider = <
     <KanbanContext.Provider value={{ columns, data, activeCardId }}>
       <DndContext
         accessibility={{ announcements }}
-        collisionDetection={closestCorners}
+        collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}

@@ -4,10 +4,10 @@ import scala.concurrent.ExecutionContext
 
 import arcata.api.clients.{ObjectStorageClient, SupabaseClient}
 import arcata.api.config.Config
-import arcata.api.etl.JobIngestionPipeline
+import arcata.api.etl.{JobIngestionPipeline, ResumeParsingPipeline}
 import arcata.api.etl.workflows.{JobDiscoveryWorkflow, JobStatusWorkflow}
 import arcata.api.http.middleware.{CorsConfig, CorsRoutes}
-import arcata.api.http.routes.{CronRoutes, IndexRoutes, JobRoutes}
+import arcata.api.http.routes.{CronRoutes, IndexRoutes, JobRoutes, ResumeRoutes}
 import arcata.api.logging.Log
 
 /**
@@ -78,6 +78,24 @@ object ApiApp extends cask.Main {
     corsConfig = corsConfig
   )
 
+  // Resume parsing pipeline (requires storage client)
+  lazy val resumeParsingPipeline: Option[ResumeParsingPipeline] = storageClient.map { storage =>
+    ResumeParsingPipeline(
+      resumeConfig = config.resume,
+      aiConfig = config.ai,
+      storageClient = storage
+    )
+  }
+
+  // Resume routes (only available if storage is configured)
+  lazy val resumeRoutes: Option[ResumeRoutes] = resumeParsingPipeline.map { pipeline =>
+    ResumeRoutes(
+      basePath = "/api/v1",
+      pipeline = pipeline,
+      corsConfig = corsConfig
+    )
+  }
+
   // Cron routes for background workflows (authenticated via API key)
   lazy val cronRoutes: CronRoutes = CronRoutes(
     jobStatusWorkflow = jobStatusWorkflow,
@@ -89,12 +107,16 @@ object ApiApp extends cask.Main {
   lazy val corsRoutes: CorsRoutes = CorsRoutes(corsConfig)
 
   // Register all routes
-  override def allRoutes: Seq[cask.Routes] = Seq(
-    corsRoutes,
-    indexRoutes,
-    jobRoutes,
-    cronRoutes
-  )
+  override def allRoutes: Seq[cask.Routes] = {
+    val baseRoutes = Seq(
+      corsRoutes,
+      indexRoutes,
+      jobRoutes,
+      cronRoutes
+    )
+    // Add resume routes if storage is configured
+    baseRoutes ++ resumeRoutes.toSeq
+  }
 
   // Server configuration
   override def host: String = config.server.host

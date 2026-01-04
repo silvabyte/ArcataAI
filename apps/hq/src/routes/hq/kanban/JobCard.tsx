@@ -95,15 +95,8 @@ export function JobCard({
                 <DropdownMenuItem
                   className="cursor-pointer hover:bg-accent"
                   onClick={() => {
-                    console.log("[JobCard] View Details clicked", {
-                      jobId: job?.job_id,
-                      hasJob: !!job,
-                      applicationId: application.application_id,
-                    });
                     if (job?.job_id) {
                       onViewDetails(job.job_id);
-                    } else {
-                      console.warn("[JobCard] No job_id available");
                     }
                   }}
                 >

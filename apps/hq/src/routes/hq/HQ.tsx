@@ -234,7 +234,7 @@ export default function HQ() {
   // Persist card move to Supabase
   const persistChange = useCallback(
     async (movedItem: KanbanApplication, newData: KanbanApplication[]) => {
-      const newStatusId = Number(movedItem.column);
+      const newStatusId = Number(movedItem.column.replace("col-", ""));
 
       // Get siblings in destination column (excluding moved item), sorted by order
       const siblings = newData
@@ -374,13 +374,8 @@ export default function HQ() {
                         revalidator.revalidate();
                       }}
                       onViewDetails={(jobId) => {
-                        console.log("[HQ] onViewDetails called", { jobId });
                         setPanelJobId(jobId);
                         setPanelOpen(true);
-                        console.log("[HQ] Panel state set", {
-                          panelJobId: jobId,
-                          panelOpen: true,
-                        });
                       }}
                       totalColumns={kanbanColumns.length}
                     />

@@ -33,7 +33,11 @@ object api extends ScalaModule with ScalafmtModule {
     // HTML to Markdown conversion
     ivy"com.vladsch.flexmark:flexmark-html2md-converter:0.64.8",
     // Actor framework for async workflows
-    ivy"com.lihaoyi::castor:0.3.0"
+    ivy"com.lihaoyi::castor:0.3.0",
+    // PDF text extraction
+    ivy"org.apache.pdfbox:pdfbox:3.0.4",
+    // DOCX text extraction
+    ivy"org.apache.poi:poi-ooxml:5.3.0"
   )
 
   def scalacOptions = Seq(

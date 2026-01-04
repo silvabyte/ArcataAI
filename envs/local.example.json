@@ -11,5 +11,8 @@
   "apps": {
     "hqUrl": "http://localhost:4201",
     "authUrl": "http://localhost:4200"
+  },
+  "resume": {
+    "maxFileSizeMb": 10
   }
 }
