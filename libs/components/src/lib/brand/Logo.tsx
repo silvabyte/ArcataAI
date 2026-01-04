@@ -1,3 +1,5 @@
+import type { SVGProps } from "react";
+
 export const Logo = ({ width = 143, height = 40, sizeFactor = 1 }) => {
   const w = width * sizeFactor;
   const h = height * sizeFactor;
@@ -28,15 +30,20 @@ export const Logo = ({ width = 143, height = 40, sizeFactor = 1 }) => {
   );
 };
 
-export const LogoIcon = () => (
+export const LogoIcon = ({
+  width = 40,
+  height = 40,
+  ...props
+}: SVGProps<SVGSVGElement>) => (
   <svg
     aria-label="Arcata icon"
     fill="none"
-    height={40}
+    height={height}
     role="img"
     viewBox="0 0 40 40"
-    width={40}
+    width={width}
     xmlns="http://www.w3.org/2000/svg"
+    {...props}
   >
     <title>Arcata Icon</title>
     <path

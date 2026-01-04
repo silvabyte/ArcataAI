@@ -1,4 +1,5 @@
 import { PlusIcon, TrashIcon } from "@heroicons/react/20/solid";
+import { StarIcon } from "@heroicons/react/24/outline";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $applyNodeReplacement,
@@ -318,43 +319,60 @@ function CertificationsNodeComponent({
   // Display mode
   return (
     <button
-      className="w-full cursor-pointer border-gray-100 border-t py-4 text-left transition-colors hover:bg-gray-50"
+      className="group w-full cursor-pointer rounded-lg p-4 text-left transition-all hover:bg-gray-50"
       onClick={() => setIsEditing(true)}
       type="button"
     >
-      <h3 className="mb-4 font-semibold text-gray-900 text-lg">
+      <h3 className="mb-6 border-gray-200 border-b pb-2 font-bold text-gray-900 text-sm uppercase tracking-wider">
         Certifications
       </h3>
       {data.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {data.map((entry) => (
-            <div className="border-gray-100 border-l-2 pl-4" key={entry.id}>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <h4 className="font-medium text-gray-900">
-                  {entry.name || "Untitled Certification"}
-                </h4>
-                <span className="text-gray-500 text-sm">
+            <div className="relative pl-4" key={entry.id}>
+              {/* Timeline line */}
+              <div className="absolute top-0 bottom-0 left-0 w-px bg-gray-200 group-hover:bg-gray-300" />
+
+              <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
+                <div>
+                  <h4 className="font-bold text-base text-gray-900">
+                    {entry.name || "Untitled Certification"}
+                  </h4>
+                  <div className="font-medium text-gray-700">
+                    {entry.issuer}
+                    {entry.credentialId ? ` • ID: ${entry.credentialId}` : ""}
+                  </div>
+                </div>
+                <div className="shrink-0 font-medium text-gray-500 text-sm tabular-nums">
                   {formatDateRange(
                     entry.issueDate,
                     entry.expirationDate,
                     entry.noExpiration
                   )}
-                </span>
+                </div>
               </div>
-              <p className="text-gray-600 text-sm">
-                {entry.issuer}
-                {entry.credentialId ? ` - ID: ${entry.credentialId}` : ""}
-              </p>
-              {entry.credentialUrl ? (
-                <p className="mt-1 truncate text-gray-600 text-sm">
-                  {entry.credentialUrl}
-                </p>
-              ) : null}
+
+              {entry.credentialUrl && (
+                <a
+                  className="mt-1 block truncate text-blue-600 text-sm hover:underline"
+                  href={entry.credentialUrl}
+                  onClick={(e) => e.stopPropagation()}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {entry.credentialUrl.replace(/^https?:\/\//, "")}
+                </a>
+              )}
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-500">Click to add certifications</p>
+        <div className="flex w-full items-center justify-center rounded-lg border-2 border-gray-200 border-dashed py-8 text-gray-400 group-hover:border-gray-300 group-hover:bg-gray-50">
+          <div className="text-center">
+            <StarIcon className="mx-auto size-10 text-gray-300" />
+            <p className="mt-2 font-medium text-sm">Add Certifications</p>
+          </div>
+        </div>
       )}
     </button>
   );

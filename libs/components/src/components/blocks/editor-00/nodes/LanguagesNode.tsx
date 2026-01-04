@@ -1,4 +1,5 @@
 import { PlusIcon, TrashIcon } from "@heroicons/react/20/solid";
+import { LanguageIcon } from "@heroicons/react/24/outline";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $applyNodeReplacement,
@@ -217,32 +218,33 @@ function LanguagesNodeComponent({
 
   return (
     <button
-      className="w-full cursor-pointer border-gray-100 border-t py-4 text-left transition-colors hover:bg-gray-50"
+      className="group w-full cursor-pointer rounded-lg p-4 text-left transition-all hover:bg-gray-50"
       onClick={() => setIsEditing(true)}
       type="button"
     >
+      <h3 className="mb-6 border-gray-200 border-b pb-2 font-bold text-gray-900 text-sm uppercase tracking-wider">
+        Languages
+      </h3>
       {hasContent ? (
-        <div>
-          <h3 className="mb-3 font-semibold text-gray-900 text-lg">
-            Languages
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {data.entries.map((entry) => (
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ${PROFICIENCY_COLORS[entry.proficiency]}`}
-                key={entry.id}
-              >
-                <span className="font-medium">{entry.language}</span>
-                <span className="opacity-75">
-                  ({PROFICIENCY_LABELS[entry.proficiency]})
-                </span>
+        <div className="flex flex-wrap gap-2">
+          {data.entries.map((entry) => (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ${PROFICIENCY_COLORS[entry.proficiency]}`}
+              key={entry.id}
+            >
+              <span className="font-medium">{entry.language}</span>
+              <span className="opacity-75">
+                ({PROFICIENCY_LABELS[entry.proficiency]})
               </span>
-            ))}
-          </div>
+            </span>
+          ))}
         </div>
       ) : (
-        <div className="text-center text-gray-500">
-          <p>Click to add languages</p>
+        <div className="flex w-full items-center justify-center rounded-lg border-2 border-gray-200 border-dashed py-8 text-gray-400 group-hover:border-gray-300 group-hover:bg-gray-50">
+          <div className="text-center">
+            <LanguageIcon className="mx-auto size-10 text-gray-300" />
+            <p className="mt-2 font-medium text-sm">Add Languages</p>
+          </div>
         </div>
       )}
     </button>

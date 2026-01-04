@@ -1,4 +1,5 @@
 import { PlusIcon, TrashIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $applyNodeReplacement,
@@ -241,38 +242,41 @@ function SkillsNodeComponent({
 
   return (
     <button
-      className="w-full cursor-pointer border-gray-100 border-t py-4 text-left transition-colors hover:bg-gray-50"
+      className="group w-full cursor-pointer rounded-lg p-4 text-left transition-all hover:bg-gray-50"
       onClick={() => setIsEditing(true)}
       type="button"
     >
+      <h3 className="mb-6 border-gray-200 border-b pb-2 font-bold text-gray-900 text-sm uppercase tracking-wider">
+        Skills
+      </h3>
       {hasContent ? (
-        <div>
-          <h3 className="mb-3 font-semibold text-gray-900 text-lg">Skills</h3>
-          <div className="space-y-3">
-            {data.categories.map((category) => (
-              <div key={category.id}>
-                {category.name !== "" && (
-                  <span className="mb-1.5 block font-medium text-gray-700 text-sm">
-                    {category.name}
+        <div className="space-y-4">
+          {data.categories.map((category) => (
+            <div key={category.id}>
+              {category.name !== "" && (
+                <span className="mb-2 block font-bold text-gray-700 text-sm">
+                  {category.name}
+                </span>
+              )}
+              <div className="flex flex-wrap gap-2">
+                {category.skills.map((skill, skillIndex) => (
+                  <span
+                    className="inline-block rounded-md bg-gray-100 px-2.5 py-1 font-medium text-gray-700 text-sm"
+                    key={`${category.id}-display-${skillIndex}`}
+                  >
+                    {skill}
                   </span>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  {category.skills.map((skill, skillIndex) => (
-                    <span
-                      className="inline-block rounded-full bg-gray-100 px-3 py-1 text-gray-700 text-sm"
-                      key={`${category.id}-display-${skillIndex}`}
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       ) : (
-        <div className="text-center text-gray-500">
-          <p>Click to add skills</p>
+        <div className="flex w-full items-center justify-center rounded-lg border-2 border-gray-200 border-dashed py-8 text-gray-400 group-hover:border-gray-300 group-hover:bg-gray-50">
+          <div className="text-center">
+            <WrenchScrewdriverIcon className="mx-auto size-10 text-gray-300" />
+            <p className="mt-2 font-medium text-sm">Add Skills</p>
+          </div>
         </div>
       )}
     </button>

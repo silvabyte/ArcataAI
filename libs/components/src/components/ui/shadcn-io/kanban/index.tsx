@@ -331,7 +331,9 @@ export const KanbanProvider = <
         // biome-ignore lint/suspicious/noExplicitAny: spreading props from shadcn component
         {...(props as any)}
       >
-        <div className={cn("flex gap-4 overflow-x-auto pb-2", className)}>
+        <div
+          className={cn("flex h-full gap-4 overflow-x-auto pb-2", className)}
+        >
           {columns.map((column) => children(column))}
         </div>
         {typeof window !== "undefined" &&

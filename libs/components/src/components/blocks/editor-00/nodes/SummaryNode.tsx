@@ -1,3 +1,4 @@
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $applyNodeReplacement,
@@ -111,26 +112,29 @@ function SummaryNodeComponent({
 
   return (
     <button
-      className="w-full cursor-pointer border-gray-100 border-t py-4 text-left transition-colors hover:bg-gray-50"
+      className="group w-full cursor-pointer rounded-lg p-4 text-left transition-all hover:bg-gray-50"
       onClick={() => setIsEditing(true)}
       type="button"
     >
       {hasContent ? (
         <div>
           {data.headline !== "" && (
-            <h3 className="font-semibold text-gray-900 text-lg">
+            <h2 className="font-semibold text-2xl text-gray-800 tracking-tight">
               {data.headline}
-            </h3>
+            </h2>
           )}
           {data.summary !== "" && (
-            <p className="mt-2 whitespace-pre-wrap text-gray-600">
+            <p className="mt-3 whitespace-pre-wrap text-base text-gray-600 leading-relaxed">
               {data.summary}
             </p>
           )}
         </div>
       ) : (
-        <div className="text-center text-gray-500">
-          <p>Click to add professional summary</p>
+        <div className="flex w-full items-center justify-center rounded-lg border-2 border-gray-200 border-dashed py-8 text-gray-400 group-hover:border-gray-300 group-hover:bg-gray-50">
+          <div className="text-center">
+            <DocumentTextIcon className="mx-auto size-10 text-gray-300" />
+            <p className="mt-2 font-medium text-sm">Add Professional Summary</p>
+          </div>
         </div>
       )}
     </button>

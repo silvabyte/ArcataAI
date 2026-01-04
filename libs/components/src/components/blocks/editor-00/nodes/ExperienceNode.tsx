@@ -1,4 +1,5 @@
 import { PlusIcon, TrashIcon } from "@heroicons/react/20/solid";
+import { BriefcaseIcon } from "@heroicons/react/24/outline";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $applyNodeReplacement,
@@ -363,35 +364,41 @@ function ExperienceNodeComponent({
   // Display mode
   return (
     <button
-      className="w-full cursor-pointer border-gray-100 border-t py-4 text-left transition-colors hover:bg-gray-50"
+      className="group w-full cursor-pointer rounded-lg p-4 text-left transition-all hover:bg-gray-50"
       onClick={() => setIsEditing(true)}
       type="button"
     >
-      <h3 className="mb-4 font-semibold text-gray-900 text-lg">
+      <h3 className="mb-6 border-gray-200 border-b pb-2 font-bold text-gray-900 text-sm uppercase tracking-wider">
         Work Experience
       </h3>
       {data.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {data.map((entry) => (
-            <div className="border-gray-100 border-l-2 pl-4" key={entry.id}>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-                <h4 className="font-medium text-gray-900">
-                  {entry.title || "Untitled Position"}
-                </h4>
-                <span className="text-gray-500 text-sm">
+            <div className="relative pl-4" key={entry.id}>
+              {/* Timeline line */}
+              <div className="absolute top-0 bottom-0 left-0 w-px bg-gray-200 group-hover:bg-gray-300" />
+
+              <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
+                <div>
+                  <h4 className="font-bold text-base text-gray-900">
+                    {entry.title || "Untitled Position"}
+                  </h4>
+                  <div className="font-medium text-gray-700">
+                    {entry.company}
+                    {entry.location ? ` • ${entry.location}` : ""}
+                  </div>
+                </div>
+                <div className="shrink-0 font-medium text-gray-500 text-sm tabular-nums">
                   {formatDateRange(
                     entry.startDate,
                     entry.endDate,
                     entry.current
                   )}
-                </span>
+                </div>
               </div>
-              <p className="text-gray-600 text-sm">
-                {entry.company}
-                {entry.location ? ` - ${entry.location}` : ""}
-              </p>
+
               {entry.highlights.length > 0 && (
-                <ul className="mt-2 list-disc space-y-1 pl-4 text-gray-600 text-sm">
+                <ul className="mt-3 list-disc space-y-1.5 pl-4 text-gray-600 text-sm leading-relaxed">
                   {entry.highlights.map((highlight) => (
                     <li key={highlight}>{highlight}</li>
                   ))}
@@ -401,9 +408,12 @@ function ExperienceNodeComponent({
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-500">
-          Click to add work experience
-        </p>
+        <div className="flex w-full items-center justify-center rounded-lg border-2 border-gray-200 border-dashed py-8 text-gray-400 group-hover:border-gray-300 group-hover:bg-gray-50">
+          <div className="text-center">
+            <BriefcaseIcon className="mx-auto size-10 text-gray-300" />
+            <p className="mt-2 font-medium text-sm">Add Work Experience</p>
+          </div>
+        </div>
       )}
     </button>
   );

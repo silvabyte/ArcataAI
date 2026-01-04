@@ -1,3 +1,4 @@
+import { SparklesIcon } from "@heroicons/react/24/outline";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
   $applyNodeReplacement,
@@ -111,14 +112,14 @@ function CustomSectionNodeComponent({
 
   return (
     <button
-      className="w-full cursor-pointer border-gray-100 border-t py-4 text-left transition-colors hover:bg-gray-50"
+      className="group w-full cursor-pointer rounded-lg p-4 text-left transition-all hover:bg-gray-50"
       onClick={() => setIsEditing(true)}
       type="button"
     >
       {hasContent ? (
         <div>
           {data.title !== "" && (
-            <h3 className="font-semibold text-gray-900 text-lg">
+            <h3 className="mb-6 border-gray-200 border-b pb-2 font-bold text-gray-900 text-sm uppercase tracking-wider">
               {data.title}
             </h3>
           )}
@@ -129,8 +130,11 @@ function CustomSectionNodeComponent({
           )}
         </div>
       ) : (
-        <div className="text-center text-gray-500">
-          <p>Click to add custom section</p>
+        <div className="flex w-full items-center justify-center rounded-lg border-2 border-gray-200 border-dashed py-8 text-gray-400 group-hover:border-gray-300 group-hover:bg-gray-50">
+          <div className="text-center">
+            <SparklesIcon className="mx-auto size-10 text-gray-300" />
+            <p className="mt-2 font-medium text-sm">Add Custom Section</p>
+          </div>
         </div>
       )}
     </button>

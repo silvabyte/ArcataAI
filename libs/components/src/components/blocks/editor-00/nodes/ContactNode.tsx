@@ -3,6 +3,7 @@ import {
   GlobeAltIcon,
   MapPinIcon,
   PhoneIcon,
+  UserIcon,
 } from "@heroicons/react/20/solid";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -253,22 +254,47 @@ function ContactNodeComponent({
       {hasContent ? (
         <div>
           {data.name !== "" && (
-            <h2 className="font-bold text-2xl text-gray-900">{data.name}</h2>
+            <h1 className="font-bold text-4xl text-gray-900 tracking-tight">
+              {data.name}
+            </h1>
           )}
-          {contactItems.length > 0 && (
-            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-600 text-sm">
-              {contactItems}
-            </div>
-          )}
-          {hasLinks && linkItems.length > 0 && (
-            <div className="mt-1 flex flex-wrap items-center gap-x-4 text-gray-500 text-sm">
-              {linkItems}
-            </div>
-          )}
+          <div className="mt-3 space-y-2">
+            {contactItems.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 text-gray-600 text-sm">
+                {contactItems.reduce((prev, curr, index) => {
+                  if (index === 0) return [curr];
+                  return [
+                    ...prev,
+                    <span className="text-gray-300" key={`sep-${index}`}>
+                      |
+                    </span>,
+                    curr,
+                  ];
+                }, [] as React.ReactNode[])}
+              </div>
+            )}
+            {hasLinks && linkItems.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 text-gray-500 text-sm">
+                {linkItems.reduce((prev, curr, index) => {
+                  if (index === 0) return [curr];
+                  return [
+                    ...prev,
+                    <span className="text-gray-300" key={`sep-link-${index}`}>
+                      |
+                    </span>,
+                    curr,
+                  ];
+                }, [] as React.ReactNode[])}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
-        <div className="text-gray-500">
-          <p>Click to add contact information</p>
+        <div className="flex w-full items-center justify-center rounded-lg border-2 border-gray-200 border-dashed py-12 text-gray-400 hover:border-gray-300 hover:bg-gray-50">
+          <div className="text-center">
+            <UserIcon className="mx-auto size-12 text-gray-300" />
+            <p className="mt-2 font-medium">Add Contact Information</p>
+          </div>
         </div>
       )}
     </button>

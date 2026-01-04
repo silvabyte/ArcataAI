@@ -5,7 +5,6 @@ import {
   FolderIcon,
   HeartIcon,
   LanguageIcon,
-  PlusIcon,
   SparklesIcon,
   StarIcon,
   TrophyIcon,
@@ -16,6 +15,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import type { LexicalNode } from "lexical";
 import { $insertNodes } from "lexical";
 import { useCallback, useState } from "react";
+import { LogoIcon } from "../../../../lib/brand/Logo";
 import { $createAwardsNode } from "../nodes/AwardsNode";
 import { $createCertificationsNode } from "../nodes/CertificationsNode";
 import { $createContactNode } from "../nodes/ContactNode";
@@ -147,48 +147,52 @@ export function InsertSectionPlugin() {
   );
 
   return (
-    <div className="relative">
-      <button
-        aria-expanded={isOpen}
-        aria-haspopup="true"
-        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-400 focus-visible:outline-offset-2"
-        onClick={() => setIsOpen(!isOpen)}
-        type="button"
-      >
-        <PlusIcon className="size-5" />
-        Add Section
-      </button>
+    <div className="fixed right-8 bottom-8 z-50">
+      <div className="relative">
+        <button
+          aria-expanded={isOpen}
+          aria-haspopup="true"
+          className="flex size-14 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition-transform hover:scale-105 hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+          onClick={() => setIsOpen(!isOpen)}
+          type="button"
+        >
+          <LogoIcon className="size-6" />
+          <span className="sr-only">Add Section</span>
+        </button>
 
-      {isOpen ? (
-        <>
-          <button
-            aria-label="Close menu"
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-            type="button"
-          />
-          <div className="absolute left-0 z-20 mt-2 w-72 origin-top-left rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
-            {sectionOptions.map((option) => (
-              <button
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-gray-100"
-                key={option.type}
-                onClick={() => insertSection(option.type)}
-                type="button"
-              >
-                <option.icon className="size-5 text-gray-400" />
-                <div>
-                  <div className="font-medium text-gray-900 text-sm">
-                    {option.label}
+        {isOpen ? (
+          <>
+            <button
+              aria-label="Close menu"
+              className="fixed inset-0 z-10 bg-black/20 backdrop-blur-sm"
+              onClick={() => setIsOpen(false)}
+              type="button"
+            />
+            <div className="absolute right-0 bottom-full z-20 mb-4 max-h-[80vh] w-72 origin-bottom-right overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-xl ring-1 ring-black/5">
+              {sectionOptions.map((option) => (
+                <button
+                  className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
+                  key={option.type}
+                  onClick={() => insertSection(option.type)}
+                  type="button"
+                >
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 group-hover:bg-white group-hover:shadow-sm">
+                    <option.icon className="size-5 text-gray-500 group-hover:text-gray-900" />
                   </div>
-                  <div className="text-gray-500 text-xs">
-                    {option.description}
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm">
+                      {option.label}
+                    </div>
+                    <div className="text-gray-500 text-xs">
+                      {option.description}
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </>
-      ) : null}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -19,10 +19,8 @@ export function Plugins() {
 
   return (
     <div className="space-y-4">
-      {/* toolbar */}
-      <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <InsertSectionPlugin />
-      </div>
+      {/* toolbar - now floating */}
+      <InsertSectionPlugin />
       {/* document */}
       <div
         className="relative rounded-xl border border-gray-200 bg-white shadow-sm"
