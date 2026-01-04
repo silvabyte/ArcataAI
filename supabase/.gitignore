@@ -1,6 +1,7 @@
 # Supabase
 .branches
 .temp
+signing_key.json
 
 # Large data files (but keep ETL scripts)
 le_data/*

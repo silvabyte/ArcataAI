@@ -1,8 +1,8 @@
 {
   "supabase": {
     "url": "http://127.0.0.1:54335",
-    "anonKey": "your-local-anon-key",
-    "serviceRoleKey": "your-local-service-role-key"
+    "anonKey": "sb_publishable_xxx (from `npx supabase status`)",
+    "serviceRoleKey": "sb_secret_xxx (from `npx supabase status`)"
   },
   "api": {
     "url": "http://localhost:4203",
