@@ -146,11 +146,6 @@ async function dockerLogin(env: DockerEnv): Promise<void> {
   await $`echo ${env.CR_PAT} | docker login ghcr.io -u ${env.CR_USER} --password-stdin`.quiet();
 }
 
-async function buildAssembly(appDir: string): Promise<void> {
-  console.log("[INFO] Building assembly JAR...");
-  await $`./mill api.assembly`.cwd(appDir);
-}
-
 async function buildImage(appDir: string, tags: string[]): Promise<void> {
   console.log("[INFO] Building Docker image...");
   const tagArgs = tags.flatMap((t) => ["-t", t]);
@@ -200,7 +195,7 @@ async function cmdBuild(
   appDir: string,
   config: { port: number; imageName: string }
 ): Promise<void> {
-  await buildAssembly(appDir);
+  // Assembly is built inside Docker (multi-stage build), no local build needed
   await buildImage(appDir, [`${config.imageName}:local`]);
   console.log(`[SUCCESS] Built ${config.imageName}:local`);
 }
@@ -235,7 +230,7 @@ async function cmdBuildPush(
     `ghcr.io/${namespace}/${config.imageName}:latest`,
     `ghcr.io/${namespace}/${config.imageName}:${sha}`,
   ];
-  await buildAssembly(appDir);
+  // Assembly is built inside Docker (multi-stage build), no local build needed
   await dockerLogin(env);
   await buildImage(appDir, tags);
   await pushImage(tags);
