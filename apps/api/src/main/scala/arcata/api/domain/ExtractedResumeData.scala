@@ -6,7 +6,9 @@ import upickle.default.*
 /**
  * Contact information extracted from a resume.
  *
- * @param fullName
+ * Field names match the frontend Lexical ContactNode schema.
+ *
+ * @param name
  *   Full name of the candidate
  * @param email
  *   Email address
@@ -14,26 +16,43 @@ import upickle.default.*
  *   Phone number
  * @param location
  *   City, state, or full address
- * @param linkedinUrl
+ * @param linkedIn
  *   LinkedIn profile URL
- * @param githubUrl
+ * @param github
  *   GitHub profile URL
- * @param portfolioUrl
+ * @param portfolio
  *   Personal website or portfolio URL
  */
 final case class ContactInfo(
-    fullName: Option[String] = None,
+    name: Option[String] = None,
     email: Option[String] = None,
     phone: Option[String] = None,
     location: Option[String] = None,
-    linkedinUrl: Option[String] = None,
-    githubUrl: Option[String] = None,
-    portfolioUrl: Option[String] = None
+    linkedIn: Option[String] = None,
+    github: Option[String] = None,
+    portfolio: Option[String] = None
+) derives ReadWriter, Schematic
+
+/**
+ * Professional summary extracted from a resume.
+ *
+ * @param headline
+ *   Job title or professional tagline (e.g., "Senior Software Engineer")
+ * @param summary
+ *   Professional summary or objective statement
+ */
+final case class SummaryInfo(
+    headline: Option[String] = None,
+    summary: Option[String] = None
 ) derives ReadWriter, Schematic
 
 /**
  * Work experience entry extracted from a resume.
  *
+ * Field names and date format match the frontend Lexical ExperienceNode schema.
+ *
+ * @param id
+ *   Unique identifier for the entry
  * @param company
  *   Company or organization name
  * @param title
@@ -41,53 +60,91 @@ final case class ContactInfo(
  * @param location
  *   Location of the job
  * @param startDate
- *   Start date (e.g., "Jan 2020" or "2020-01")
+ *   Start date in YYYY-MM format (e.g., "2024-02")
  * @param endDate
- *   End date, or "Present" if current
- * @param description
- *   Description of responsibilities and achievements
+ *   End date in YYYY-MM format, or empty string if current
+ * @param current
+ *   Whether this is the current position
  * @param highlights
  *   Key accomplishments as bullet points
  */
 final case class WorkExperience(
+    id: Option[String] = None,
     company: Option[String] = None,
     title: Option[String] = None,
     location: Option[String] = None,
     startDate: Option[String] = None,
     endDate: Option[String] = None,
-    description: Option[String] = None,
+    current: Option[Boolean] = None,
     highlights: Option[List[String]] = None
 ) derives ReadWriter, Schematic
 
 /**
  * Education entry extracted from a resume.
  *
+ * Field names match the frontend Lexical EducationNode schema.
+ *
+ * @param id
+ *   Unique identifier for the entry
  * @param institution
  *   School or university name
  * @param degree
  *   Degree type (e.g., "Bachelor of Science", "MBA")
- * @param fieldOfStudy
+ * @param field
  *   Major or field of study
  * @param location
  *   Location of the institution
  * @param startDate
- *   Start date
+ *   Start date in YYYY-MM format
  * @param endDate
- *   End date or graduation date
+ *   End date in YYYY-MM format, or empty string if current
+ * @param current
+ *   Whether currently studying here
  * @param gpa
  *   GPA if listed
  * @param honors
  *   Honors, awards, or notable achievements
+ * @param coursework
+ *   Relevant coursework
  */
 final case class Education(
+    id: Option[String] = None,
     institution: Option[String] = None,
     degree: Option[String] = None,
-    fieldOfStudy: Option[String] = None,
+    field: Option[String] = None,
     location: Option[String] = None,
     startDate: Option[String] = None,
     endDate: Option[String] = None,
+    current: Option[Boolean] = None,
     gpa: Option[String] = None,
-    honors: Option[List[String]] = None
+    honors: Option[String] = None,
+    coursework: Option[List[String]] = None
+) derives ReadWriter, Schematic
+
+/**
+ * A skill category containing related skills.
+ *
+ * @param id
+ *   Unique identifier for the category
+ * @param name
+ *   Category name (e.g., "Programming Languages", "Frameworks")
+ * @param skills
+ *   List of skills in this category
+ */
+final case class SkillCategory(
+    id: Option[String] = None,
+    name: Option[String] = None,
+    skills: Option[List[String]] = None
+) derives ReadWriter, Schematic
+
+/**
+ * Skills data with categorized skills.
+ *
+ * @param categories
+ *   List of skill categories
+ */
+final case class SkillsData(
+    categories: Option[List[SkillCategory]] = None
 ) derives ReadWriter, Schematic
 
 /**
@@ -167,13 +224,13 @@ final case class CustomSection(
  * @param contact
  *   Contact information section
  * @param summary
- *   Professional summary or objective statement
+ *   Professional summary with headline and text
  * @param experience
  *   Work experience entries, in chronological order as they appear
  * @param education
  *   Education entries
  * @param skills
- *   Skills listed (technical and soft skills)
+ *   Skills organized by categories
  * @param projects
  *   Projects section
  * @param certifications
@@ -185,10 +242,10 @@ final case class CustomSection(
  */
 final case class ExtractedResumeData(
     contact: Option[ContactInfo] = None,
-    summary: Option[String] = None,
+    summary: Option[SummaryInfo] = None,
     experience: Option[List[WorkExperience]] = None,
     education: Option[List[Education]] = None,
-    skills: Option[List[String]] = None,
+    skills: Option[SkillsData] = None,
     projects: Option[List[Project]] = None,
     certifications: Option[List[Certification]] = None,
     languages: Option[List[String]] = None,

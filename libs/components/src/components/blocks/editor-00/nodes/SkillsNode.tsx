@@ -155,7 +155,10 @@ function SkillsNodeComponent({
   skillsData: SkillsData;
 }) {
   const [editor] = useLexicalComposerContext();
-  const [data, setData] = useState<SkillsData>(skillsData);
+  // Ensure categories array always exists even if data is malformed
+  const [data, setData] = useState<SkillsData>(() => ({
+    categories: skillsData?.categories ?? [],
+  }));
   const [isEditing, setIsEditing] = useState(false);
   const id = useId();
 
@@ -326,13 +329,18 @@ export class SkillsNode extends DecoratorNode<JSX.Element> {
   }
 
   static importJSON(serializedNode: SerializedSkillsNode): SkillsNode {
-    return $createSkillsNode(serializedNode.skillsData);
+    // Handle potentially malformed data from database
+    const skillsData = serializedNode.skillsData;
+    return $createSkillsNode({
+      categories: skillsData?.categories ?? [],
+    });
   }
 
   constructor(skillsData?: SkillsData, key?: NodeKey) {
     super(key);
-    this.__skillsData = skillsData ?? {
-      categories: [],
+    // Ensure categories array always exists even if data is malformed
+    this.__skillsData = {
+      categories: skillsData?.categories ?? [],
     };
   }
 

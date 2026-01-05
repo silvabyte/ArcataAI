@@ -28,12 +28,19 @@ final class ResumeExtractionAgent(config: AIConfig):
     instructions = """You are a resume parser. Given plain text extracted from a resume document,
 extract structured resume information. Be thorough and preserve ALL information.
 
+IMPORTANT - Field naming conventions (must match exactly):
+- Contact: name, email, phone, location, linkedIn, github, portfolio
+- Summary: headline (job title/tagline), summary (description text)
+- Experience entries: id, company, title, location, startDate, endDate, current, highlights
+- Education entries: id, institution, degree, field, location, startDate, endDate, current, gpa, honors, coursework
+- Skills: categories array, each with id, name, and skills array
+
 Guidelines:
-- Extract contact information: name, email, phone, location, LinkedIn, GitHub, portfolio URLs
-- Extract the professional summary or objective if present
-- Parse work experience entries with company, title, dates, location, and bullet points
-- Extract education with institution, degree, field of study, dates, GPA, and honors
-- Collect all skills mentioned (technical and soft skills)
+- Extract contact information: name (full name), email, phone, location, linkedIn URL, github URL, portfolio URL
+- Extract the professional summary with headline (job title if present) and summary text
+- Parse work experience entries with company, title, dates, location, and bullet points (highlights array)
+- Extract education with institution, degree, field (major), dates, GPA, and honors (as single string)
+- Organize skills into categories (e.g., "Programming Languages", "Frameworks", "Tools")
 - Extract projects with name, description, technologies, and URLs
 - Parse certifications with name, issuer, dates, and credential IDs
 - List languages spoken if mentioned
@@ -46,7 +53,7 @@ CRITICAL - Custom Sections:
   in a standard field or in customSections.
 
 Date formats:
-- Preserve dates as they appear in the resume (e.g., "Jan 2020", "2020", "January 2020 - Present")
+- Output dates as they appear in the resume (normalization happens later)
 - Use "Present" for current positions
 
 If information is ambiguous or unclear, make a reasonable interpretation rather than omitting it.""",

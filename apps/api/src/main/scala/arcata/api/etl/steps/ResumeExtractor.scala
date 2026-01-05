@@ -79,10 +79,10 @@ final class ResumeExtractor(aiConfig: AIConfig) extends BaseStep[ResumeExtractor
 
       case Right(extracted) =>
         // Log what was extracted
-        val contactName = extracted.contact.flatMap(_.fullName).getOrElse("unknown")
+        val contactName = extracted.contact.flatMap(_.name).getOrElse("unknown")
         val expCount = extracted.experience.map(_.size).getOrElse(0)
         val eduCount = extracted.education.map(_.size).getOrElse(0)
-        val skillCount = extracted.skills.map(_.size).getOrElse(0)
+        val skillCount = extracted.skills.flatMap(_.categories).map(_.size).getOrElse(0)
         val customCount = extracted.customSections.map(_.size).getOrElse(0)
 
         logger.info(

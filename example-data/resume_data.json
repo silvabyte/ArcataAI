@@ -1,0 +1,205 @@
+{
+  "root": {
+    "type": "root",
+    "format": "",
+    "indent": 0,
+    "version": 1,
+    "children": [
+      {
+        "type": "contact-section",
+        "version": 1,
+        "contactData": {
+          "email": "matsilva@hey.com",
+          "phone": "814-699-2870",
+          "fullName": "Mathew Silva",
+          "location": "Satellite Beach, Florida, United States",
+          "githubUrl": "https://github.com/matsilva",
+          "linkedinUrl": "https://linkedin.com/in/mat-silva-33837226",
+          "portfolioUrl": "https://github.com/silvabyte"
+        }
+      },
+      {
+        "type": "summary-section",
+        "version": 1,
+        "summaryData": "Software Engineer specializing in modern web platforms and real world AI applications. I’ve spent over a decade designing, building, and scaling SaaS products. I lead frontend and backend work, own complex features end-to-end, and drive architectural decisions in multi-tenant, security-sensitive environments. My recent focus is on applied AI: validating prototypes, designing agentic workflows, and shipping LLM powered features into production with observability/monitoring. I bring a builder’s mindset, clear communication, and a consistent record of delivering customer focused impact."
+      },
+      {
+        "type": "experience-section",
+        "entries": [
+          {
+            "title": "Software Consulting",
+            "company": "SilvaByte",
+            "endDate": "Present",
+            "startDate": "July 2025",
+            "highlights": [
+              "Architected and delivered a production-grade tax practice management platform for modern tax firms, streamlining tax preparation workflows, client management, and billable time tracking",
+              "Built enterprise data grid system using ag-Grid and TanStack Table with custom inline cell editors (text, checkbox, date picker), multi-column sorting, faceted filtering with real-time counts, column state persistence, and client-side pagination handling 30+ columns across thousands of rows",
+              "Implemented drag-and-drop workflow management using @dnd-kit with keyboard navigation, collision detection, and optimistic UI updates for reordering tax status workflows",
+              "Developed interactive calendar scheduling interface using date-fns for week/month grid calculations, context menus for entry actions, and real-time Convex mutations for payroll date management",
+              "Designed accessible UI component library using Radix UI primitives composed with Tailwind CSS and shadcn/ui patterns for consistent keyboard navigation and ARIA compliance",
+              "Architected client-side state management using Zustand with persist middleware for filter/sort preferences and TanStack Query for REST API integration with Next.js cache tag invalidation",
+              "Built type-safe Server Components using Next.js App Router with parallel data fetching, preloaded Convex queries with Clerk JWT authentication, and route groups for auth boundary enforcement",
+              "Designed tri-database architecture separating concerns across Convex for real-time collaboration, PostgreSQL for transactional integrity, and DuckDB for high-performance OLAP analytics on historical snapshots",
+              "Built analytics engine using DuckDB embedded database with Parquet columnar storage, enabling aggregation queries across multi-year tax return datasets without impacting production performance",
+              "Implemented enterprise multi-tenant isolation using Clerk Organizations with tenant context enforced across JWT claims, Convex queries, PostgreSQL Row-Level Security, and DuckDB query filters",
+              "Built data ingestion pipeline using Workflow orchestration to process Lacerte CSV exports through parse, normalize, deduplicate, amendment detection, and audit stages",
+              "Engineered full-text search using PostgreSQL tsvector with weighted relevance scoring combined with Convex search indexes for instant lookup",
+              "Developed real-time collaboration features enabling simultaneous client record editing with WebSocket-based updates and optimistic UI ensuring zero perceived latency",
+              "Established type-safe full-stack workflow using Drizzle ORM with auto-generated types, Zod validation schemas, and Convex validators ensuring runtime safety across client-server boundaries",
+              "Built API key management system with bcrypt hashing, prefix-based identification, and rotation capabilities for secure third-party integrations",
+              "Integrated AI-powered onboarding chatbot using GPT-4o and Vercel AI SDK for context-aware client assistance",
+              "Created comprehensive test suite using Vitest with jsdom environment and convex-test for backend function testing"
+            ]
+          },
+          {
+            "company": "Wingspan App",
+            "highlights": [
+              "Architected enterprise-grade sports training platform enabling athletes to track progress through gamified tasks, achievements, and leaderboards across multi-week programs",
+              "Designed domain-driven monorepo using Turborepo with Fastify API, two React 19 SPAs (athlete UI, admin console), and shared libraries for independent deployments",
+              "Implemented type-safe end-to-end workflow with auto-generated TypeScript SDK from Open API specs, eliminating runtime API contract errors",
+              "Built accessible component library using Radix UI primitives, Tailwind CSS 4 design system with CVA variants, and touch-optimized layouts (44px minimum targets)",
+              "Implemented client-side state management with Zustand (auth, WebSocket events) and TanStack Query (caching, optimistic updates, parallel fetching)",
+              "Built WebSocket-based real-time event system for achievement notifications and progress updates with automatic reconnection",
+              "Created inline editing components, custom form hooks with validation, and responsive layouts following WCAG accessibility patterns",
+              "Established secure data isolation using PostgreSQL Row-Level Security with per-request account context",
+              "Implemented zero-downtime blue/green deployment pipeline on Azure App Service with automated health checks",
+              "Created idempotent database seeding system with checksum-based tracking and environment targeting for reproducible data states",
+              "Configured CI/CD quality gates (lint, typecheck, build, Vitest tests, Terraform plan) with GitHub Actions OIDC federation to Azure",
+              "Designed Azure infrastructure as code using Terraform (App Service, PostgreSQL Flexible Server, Container Registry, Key Vault, Front Door)"
+            ]
+          },
+          {
+            "title": "Senior Software Engineer",
+            "company": "AKA Identity",
+            "endDate": "July 2025",
+            "location": "Remote",
+            "startDate": "February 2024",
+            "highlights": [
+              "Led AI prototype validation to production deployment achieving 85% user task completion rate, validating product-market fit through forward-deployed engineering approach (Case Study)",
+              "Designed AI-powered identity risk assessment using LLM-based analysis of access patterns, enabling proactive identity access posture discoverability and management",
+              "Implemented RAG (Retrieval-Augmented Generation) system for identity access policy recommendations",
+              "Created interactive identity access graphs using React Flow with custom SVG components, improving customer data insights accessibility for faster security decision-making",
+              "Implemented type-safe REST API integration using OpenAPI specifications (Swagger + openapi-ts) with React Query, ensuring reliable enterprise-grade data handling with 99.9% uptime",
+              "Designed and implemented complex multi-layered 'Rainbow Chart' React component for security insights visualization with ML-powered trend prediction",
+              "Built enterprise-grade streaming data ingestion APIs processing identity and access management data through event-driven microservices architecture with Kafka",
+              "Established AI model monitoring and evaluation framework ensuring consistent performance in production environments"
+            ]
+          },
+          {
+            "title": "Senior Software Engineer",
+            "company": "LogDNA/Mezmo",
+            "endDate": "October 2023",
+            "location": "Remote",
+            "startDate": "October 2021",
+            "highlights": [
+              "Led enterprise feature development with full-stack ownership. Enterprise wide log retention management being an example feature",
+              "Rewrote third-party libraries for Vue 3 migration, ensuring platform stability during major framework upgrade",
+              "Implemented SAML-based SSO and integrations as part of enterprise child org features, enabling secure authentication and seamless interoperability for identity providers",
+              "Developed CLI tool automating web release process, reducing release time from 1-2 hours to minutes, enabling faster feature delivery to enterprise customers including IBM and Reddit",
+              "Optimized CI/CD pipelines reducing build times by 40% (from 25-30 minutes to 8-15 minutes), saving 200+ engineering hours monthly",
+              "Delivered Admin Console service, empowering customer support teams to resolve issues faster while improving security posture through isolating unrestricted privileged access controls",
+              "Enabled Cypress testing in CI pipeline and implemented mockable services, improving platform reliability for enterprise customers"
+            ]
+          },
+          {
+            "title": "Lead Front-end Engineer",
+            "company": "Baffle, Inc.",
+            "endDate": "October 2021",
+            "location": "Remote",
+            "startDate": "July 2019",
+            "highlights": [
+              "Built and led product team for Baffle Manager 3.0, an enterprise database security management platform, mentoring product engineering team and establishing comprehensive developer-owned testing frameworks",
+              "Used React Virtualized for data grid optimization, handling large datasets smoothly",
+              "Ensured WCAG AA compliance making Baffle Manager UI accessible to all users, reducing accessibility-related issues to near zero",
+              "Collaborated with design to build reusable component library, translating Figma styles into Tailwind design tokens for consistent, scalable design system",
+              "Reduced network requests by 98% (2269→31) and implemented Server-Sent Events eliminating polling overhead",
+              "Built modern React application from ground up achieving 85% test coverage with Jest and Cypress",
+              "Implemented CI/CD pipeline via Jenkins multi-branch strategy and Docker containers",
+              "Created containerized deployment model with hash-based content caching via Nginx for zero-downtime deployments",
+              "Implemented seamless migration strategy from legacy Angular app to new React app using NGINX proxy"
+            ]
+          },
+          {
+            "title": "Software Engineer - DevOptics Product Team",
+            "company": "CloudBees",
+            "endDate": "July 2019",
+            "location": "Remote",
+            "startDate": "February 2018",
+            "highlights": [
+              "Utilized D3.js to generate scales and render spark lines, bar charts, and bubble charts for visualizing DORA metrics (deployment frequency, lead time, MTTR), helping customers improve their software delivery system",
+              "Implemented zero-downtime production deployments for UI application",
+              "Built v2 DevOptics Value Stream workflow using custom JavaScript layout engine and SVG / React components",
+              "Moved UI integration testing to frontend developers via Cypress & Docker, reducing bottlenecks and brittle end-to-end tests on the QA engineering team",
+              "Created ephemeral feature branch environments accelerating feedback loops earlier in the software delivery life-cycle–during feature branch development, not post-merge to production environment",
+              "Set up automatic staging/production deployments ensuring continuous delivery",
+              "Ensured smooth DevOptics product launch at Jenkins World by developing user registration/login through existing grand central system, rallying cross-functional team to deliver within two months prior to the conference."
+            ]
+          },
+          {
+            "title": "Founder & Chief Technology Officer",
+            "company": "RendrFX, Inc.",
+            "endDate": "February 2018",
+            "location": "Erie, Pennsylvania",
+            "startDate": "August 2015",
+            "highlights": [
+              "Built scalable multi-tenant SaaS platform serving 100K+ global users across 195 countries",
+              "Achieved product-market fit with $100K ARR within 6 months through organic growth",
+              "Delivered React-based application with three core features: Artists Dashboard, Marketplace, and real-time WYSIWYG Video Editor with drag-and-drop functionality",
+              "Designed cloud-native auto-scaling architecture handling 10K+ renders/month with burst scaling to thousands of concurrent jobs",
+              "Built and led 4-person product team",
+              "Invented templating framework for Adobe After Effects/Blender converting design parameters into JSON manifests consumed by REST API",
+              "Integrated third-party stock-media APIs enabling one-click licensed media insertion and social sharing",
+              "Raised $500K seed capital from angel investors and regional VC"
+            ]
+          },
+          {
+            "title": "Senior Software Architect",
+            "company": "Universal Mind",
+            "endDate": "August 2015",
+            "location": "Remote",
+            "startDate": "May 2015",
+            "highlights": [
+              "Implemented interactive genomics data visualization features using D3.js for Complete Genomics research application"
+            ]
+          },
+          {
+            "title": "Full-Stack Javascript Engineer",
+            "company": "Twin Technologies, Inc.",
+            "endDate": "April 2015",
+            "location": "Remote",
+            "startDate": "December 2014",
+            "highlights": [
+              "Developed B2C e-commerce platform for Under Armour with enterprise-scale requirements",
+              "Created custom React components for Steph Curry product launch, generating $100K+ revenue in first hour",
+              "Worked on internal CMS tools written in Angular, React and Knockout.js and payment processing systems written in cold fusion"
+            ]
+          },
+          {
+            "title": "Web Developer",
+            "company": "Adknowledge",
+            "endDate": "December 2014",
+            "location": "Estero, FL",
+            "startDate": "April 2013",
+            "highlights": [
+              "Developed and maintained high traffic web apps to support top of the funnel marketing activities.",
+              "Developed internal media buying application using Node.js, Express, DynamoDB with real-time data processing",
+              "Maintained AWS infrastructure supporting high-volume ad serving systems"
+            ]
+          }
+        ],
+        "version": 1
+      },
+      {
+        "type": "education-section",
+        "entries": [],
+        "version": 1
+      },
+      {
+        "type": "skills-section",
+        "version": 1,
+        "skillsData": []
+      }
+    ],
+    "direction": "ltr"
+  }
+}
