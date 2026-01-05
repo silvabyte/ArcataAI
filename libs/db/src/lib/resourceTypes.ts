@@ -12,6 +12,7 @@ export type Conversation = Database["public"]["Tables"]["conversations"]["Row"];
 export type JobStream = Database["public"]["Tables"]["job_stream"]["Row"];
 export type ApplicationAnswer =
   Database["public"]["Tables"]["application_answers"]["Row"];
+export type CoverLetter = Database["public"]["Tables"]["cover_letters"]["Row"];
 
 // === Enum Types ===
 

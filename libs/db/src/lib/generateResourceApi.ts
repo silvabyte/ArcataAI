@@ -10,7 +10,8 @@ export type ResourceName =
   | "job_applications"
   | "conversations"
   | "job_stream"
-  | "application_answers";
+  | "application_answers"
+  | "cover_letters";
 
 type GenerateResourceApiArg = {
   table: ResourceName;

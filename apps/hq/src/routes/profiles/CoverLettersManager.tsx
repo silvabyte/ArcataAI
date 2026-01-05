@@ -1,80 +1,186 @@
 import { Button, Card, Input } from "@arcata/components";
+import {
+  type CoverLetter as DBCoverLetter,
+  db,
+  getCurrentUser,
+} from "@arcata/db";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-// Mock Data Type
-export type CoverLetter = {
-  id: string;
-  name: string;
-  content: string;
-  lastModified: string; // ISO date string
+const DEBOUNCE_MS = 500;
+
+type CoverLettersManagerProps = {
+  jobProfileId: number;
 };
 
-const INITIAL_COVER_LETTERS: CoverLetter[] = [
-  {
-    id: "1",
-    name: "Software Engineer @ Google",
-    content:
-      "Dear Hiring Manager,\n\nI am writing to express my interest in the Software Engineer position at Google. With my background in distributed systems and React, I believe I would be a great fit for your team.\n\nSincerely,\n[Name]",
-    lastModified: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Frontend Developer @ Airbnb",
-    content:
-      "To whom it may concern,\n\nI've always admired Airbnb's design system and commitment to high-quality user experiences. I have 5 years of experience building scalable frontend applications.\n\nBest,\n[Name]",
-    lastModified: new Date(Date.now() - 86_400_000).toISOString(), // 1 day ago
-  },
-];
+export function CoverLettersManager({
+  jobProfileId,
+}: CoverLettersManagerProps) {
+  const [coverLetters, setCoverLetters] = useState<DBCoverLetter[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-export function CoverLettersManager() {
-  const [coverLetters, setCoverLetters] = useState<CoverLetter[]>(
-    INITIAL_COVER_LETTERS
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const selectedLetter = coverLetters.find(
+    (cl) => cl.cover_letter_id === selectedId
   );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selectedLetter = coverLetters.find((cl) => cl.id === selectedId);
-
-  const handleCreate = () => {
-    const newLetter: CoverLetter = {
-      id: crypto.randomUUID(),
-      name: "New Cover Letter",
-      content: "",
-      lastModified: new Date().toISOString(),
-    };
-    setCoverLetters([newLetter, ...coverLetters]);
-    setSelectedId(newLetter.id);
-  };
-
-  const handleDelete = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (
-      // biome-ignore lint/suspicious/noAlert: Simple confirmation for now
-      confirm("Are you sure you want to delete this cover letter?")
-    ) {
-      setCoverLetters(coverLetters.filter((cl) => cl.id !== id));
-      if (selectedId === id) {
-        setSelectedId(null);
+  // Load cover letters on mount
+  useEffect(() => {
+    async function loadCoverLetters() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const letters = await db.cover_letters.list<DBCoverLetter>({
+          eq: { key: "job_profile_id", value: jobProfileId },
+          order: { key: "updated_at", meta: { ascending: false } },
+        });
+        setCoverLetters(letters as DBCoverLetter[]);
+      } catch (err) {
+        console.error("Failed to load cover letters:", err);
+        setError("Failed to load cover letters");
+      } finally {
+        setIsLoading(false);
       }
     }
-  };
 
-  const handleUpdate = (id: string, updates: Partial<CoverLetter>) => {
-    setCoverLetters(
-      coverLetters.map((cl) =>
-        cl.id === id
-          ? { ...cl, ...updates, lastModified: new Date().toISOString() }
-          : cl
-      )
+    loadCoverLetters();
+  }, [jobProfileId]);
+
+  const handleCreate = useCallback(async () => {
+    try {
+      const user = await getCurrentUser();
+      if (!user) {
+        setError("Not authenticated");
+        return;
+      }
+
+      const result = await db.cover_letters.create<DBCoverLetter[]>({
+        profile_id: user.id,
+        job_profile_id: jobProfileId,
+        name: "New Cover Letter",
+        content: "",
+      });
+
+      const created = result[0];
+      if (created) {
+        setCoverLetters((prev) => [created, ...prev]);
+        setSelectedId(created.cover_letter_id);
+      }
+    } catch (err) {
+      console.error("Failed to create cover letter:", err);
+      setError("Failed to create cover letter");
+    }
+  }, [jobProfileId]);
+
+  const handleDelete = useCallback(
+    async (id: number, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (
+        // biome-ignore lint/suspicious/noAlert: Simple confirmation for now
+        !confirm("Are you sure you want to delete this cover letter?")
+      ) {
+        return;
+      }
+
+      try {
+        await db.cover_letters.remove(id);
+        setCoverLetters((prev) =>
+          prev.filter((cl) => cl.cover_letter_id !== id)
+        );
+        if (selectedId === id) {
+          setSelectedId(null);
+        }
+      } catch (err) {
+        console.error("Failed to delete cover letter:", err);
+        setError("Failed to delete cover letter");
+      }
+    },
+    [selectedId]
+  );
+
+  const handleUpdate = useCallback(
+    (id: number, updates: Partial<Pick<DBCoverLetter, "name" | "content">>) => {
+      // Optimistic update
+      setCoverLetters((prev) =>
+        prev.map((cl) =>
+          cl.cover_letter_id === id ? { ...cl, ...updates } : cl
+        )
+      );
+
+      // Debounced save
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      debounceTimerRef.current = setTimeout(async () => {
+        setIsSaving(true);
+        try {
+          await db.cover_letters.update(id, updates);
+        } catch (err) {
+          console.error("Failed to update cover letter:", err);
+          setError("Failed to save changes");
+        } finally {
+          setIsSaving(false);
+        }
+      }, DEBOUNCE_MS);
+    },
+    []
+  );
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    const cleanup = () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+    return cleanup;
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-gray-500">Loading cover letters...</div>
+      </div>
     );
-  };
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="rounded-lg bg-red-50 p-6 text-center">
+          <p className="text-red-600">{error}</p>
+          <button
+            className="mt-2 text-red-800 text-sm underline"
+            onClick={() => {
+              setError(null);
+            }}
+            type="button"
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex h-full max-w-7xl gap-6">
       {/* Sidebar List */}
       <div className="flex w-1/3 min-w-[300px] max-w-sm flex-col gap-4">
         <div className="flex items-center justify-between px-1">
-          <h2 className="font-semibold text-gray-900 text-lg">Cover Letters</h2>
+          <h2 className="font-semibold text-gray-900 text-lg">
+            Cover Letters
+            {isSaving ? (
+              <span className="ml-2 font-normal text-gray-400 text-sm">
+                Saving...
+              </span>
+            ) : null}
+          </h2>
           <Button onClick={handleCreate} size="sm" variant="default">
             <PlusIcon className="mr-2 h-4 w-4" />
             New
@@ -91,12 +197,12 @@ export function CoverLettersManager() {
             coverLetters.map((letter) => (
               <Card
                 className={`group relative cursor-pointer transition-all hover:border-gray-400 ${
-                  selectedId === letter.id
+                  selectedId === letter.cover_letter_id
                     ? "border-gray-900 shadow-md ring-1 ring-gray-900"
                     : "border-gray-200 shadow-sm"
                 }`}
-                key={letter.id}
-                onClick={() => setSelectedId(letter.id)}
+                key={letter.cover_letter_id}
+                onClick={() => setSelectedId(letter.cover_letter_id)}
               >
                 <div className="p-4">
                   <h3 className="truncate pr-6 font-medium text-gray-900">
@@ -104,12 +210,14 @@ export function CoverLettersManager() {
                   </h3>
                   <p className="mt-1 text-gray-500 text-xs">
                     Modified{" "}
-                    {new Date(letter.lastModified).toLocaleDateString()}
+                    {letter.updated_at
+                      ? new Date(letter.updated_at).toLocaleDateString()
+                      : "N/A"}
                   </p>
 
                   <button
                     className="absolute top-3 right-3 rounded-md p-1.5 text-gray-400 opacity-0 transition-colors hover:bg-gray-100 hover:text-red-600 group-hover:opacity-100"
-                    onClick={(e) => handleDelete(letter.id, e)}
+                    onClick={(e) => handleDelete(letter.cover_letter_id, e)}
                     title="Delete cover letter"
                     type="button"
                   >
@@ -138,7 +246,9 @@ export function CoverLettersManager() {
                   className="bg-white font-medium"
                   id="cover-letter-name"
                   onChange={(e) =>
-                    handleUpdate(selectedLetter.id, { name: e.target.value })
+                    handleUpdate(selectedLetter.cover_letter_id, {
+                      name: e.target.value,
+                    })
                   }
                   placeholder="e.g. Software Engineer at Google"
                   value={selectedLetter.name}
@@ -149,7 +259,9 @@ export function CoverLettersManager() {
               <textarea
                 className="h-full w-full resize-none p-8 font-sans text-base text-gray-800 leading-relaxed focus:outline-none"
                 onChange={(e) =>
-                  handleUpdate(selectedLetter.id, { content: e.target.value })
+                  handleUpdate(selectedLetter.cover_letter_id, {
+                    content: e.target.value,
+                  })
                 }
                 placeholder="Write your cover letter here..."
                 spellCheck={false}

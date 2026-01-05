@@ -10,6 +10,7 @@ const resources: { table: ResourceName; id_field: string }[] = [
   { table: "conversations", id_field: "conversation_id" },
   { table: "job_stream", id_field: "stream_id" },
   { table: "application_answers", id_field: "answer_id" },
+  { table: "cover_letters", id_field: "cover_letter_id" },
 ];
 
 type DB = {
@@ -32,6 +33,7 @@ export const db: DB = {
   application_answers: undefined as unknown as ReturnType<
     typeof generateResourceApi
   >,
+  cover_letters: undefined as unknown as ReturnType<typeof generateResourceApi>,
 };
 
 for (const resource of resources) {

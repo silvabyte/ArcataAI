@@ -42,7 +42,8 @@
     "docker:push:api": "bun run scripts/docker.ts push --app=api",
     "docker:build-push:api": "bun run scripts/docker.ts build-push --app=api",
     "docker:run:api": "bun run scripts/docker.ts run --app=api",
-    "docker:stop:api": "bun run scripts/docker.ts stop --app=api"
+    "docker:stop:api": "bun run scripts/docker.ts stop --app=api",
+    "db:generate-types": "bunx supabase gen types typescript --local > libs/db/src/lib/database.types.ts"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",

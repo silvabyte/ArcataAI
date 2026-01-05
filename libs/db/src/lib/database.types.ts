@@ -150,6 +150,7 @@ export type Database = {
           company_city: string | null;
           company_domain: string | null;
           company_id: number;
+          company_jobs_source: string | null;
           company_jobs_url: string | null;
           company_linkedin_url: string | null;
           company_naics: string | null;
@@ -179,6 +180,7 @@ export type Database = {
           company_city?: string | null;
           company_domain?: string | null;
           company_id?: number;
+          company_jobs_source?: string | null;
           company_jobs_url?: string | null;
           company_linkedin_url?: string | null;
           company_naics?: string | null;
@@ -208,6 +210,7 @@ export type Database = {
           company_city?: string | null;
           company_domain?: string | null;
           company_id?: number;
+          company_jobs_source?: string | null;
           company_jobs_url?: string | null;
           company_linkedin_url?: string | null;
           company_naics?: string | null;
@@ -279,6 +282,51 @@ export type Database = {
           },
           {
             foreignKeyName: "conversations_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      cover_letters: {
+        Row: {
+          content: string;
+          cover_letter_id: number;
+          created_at: string | null;
+          job_profile_id: number | null;
+          name: string;
+          profile_id: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          content?: string;
+          cover_letter_id?: number;
+          created_at?: string | null;
+          job_profile_id?: number | null;
+          name: string;
+          profile_id: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          content?: string;
+          cover_letter_id?: number;
+          created_at?: string | null;
+          job_profile_id?: number | null;
+          name?: string;
+          profile_id?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cover_letters_job_profile_id_fkey";
+            columns: ["job_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "job_profiles";
+            referencedColumns: ["job_profile_id"];
+          },
+          {
+            foreignKeyName: "cover_letters_profile_id_fkey";
             columns: ["profile_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
@@ -474,8 +522,10 @@ export type Database = {
           application_url: string | null;
           benefits: string[] | null;
           category: string | null;
+          closed_at: string | null;
+          closed_reason: string | null;
           closing_date: string | null;
-          company_id: number;
+          company_id: number | null;
           completion_state: string | null;
           created_at: string | null;
           description: string | null;
@@ -484,6 +534,7 @@ export type Database = {
           is_remote: boolean | null;
           job_id: number;
           job_type: string | null;
+          last_status_check: string | null;
           location: string | null;
           posted_date: string | null;
           preferred_qualifications: string[] | null;
@@ -494,6 +545,7 @@ export type Database = {
           salary_max: number | null;
           salary_min: number | null;
           source_url: string | null;
+          status: string | null;
           title: string;
           updated_at: string | null;
         };
@@ -501,8 +553,10 @@ export type Database = {
           application_url?: string | null;
           benefits?: string[] | null;
           category?: string | null;
+          closed_at?: string | null;
+          closed_reason?: string | null;
           closing_date?: string | null;
-          company_id: number;
+          company_id?: number | null;
           completion_state?: string | null;
           created_at?: string | null;
           description?: string | null;
@@ -511,6 +565,7 @@ export type Database = {
           is_remote?: boolean | null;
           job_id?: number;
           job_type?: string | null;
+          last_status_check?: string | null;
           location?: string | null;
           posted_date?: string | null;
           preferred_qualifications?: string[] | null;
@@ -521,6 +576,7 @@ export type Database = {
           salary_max?: number | null;
           salary_min?: number | null;
           source_url?: string | null;
+          status?: string | null;
           title: string;
           updated_at?: string | null;
         };
@@ -528,8 +584,10 @@ export type Database = {
           application_url?: string | null;
           benefits?: string[] | null;
           category?: string | null;
+          closed_at?: string | null;
+          closed_reason?: string | null;
           closing_date?: string | null;
-          company_id?: number;
+          company_id?: number | null;
           completion_state?: string | null;
           created_at?: string | null;
           description?: string | null;
@@ -538,6 +596,7 @@ export type Database = {
           is_remote?: boolean | null;
           job_id?: number;
           job_type?: string | null;
+          last_status_check?: string | null;
           location?: string | null;
           posted_date?: string | null;
           preferred_qualifications?: string[] | null;
@@ -548,6 +607,7 @@ export type Database = {
           salary_max?: number | null;
           salary_min?: number | null;
           source_url?: string | null;
+          status?: string | null;
           title?: string;
           updated_at?: string | null;
         };

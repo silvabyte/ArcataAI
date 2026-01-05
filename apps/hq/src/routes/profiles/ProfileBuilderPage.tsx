@@ -542,7 +542,9 @@ export function ProfileBuilderPage() {
             </div>
           ) : (
             <div className="h-full p-4 lg:p-6">
-              <CoverLettersManager />
+              <CoverLettersManager
+                jobProfileId={currentProfile.job_profile_id}
+              />
             </div>
           )}
         </div>
