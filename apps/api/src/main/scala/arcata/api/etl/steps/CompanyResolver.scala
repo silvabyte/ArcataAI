@@ -9,18 +9,18 @@ import boogieloops.ai.SchemaError
 
 /** Input for the CompanyResolver step. */
 final case class CompanyResolverInput(
-    extractedData: Transformed[ExtractedJobData],
-    url: String,
-    objectId: Option[String],
-    content: String
+  extractedData: Transformed[ExtractedJobData],
+  url: String,
+  objectId: Option[String],
+  content: String,
 )
 
 /** Output from the CompanyResolver step. */
 final case class CompanyResolverOutput(
-    extractedData: Transformed[ExtractedJobData],
-    company: Option[Company],
-    url: String,
-    objectId: Option[String]
+  extractedData: Transformed[ExtractedJobData],
+  company: Option[Company],
+  url: String,
+  objectId: Option[String],
 )
 
 /**
@@ -36,15 +36,15 @@ final case class CompanyResolverOutput(
  * 4. Return None if AI couldn't extract company website (job will be orphaned)
  */
 final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
-    extends BaseStep[CompanyResolverInput, CompanyResolverOutput]:
+  extends BaseStep[CompanyResolverInput, CompanyResolverOutput]:
 
   val name = "CompanyResolver"
 
   private val enrichmentAgent = CompanyEnrichmentAgent(aiConfig)
 
   override def execute(
-      input: CompanyResolverInput,
-      ctx: PipelineContext
+    input: CompanyResolverInput,
+    ctx: PipelineContext,
   ): Either[StepError, CompanyResolverOutput] = {
     logger.info(s"[${ctx.runId}] Resolving company for: ${input.url}")
 
@@ -73,9 +73,10 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
     val company = enrichedData match
       case Some(data) =>
         // Try to find existing company by domain first
-        val byDomain = data.domain.flatMap { domain =>
-          logger.info(s"[${ctx.runId}] Looking up company by domain: $domain")
-          supabaseClient.findCompanyByDomain(domain)
+        val byDomain = data.domain.flatMap {
+          domain =>
+            logger.info(s"[${ctx.runId}] Looking up company by domain: $domain")
+            supabaseClient.findCompanyByDomain(domain)
         }
 
         byDomain match
@@ -87,9 +88,10 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
 
           case None =>
             // Try to find by jobsUrl
-            val byJobsUrl = data.jobsUrl.flatMap { jobsUrl =>
-              logger.info(s"[${ctx.runId}] Looking up company by jobsUrl: $jobsUrl")
-              supabaseClient.findCompanyByJobsUrl(jobsUrl)
+            val byJobsUrl = data.jobsUrl.flatMap {
+              jobsUrl =>
+                logger.info(s"[${ctx.runId}] Looking up company by jobsUrl: $jobsUrl")
+                supabaseClient.findCompanyByJobsUrl(jobsUrl)
             }
 
             byJobsUrl match
@@ -111,7 +113,7 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
                       industry = data.industry,
                       companySize = data.size,
                       description = data.description,
-                      headquarters = data.headquarters
+                      headquarters = data.headquarters,
                     )
                     supabaseClient.insertCompany(newCompany) match
                       case Some(created) =>
@@ -135,7 +137,7 @@ final class CompanyResolver(supabaseClient: SupabaseClient, aiConfig: AIConfig)
         extractedData = input.extractedData,
         company = company,
         url = input.url,
-        objectId = input.objectId
+        objectId = input.objectId,
       )
     )
   }

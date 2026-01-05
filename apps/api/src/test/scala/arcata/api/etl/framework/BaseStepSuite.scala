@@ -24,8 +24,9 @@ object BaseStepSuite extends TestSuite:
     }
 
     test("apply creates step from function") {
-      val step = BaseStep("double") { (input: Int, _: PipelineContext) =>
-        Right(input * 2)
+      val step = BaseStep("double") {
+        (input: Int, _: PipelineContext) =>
+          Right(input * 2)
       }
       val ctx = PipelineContext.create("test-profile")
 
@@ -35,11 +36,13 @@ object BaseStepSuite extends TestSuite:
     }
 
     test("andThen composes steps") {
-      val double = BaseStep("double") { (input: Int, _: PipelineContext) =>
-        Right(input * 2)
+      val double = BaseStep("double") {
+        (input: Int, _: PipelineContext) =>
+          Right(input * 2)
       }
-      val addOne = BaseStep("addOne") { (input: Int, _: PipelineContext) =>
-        Right(input + 1)
+      val addOne = BaseStep("addOne") {
+        (input: Int, _: PipelineContext) =>
+          Right(input + 1)
       }
 
       val composed = double.andThen(addOne)
@@ -52,11 +55,13 @@ object BaseStepSuite extends TestSuite:
     }
 
     test("andThen short-circuits on error") {
-      val failStep: BaseStep[Int, Int] = BaseStep("fail") { (_: Int, _: PipelineContext) =>
-        Left(StepError.ValidationError("failed", "fail"))
+      val failStep: BaseStep[Int, Int] = BaseStep("fail") {
+        (_: Int, _: PipelineContext) =>
+          Left(StepError.ValidationError("failed", "fail"))
       }
-      val addOne: BaseStep[Int, Int] = BaseStep("addOne") { (input: Int, _: PipelineContext) =>
-        Right(input + 1)
+      val addOne: BaseStep[Int, Int] = BaseStep("addOne") {
+        (input: Int, _: PipelineContext) =>
+          Right(input + 1)
       }
 
       val composed = failStep.andThen(addOne)
@@ -68,8 +73,9 @@ object BaseStepSuite extends TestSuite:
     }
 
     test("step catches exceptions and returns error") {
-      val throwing = BaseStep("throwing") { (_: Int, _: PipelineContext) =>
-        throw new RuntimeException("boom!") // scalafix:ok DisableSyntax.throw
+      val throwing = BaseStep("throwing") {
+        (_: Int, _: PipelineContext) =>
+          throw new RuntimeException("boom!") // scalafix:ok DisableSyntax.throw
       }
       val ctx = PipelineContext.create("test-profile")
 

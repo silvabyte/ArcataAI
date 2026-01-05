@@ -26,14 +26,14 @@ import cask.router.{RawDecorator, Result}
  *   until one succeeds.
  */
 class authenticated(
-    allowedTypes: Vector[AuthType] = Vector(AuthType.JWT)
+  allowedTypes: Vector[AuthType] = Vector(AuthType.JWT)
 ) extends RawDecorator:
 
   private val jsonHeaders = Seq("Content-Type" -> "application/json")
 
   override def wrapFunction(
-      ctx: Request,
-      delegate: Delegate
+    ctx: Request,
+    delegate: Delegate,
   ): Result[Response.Raw] = {
     // Try each allowed auth type until one succeeds
     val results = allowedTypes.map(tryAuth(_, ctx))
@@ -52,7 +52,7 @@ class authenticated(
           Response(
             data = s"""{"error": "${failure.reason}"}""",
             statusCode = failure.statusCode,
-            headers = jsonHeaders
+            headers = jsonHeaders,
           )
         )
   }
@@ -76,7 +76,7 @@ class authenticated(
                 profileId = profileId,
                 claims = Some(claims),
                 authType = AuthType.JWT,
-                request = ctx
+                request = ctx,
               )
             )
 

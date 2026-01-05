@@ -22,7 +22,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
   private def headers: Map[String, String] = Map(
     "apikey" -> config.serviceRoleKey,
     "Content-Type" -> "application/json",
-    "Prefer" -> "return=representation"
+    "Prefer" -> "return=representation",
   )
 
   // Company operations
@@ -32,7 +32,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val response = requests.get(
       s"$baseUrl/companies",
       headers = headers,
-      params = Map("company_domain" -> s"eq.$domain", "limit" -> "1")
+      params = Map("company_domain" -> s"eq.$domain", "limit" -> "1"),
     )
     parseResponse[Seq[Company]](response).flatMap(_.headOption)
   }
@@ -42,7 +42,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val response = requests.get(
       s"$baseUrl/companies",
       headers = headers,
-      params = Map("company_jobs_url" -> s"eq.$jobsUrl", "limit" -> "1")
+      params = Map("company_jobs_url" -> s"eq.$jobsUrl", "limit" -> "1"),
     )
     parseResponse[Seq[Company]](response).flatMap(_.headOption)
   }
@@ -65,8 +65,8 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
         "company_jobs_source" -> s"eq.$source",
         "company_jobs_url" -> "not.is.null",
         "limit" -> limit.toString,
-        "order" -> "company_id.asc"
-      )
+        "order" -> "company_id.asc",
+      ),
     )
     parseResponse[Seq[Company]](response).getOrElse(Seq.empty)
   }
@@ -77,7 +77,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val response = requests.post(
       s"$baseUrl/companies",
       headers = headers,
-      data = json
+      data = json,
     )
     parseResponse[Seq[Company]](response).flatMap(_.headOption)
   }
@@ -90,7 +90,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val response = requests.post(
       s"$baseUrl/jobs",
       headers = headers,
-      data = json
+      data = json,
     )
     parseResponse[Seq[Job]](response).flatMap(_.headOption)
   }
@@ -100,7 +100,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val response = requests.get(
       s"$baseUrl/jobs",
       headers = headers,
-      params = Map("source_url" -> s"eq.$sourceUrl", "limit" -> "1")
+      params = Map("source_url" -> s"eq.$sourceUrl", "limit" -> "1"),
     )
     parseResponse[Seq[Job]](response).flatMap(_.headOption)
   }
@@ -126,8 +126,8 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
         "source_url" -> "not.is.null",
         "or" -> s"(last_status_check.is.null,last_status_check.lt.$threshold)",
         "limit" -> batchSize.toString,
-        "order" -> "last_status_check.asc.nullsfirst"
-      )
+        "order" -> "last_status_check.asc.nullsfirst",
+      ),
     )
     parseResponse[Seq[Job]](response).getOrElse(Seq.empty)
   }
@@ -147,7 +147,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val obj = ujson.Obj(
       "status" -> "closed",
       "closed_at" -> now,
-      "last_status_check" -> now
+      "last_status_check" -> now,
     )
     closedReason.foreach(v => obj("closed_reason") = v)
 
@@ -155,7 +155,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
       s"$baseUrl/jobs",
       headers = headers,
       params = Map("job_id" -> s"eq.$jobId"),
-      data = ujson.write(obj)
+      data = ujson.write(obj),
     )
     response.is2xx
   }
@@ -176,7 +176,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
       s"$baseUrl/jobs",
       headers = headers,
       params = Map("job_id" -> s"eq.$jobId"),
-      data = ujson.write(obj)
+      data = ujson.write(obj),
     )
     response.is2xx
   }
@@ -189,7 +189,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val response = requests.post(
       s"$baseUrl/job_stream",
       headers = headers,
-      data = json
+      data = json,
     )
     parseResponse[Seq[JobStreamEntry]](response).flatMap(_.headOption)
   }
@@ -202,7 +202,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val response = requests.post(
       s"$baseUrl/job_applications",
       headers = headers,
-      data = json
+      data = json,
     )
     parseResponse[Seq[JobApplication]](response).flatMap(_.headOption)
   }
@@ -216,8 +216,8 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
         "profile_id" -> s"eq.$profileId",
         "is_default" -> "eq.true",
         "select" -> "status_id",
-        "limit" -> "1"
-      )
+        "limit" -> "1",
+      ),
     )
     parseResponse[Seq[ujson.Value]](response)
       .flatMap(_.headOption)
@@ -284,7 +284,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
     val obj = ujson.Obj(
       "job_id" -> entry.jobId,
       "profile_id" -> entry.profileId,
-      "source" -> entry.source
+      "source" -> entry.source,
     )
     entry.status.foreach(v => obj("status") = v)
     entry.bestMatchScore.foreach(v => obj("best_match_score") = v)
@@ -296,7 +296,7 @@ class SupabaseClient(config: SupabaseConfig) extends Logging:
   private def writeJobApplicationForInsert(app: JobApplication): String = {
     val obj = ujson.Obj(
       "profile_id" -> app.profileId,
-      "status_order" -> app.statusOrder
+      "status_order" -> app.statusOrder,
     )
     app.jobId.foreach(v => obj("job_id") = v)
     app.jobProfileId.foreach(v => obj("job_profile_id") = v)

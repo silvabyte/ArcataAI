@@ -20,12 +20,13 @@ final class ResumeExtractionAgent(config: AIConfig):
     apiKey = config.apiKey,
     modelId = config.model,
     strictModelValidation = false,
-    timeouts = ProviderTimeouts(60_000 * 5, 60_000 * 5)
+    timeouts = ProviderTimeouts(60_000 * 5, 60_000 * 5),
   )
 
   private val agent = Agent(
     name = "ResumeExtractor",
-    instructions = """You are a resume parser. Given plain text extracted from a resume document,
+    instructions =
+      """You are a resume parser. Given plain text extracted from a resume document,
 extract structured resume information. Be thorough and preserve ALL information.
 
 IMPORTANT - Field naming conventions (must match exactly):
@@ -71,7 +72,7 @@ Date formats:
 If information is ambiguous or unclear, make a reasonable interpretation rather than omitting it.""",
     provider = provider,
     model = config.model,
-    temperature = Some(0.1) // Low temperature for consistent extraction
+    temperature = Some(0.1), // Low temperature for consistent extraction
   )
 
   /**
@@ -93,7 +94,7 @@ File name: $fileName
 
 Resume content:
 $text""",
-        RequestMetadata()
+        RequestMetadata(),
       )
       .map(_.data)
   }

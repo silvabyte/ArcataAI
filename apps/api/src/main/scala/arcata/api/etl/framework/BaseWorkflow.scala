@@ -47,10 +47,12 @@ case class WorkflowRun[I](input: I, profileId: String)
  * @tparam O
  *   Output type for the workflow/pipeline
  */
-abstract class BaseWorkflow[I, O](using ac: castor.Context)
-    extends SimpleActor[WorkflowRun[I]]
-    with BasePipeline[I, O]
-    with Logging:
+abstract class BaseWorkflow[I, O](
+  using
+  ac: castor.Context
+) extends SimpleActor[WorkflowRun[I]]
+  with BasePipeline[I, O]
+  with Logging:
 
   /**
    * Called when pipeline completes successfully.

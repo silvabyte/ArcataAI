@@ -6,18 +6,18 @@ import arcata.api.extraction.CompletionState
 
 /** Input for the JobTransformer step. */
 final case class JobTransformerInput(
-    extracted: ExtractedJobData,
-    sourceUrl: String,
-    objectId: Option[String],
-    completionState: CompletionState
+  extracted: ExtractedJobData,
+  sourceUrl: String,
+  objectId: Option[String],
+  completionState: CompletionState,
 )
 
 /** Output from the JobTransformer step. */
 final case class JobTransformerOutput(
-    transformed: Transformed[ExtractedJobData],
-    sourceUrl: String,
-    objectId: Option[String],
-    completionState: CompletionState
+  transformed: Transformed[ExtractedJobData],
+  sourceUrl: String,
+  objectId: Option[String],
+  completionState: CompletionState,
 )
 
 /**
@@ -39,8 +39,8 @@ object JobTransformer extends BaseStep[JobTransformerInput, JobTransformerOutput
   override val name: String = "JobTransformer"
 
   override def execute(
-      input: JobTransformerInput,
-      ctx: PipelineContext
+    input: JobTransformerInput,
+    ctx: PipelineContext,
   ): Either[StepError, JobTransformerOutput] = {
     logger.info(s"[${ctx.runId}] Transforming job data for: ${input.sourceUrl}")
 
@@ -63,7 +63,7 @@ object JobTransformer extends BaseStep[JobTransformerInput, JobTransformerOutput
       applicationUrl = input.extracted.applicationUrl.flatMap(sanitizeString),
       isRemote = input.extracted.isRemote,
       postedDate = input.extracted.postedDate.flatMap(sanitizeString),
-      closingDate = input.extracted.closingDate.flatMap(sanitizeString)
+      closingDate = input.extracted.closingDate.flatMap(sanitizeString),
     )
 
     Right(
@@ -71,7 +71,7 @@ object JobTransformer extends BaseStep[JobTransformerInput, JobTransformerOutput
         transformed = Transformed(transformed),
         sourceUrl = input.sourceUrl,
         objectId = input.objectId,
-        completionState = input.completionState
+        completionState = input.completionState,
       )
     )
   }

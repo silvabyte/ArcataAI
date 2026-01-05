@@ -20,7 +20,7 @@ final class CompanyEnrichmentAgent(config: AIConfig):
     apiKey = config.apiKey,
     modelId = config.model,
     strictModelValidation = false,
-    timeouts = ProviderTimeouts(60_000 * 5, 60_000 * 5)
+    timeouts = ProviderTimeouts(60_000 * 5, 60_000 * 5),
   )
 
   private val agent = Agent(
@@ -55,7 +55,7 @@ RULES:
 - If you cannot find the company's actual website, leave websiteUrl and domain as null""",
     provider = provider,
     model = config.model,
-    temperature = Some(0.1)
+    temperature = Some(0.1),
   )
 
   /**
@@ -71,13 +71,13 @@ RULES:
    *   Either an error or the enriched company data
    */
   def enrich(
-      companyName: String,
-      content: String,
-      url: String
+    companyName: String,
+    content: String,
+    url: String,
   ): Either[SchemaError, ExtractedCompanyData] = {
     Log.info(
       s"CompanyEnrichmentAgent: Starting enrichment for '$companyName'",
-      Map("url" -> url, "contentLength" -> content.length)
+      Map("url" -> url, "contentLength" -> content.length),
     )
 
     val result = agent
@@ -88,7 +88,7 @@ Source URL: $url
 
 Content:
 $content""",
-        RequestMetadata()
+        RequestMetadata(),
       )
 
     result match
@@ -105,13 +105,13 @@ $content""",
             "industry" -> response.data.industry.getOrElse("null"),
             "size" -> response.data.size.getOrElse("null"),
             "description" -> response.data.description.map(_.take(100)).getOrElse("null"),
-            "headquarters" -> response.data.headquarters.getOrElse("null")
-          )
+            "headquarters" -> response.data.headquarters.getOrElse("null"),
+          ),
         )
       case Left(error) =>
         Log.error(
           s"CompanyEnrichmentAgent: Failed to enrich '$companyName'",
-          Map("error" -> error.toString, "url" -> url)
+          Map("error" -> error.toString, "url" -> url),
         )
 
     result.map(_.data)

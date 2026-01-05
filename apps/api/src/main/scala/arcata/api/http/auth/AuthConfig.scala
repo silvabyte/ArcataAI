@@ -19,7 +19,7 @@ object AuthConfig:
   private lazy val jwksProvider: JwksProvider = {
     val supabaseUrl = sys.env.getOrElse(
       "SUPABASE_URL",
-      throw ConfigError("Required environment variable 'SUPABASE_URL' is not set") // scalafix:ok DisableSyntax.throw
+      throw ConfigError("Required environment variable 'SUPABASE_URL' is not set"), // scalafix:ok DisableSyntax.throw
 
     )
     JwksProvider(JwksProvider.jwksUrlFor(supabaseUrl))

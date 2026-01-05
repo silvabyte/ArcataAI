@@ -30,7 +30,7 @@ object ApiKeyValidator:
             profileId = "service",
             claims = None,
             authType = AuthType.ApiKey,
-            request = request
+            request = request,
           )
         )
 

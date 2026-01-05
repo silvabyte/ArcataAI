@@ -5,16 +5,16 @@ import arcata.api.utils.HtmlCleaner as HtmlCleanerUtil
 
 /** Input for the HtmlCleaner step. */
 final case class HtmlCleanerInput(
-    html: String,
-    url: String,
-    objectId: Option[String]
+  html: String,
+  url: String,
+  objectId: Option[String],
 )
 
 /** Output from the HtmlCleaner step. */
 final case class HtmlCleanerOutput(
-    markdown: String,
-    url: String,
-    objectId: Option[String]
+  markdown: String,
+  url: String,
+  objectId: Option[String],
 )
 
 /**
@@ -28,8 +28,8 @@ final class HtmlCleaner extends BaseStep[HtmlCleanerInput, HtmlCleanerOutput]:
   val name = "HtmlCleaner"
 
   override def execute(
-      input: HtmlCleanerInput,
-      ctx: PipelineContext
+    input: HtmlCleanerInput,
+    ctx: PipelineContext,
   ): Either[StepError, HtmlCleanerOutput] = {
     val markdown = HtmlCleanerUtil.toMarkdown(input.html)
 
@@ -37,7 +37,7 @@ final class HtmlCleaner extends BaseStep[HtmlCleanerInput, HtmlCleanerOutput]:
       HtmlCleanerOutput(
         markdown = markdown,
         url = input.url,
-        objectId = input.objectId
+        objectId = input.objectId,
       )
     )
   }

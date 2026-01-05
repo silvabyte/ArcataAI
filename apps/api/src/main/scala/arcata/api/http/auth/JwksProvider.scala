@@ -13,12 +13,12 @@ import upickle.default.*
 
 /** A single key from a JWKS response. */
 final case class JwkKey(
-    kid: String,
-    kty: String,
-    alg: String,
-    crv: String,
-    x: String,
-    y: String
+  kid: String,
+  kty: String,
+  alg: String,
+  crv: String,
+  x: String,
+  y: String,
 ) derives ReadWriter
 
 /** JWKS response containing public keys. */
@@ -26,7 +26,7 @@ final case class JwksResponse(keys: Seq[JwkKey]) derives ReadWriter
 
 /** Error when JWKS operations fail. */
 final case class JwksError(message: String, cause: Option[Throwable] = None)
-    extends Exception(message, cause.orNull)
+  extends Exception(message, cause.orNull)
 
 /**
  * Fetches and parses JWKS (JSON Web Key Set) from Supabase.
@@ -39,15 +39,16 @@ class JwksProvider(jwksUrl: String) extends Logging:
 
   /** Fetch keys and find the one matching the given kid. */
   def getKey(kid: String): Either[JwksError, ECPublicKey] = {
-    fetchKeys().flatMap { keys =>
-      logger.debug(s"JWKS contains ${keys.size} keys: ${keys.map(_.kid).mkString(", ")}")
-      keys.find(_.kid == kid) match
-        case Some(jwk) =>
-          logger.debug(s"Found matching key for kid: $kid")
-          parseEcPublicKey(jwk)
-        case None =>
-          logger.warn(s"Key with kid '$kid' not found in JWKS. Available kids: ${keys.map(_.kid).mkString(", ")}")
-          Left(JwksError(s"Key with kid '$kid' not found in JWKS"))
+    fetchKeys().flatMap {
+      keys =>
+        logger.debug(s"JWKS contains ${keys.size} keys: ${keys.map(_.kid).mkString(", ")}")
+        keys.find(_.kid == kid) match
+          case Some(jwk) =>
+            logger.debug(s"Found matching key for kid: $kid")
+            parseEcPublicKey(jwk)
+          case None =>
+            logger.warn(s"Key with kid '$kid' not found in JWKS. Available kids: ${keys.map(_.kid).mkString(", ")}")
+            Left(JwksError(s"Key with kid '$kid' not found in JWKS"))
     }
   }
 

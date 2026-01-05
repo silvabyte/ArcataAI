@@ -18,9 +18,9 @@ import scribe.Logging
  *   Delay between HTTP requests in milliseconds
  */
 case class JobSourceConfig(
-    companyBatchSize: Int = 1,
-    jobsPerCompany: Int = 1,
-    delayBetweenRequestsMs: Int = 1000
+  companyBatchSize: Int = 1,
+  jobsPerCompany: Int = 1,
+  delayBetweenRequestsMs: Int = 1000,
 )
 
 /**
@@ -38,11 +38,11 @@ case class JobSourceConfig(
  *   Additional context from the source (e.g., greenhouse_job_id, lever_posting_id)
  */
 case class DiscoveredJob(
-    url: String,
-    source: JobSource,
-    companyId: Option[Long] = None,
-    apiUrl: Option[String] = None,
-    metadata: Map[String, String] = Map.empty
+  url: String,
+  source: JobSource,
+  companyId: Option[Long] = None,
+  apiUrl: Option[String] = None,
+  metadata: Map[String, String] = Map.empty,
 )
 
 /**
@@ -64,21 +64,21 @@ case class DiscoveredJob(
  *   Rate limiting configuration
  */
 enum JobSource(
-    val sourceId: String,
-    val name: String,
-    val config: JobSourceConfig
+  val sourceId: String,
+  val name: String,
+  val config: JobSourceConfig,
 ) {
 
   case Greenhouse
-      extends JobSource(
-        sourceId = "greenhouse",
-        name = "Greenhouse ATS",
-        config = JobSourceConfig(
-          companyBatchSize = 1,
-          jobsPerCompany = 1,
-          delayBetweenRequestsMs = 1000
-        )
-      )
+    extends JobSource(
+      sourceId = "greenhouse",
+      name = "Greenhouse ATS",
+      config = JobSourceConfig(
+        companyBatchSize = 1,
+        jobsPerCompany = 1,
+        delayBetweenRequestsMs = 1000,
+      ),
+    )
 
   // Future sources:
   // case Lever extends JobSource("lever", "Lever ATS", JobSourceConfig(...))

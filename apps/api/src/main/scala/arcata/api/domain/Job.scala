@@ -59,32 +59,32 @@ import upickle.default.*
  *   Timestamp when job status was last verified
  */
 final case class Job(
-    jobId: Option[Long] = None,
-    companyId: Option[Long] = None,
-    title: String,
-    description: Option[String] = None,
-    location: Option[String] = None,
-    jobType: Option[String] = None,
-    experienceLevel: Option[String] = None,
-    educationLevel: Option[String] = None,
-    salaryMin: Option[Int] = None,
-    salaryMax: Option[Int] = None,
-    salaryCurrency: Option[String] = Some("USD"),
-    qualifications: Option[Seq[String]] = None,
-    preferredQualifications: Option[Seq[String]] = None,
-    responsibilities: Option[Seq[String]] = None,
-    benefits: Option[Seq[String]] = None,
-    category: Option[String] = None,
-    sourceUrl: Option[String] = None,
-    applicationUrl: Option[String] = None,
-    isRemote: Option[Boolean] = None,
-    postedDate: Option[String] = None,
-    closingDate: Option[String] = None,
-    completionState: Option[String] = None,
-    status: Option[String] = Some("open"),
-    closedReason: Option[String] = None,
-    closedAt: Option[String] = None,
-    lastStatusCheck: Option[String] = None
+  jobId: Option[Long] = None,
+  companyId: Option[Long] = None,
+  title: String,
+  description: Option[String] = None,
+  location: Option[String] = None,
+  jobType: Option[String] = None,
+  experienceLevel: Option[String] = None,
+  educationLevel: Option[String] = None,
+  salaryMin: Option[Int] = None,
+  salaryMax: Option[Int] = None,
+  salaryCurrency: Option[String] = Some("USD"),
+  qualifications: Option[Seq[String]] = None,
+  preferredQualifications: Option[Seq[String]] = None,
+  responsibilities: Option[Seq[String]] = None,
+  benefits: Option[Seq[String]] = None,
+  category: Option[String] = None,
+  sourceUrl: Option[String] = None,
+  applicationUrl: Option[String] = None,
+  isRemote: Option[Boolean] = None,
+  postedDate: Option[String] = None,
+  closingDate: Option[String] = None,
+  completionState: Option[String] = None,
+  status: Option[String] = Some("open"),
+  closedReason: Option[String] = None,
+  closedAt: Option[String] = None,
+  lastStatusCheck: Option[String] = None,
 )
 
 object Job:
@@ -150,7 +150,7 @@ object Job:
         status = obj.get("status").flatMap(v => if v.isNull then None else Some(v.str)),
         closedReason = obj.get("closed_reason").flatMap(v => if v.isNull then None else Some(v.str)),
         closedAt = obj.get("closed_at").flatMap(v => if v.isNull then None else Some(v.str)),
-        lastStatusCheck = obj.get("last_status_check").flatMap(v => if v.isNull then None else Some(v.str))
+        lastStatusCheck = obj.get("last_status_check").flatMap(v => if v.isNull then None else Some(v.str)),
       )
-    }
+    },
   )

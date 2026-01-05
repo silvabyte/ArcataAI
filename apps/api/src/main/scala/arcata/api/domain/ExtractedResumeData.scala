@@ -24,13 +24,13 @@ import upickle.default.*
  *   Personal website or portfolio URL
  */
 final case class ContactInfo(
-    name: Option[String] = None,
-    email: Option[String] = None,
-    phone: Option[String] = None,
-    location: Option[String] = None,
-    linkedIn: Option[String] = None,
-    github: Option[String] = None,
-    portfolio: Option[String] = None
+  name: Option[String] = None,
+  email: Option[String] = None,
+  phone: Option[String] = None,
+  location: Option[String] = None,
+  linkedIn: Option[String] = None,
+  github: Option[String] = None,
+  portfolio: Option[String] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -42,8 +42,8 @@ final case class ContactInfo(
  *   Professional summary or objective statement
  */
 final case class SummaryInfo(
-    headline: Option[String] = None,
-    summary: Option[String] = None
+  headline: Option[String] = None,
+  summary: Option[String] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -69,14 +69,14 @@ final case class SummaryInfo(
  *   Key accomplishments as bullet points
  */
 final case class WorkExperience(
-    id: Option[String] = None,
-    company: Option[String] = None,
-    title: Option[String] = None,
-    location: Option[String] = None,
-    startDate: Option[String] = None,
-    endDate: Option[String] = None,
-    current: Option[Boolean] = None,
-    highlights: Option[List[String]] = None
+  id: Option[String] = None,
+  company: Option[String] = None,
+  title: Option[String] = None,
+  location: Option[String] = None,
+  startDate: Option[String] = None,
+  endDate: Option[String] = None,
+  current: Option[Boolean] = None,
+  highlights: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -108,17 +108,17 @@ final case class WorkExperience(
  *   Relevant coursework
  */
 final case class Education(
-    id: Option[String] = None,
-    institution: Option[String] = None,
-    degree: Option[String] = None,
-    field: Option[String] = None,
-    location: Option[String] = None,
-    startDate: Option[String] = None,
-    endDate: Option[String] = None,
-    current: Option[Boolean] = None,
-    gpa: Option[String] = None,
-    honors: Option[String] = None,
-    coursework: Option[List[String]] = None
+  id: Option[String] = None,
+  institution: Option[String] = None,
+  degree: Option[String] = None,
+  field: Option[String] = None,
+  location: Option[String] = None,
+  startDate: Option[String] = None,
+  endDate: Option[String] = None,
+  current: Option[Boolean] = None,
+  gpa: Option[String] = None,
+  honors: Option[String] = None,
+  coursework: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -132,9 +132,9 @@ final case class Education(
  *   List of skills in this category
  */
 final case class SkillCategory(
-    id: Option[String] = None,
-    name: Option[String] = None,
-    skills: Option[List[String]] = None
+  id: Option[String] = None,
+  name: Option[String] = None,
+  skills: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -144,7 +144,7 @@ final case class SkillCategory(
  *   List of skill categories
  */
 final case class SkillsData(
-    categories: Option[List[SkillCategory]] = None
+  categories: Option[List[SkillCategory]] = None
 ) derives ReadWriter, Schematic
 
 /**
@@ -172,15 +172,15 @@ final case class SkillsData(
  *   Key accomplishments or features as bullet points
  */
 final case class Project(
-    id: Option[String] = None,
-    name: Option[String] = None,
-    description: Option[String] = None,
-    url: Option[String] = None,
-    startDate: Option[String] = None,
-    endDate: Option[String] = None,
-    current: Option[Boolean] = None,
-    technologies: Option[List[String]] = None,
-    highlights: Option[List[String]] = None
+  id: Option[String] = None,
+  name: Option[String] = None,
+  description: Option[String] = None,
+  url: Option[String] = None,
+  startDate: Option[String] = None,
+  endDate: Option[String] = None,
+  current: Option[Boolean] = None,
+  technologies: Option[List[String]] = None,
+  highlights: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -206,14 +206,14 @@ final case class Project(
  *   Whether this credential does not expire
  */
 final case class Certification(
-    id: Option[String] = None,
-    name: Option[String] = None,
-    issuer: Option[String] = None,
-    issueDate: Option[String] = None,
-    expirationDate: Option[String] = None,
-    credentialId: Option[String] = None,
-    credentialUrl: Option[String] = None,
-    noExpiration: Option[Boolean] = None
+  id: Option[String] = None,
+  name: Option[String] = None,
+  issuer: Option[String] = None,
+  issueDate: Option[String] = None,
+  expirationDate: Option[String] = None,
+  credentialId: Option[String] = None,
+  credentialUrl: Option[String] = None,
+  noExpiration: Option[Boolean] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -229,9 +229,9 @@ final case class Certification(
  *   Proficiency level: native, fluent, advanced, intermediate, or beginner
  */
 final case class LanguageEntry(
-    id: Option[String] = None,
-    language: Option[String] = None,
-    proficiency: Option[String] = None
+  id: Option[String] = None,
+  language: Option[String] = None,
+  proficiency: Option[String] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -241,7 +241,7 @@ final case class LanguageEntry(
  *   List of language entries with proficiency levels
  */
 final case class LanguagesData(
-    entries: Option[List[LanguageEntry]] = None
+  entries: Option[List[LanguageEntry]] = None
 ) derives ReadWriter, Schematic
 
 /**
@@ -267,14 +267,14 @@ final case class LanguagesData(
  *   Key contributions as bullet points
  */
 final case class VolunteerExperience(
-    id: Option[String] = None,
-    organization: Option[String] = None,
-    role: Option[String] = None,
-    location: Option[String] = None,
-    startDate: Option[String] = None,
-    endDate: Option[String] = None,
-    current: Option[Boolean] = None,
-    highlights: Option[List[String]] = None
+  id: Option[String] = None,
+  organization: Option[String] = None,
+  role: Option[String] = None,
+  location: Option[String] = None,
+  startDate: Option[String] = None,
+  endDate: Option[String] = None,
+  current: Option[Boolean] = None,
+  highlights: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -294,11 +294,11 @@ final case class VolunteerExperience(
  *   Description of the award
  */
 final case class Award(
-    id: Option[String] = None,
-    title: Option[String] = None,
-    issuer: Option[String] = None,
-    date: Option[String] = None,
-    description: Option[String] = None
+  id: Option[String] = None,
+  title: Option[String] = None,
+  issuer: Option[String] = None,
+  date: Option[String] = None,
+  description: Option[String] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -314,9 +314,9 @@ final case class Award(
  *   Structured items if the section contains a list
  */
 final case class CustomSection(
-    title: String,
-    content: Option[String] = None,
-    items: Option[List[String]] = None
+  title: String,
+  content: Option[String] = None,
+  items: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -349,17 +349,17 @@ final case class CustomSection(
  *   Any sections that don't fit standard categories (publications, patents, etc.)
  */
 final case class ExtractedResumeData(
-    contact: Option[ContactInfo] = None,
-    summary: Option[SummaryInfo] = None,
-    experience: Option[List[WorkExperience]] = None,
-    education: Option[List[Education]] = None,
-    skills: Option[SkillsData] = None,
-    projects: Option[List[Project]] = None,
-    certifications: Option[List[Certification]] = None,
-    languages: Option[LanguagesData] = None,
-    volunteer: Option[List[VolunteerExperience]] = None,
-    awards: Option[List[Award]] = None,
-    customSections: Option[List[CustomSection]] = None
+  contact: Option[ContactInfo] = None,
+  summary: Option[SummaryInfo] = None,
+  experience: Option[List[WorkExperience]] = None,
+  education: Option[List[Education]] = None,
+  skills: Option[SkillsData] = None,
+  projects: Option[List[Project]] = None,
+  certifications: Option[List[Certification]] = None,
+  languages: Option[LanguagesData] = None,
+  volunteer: Option[List[VolunteerExperience]] = None,
+  awards: Option[List[Award]] = None,
+  customSections: Option[List[CustomSection]] = None,
 ) derives ReadWriter, Schematic
 
 object ExtractedResumeData:

@@ -13,42 +13,42 @@ import upickle.default.*
 @Schematic.title("IngestJobRequest")
 @Schematic.description("Request to ingest a job from a URL")
 final case class IngestJobRequest(
-    @Schematic.description("The job posting URL to fetch and parse")
-    url: String,
-    @Schematic.description("How the job was found (e.g., 'manual', 'extension', 'ai_discovery')")
-    source: Option[String] = None,
-    @Schematic.description("Whether to also create a job application in 'Saved' status")
-    createApplication: Option[Boolean] = None,
-    @Schematic.description("Notes to attach if creating an application")
-    notes: Option[String] = None
+  @Schematic.description("The job posting URL to fetch and parse")
+  url: String,
+  @Schematic.description("How the job was found (e.g., 'manual', 'extension', 'ai_discovery')")
+  source: Option[String] = None,
+  @Schematic.description("Whether to also create a job application in 'Saved' status")
+  createApplication: Option[Boolean] = None,
+  @Schematic.description("Notes to attach if creating an application")
+  notes: Option[String] = None,
 ) derives Schematic, ReadWriter
 
 /** Response for successful job ingestion. */
 @Schematic.title("IngestJobResponse")
 @Schematic.description("Response from successful job ingestion")
 final case class IngestJobResponse(
-    @Schematic.description("Whether the operation succeeded")
-    success: Boolean,
-    @Schematic.description("The created or found job ID")
-    jobId: Long,
-    @Schematic.description("The job stream entry ID")
-    streamId: Option[Long],
-    @Schematic.description("The application ID (if createApplication was true)")
-    applicationId: Option[Long],
-    @Schematic.description("Human-readable success message")
-    message: String
+  @Schematic.description("Whether the operation succeeded")
+  success: Boolean,
+  @Schematic.description("The created or found job ID")
+  jobId: Long,
+  @Schematic.description("The job stream entry ID")
+  streamId: Option[Long],
+  @Schematic.description("The application ID (if createApplication was true)")
+  applicationId: Option[Long],
+  @Schematic.description("Human-readable success message")
+  message: String,
 ) derives Schematic, ReadWriter
 
 /** Error response. */
 @Schematic.title("JobErrorResponse")
 @Schematic.description("Error response for job operations")
 final case class JobErrorResponse(
-    @Schematic.description("Whether the operation succeeded (always false for errors)")
-    success: Boolean,
-    @Schematic.description("Error message")
-    error: String,
-    @Schematic.description("Additional error details")
-    details: Option[String] = None
+  @Schematic.description("Whether the operation succeeded (always false for errors)")
+  success: Boolean,
+  @Schematic.description("Error message")
+  error: String,
+  @Schematic.description("Additional error details")
+  details: Option[String] = None,
 ) derives Schematic, ReadWriter
 
 /**
@@ -62,9 +62,9 @@ final case class JobErrorResponse(
  *   CORS configuration for response headers
  */
 class JobRoutes(
-    basePath: String,
-    pipeline: JobIngestionPipeline,
-    corsConfig: CorsConfig
+  basePath: String,
+  pipeline: JobIngestionPipeline,
+  corsConfig: CorsConfig,
 ) extends cask.Routes {
   private val jsonHeaders = Seq("Content-Type" -> "application/json")
 
@@ -101,12 +101,12 @@ class JobRoutes(
         200 -> ApiResponse("Job ingested successfully", Schematic[IngestJobResponse]),
         400 -> ApiResponse("Invalid request", Schematic[JobErrorResponse]),
         401 -> ApiResponse("Unauthorized", Schematic[JobErrorResponse]),
-        500 -> ApiResponse("Pipeline error", Schematic[JobErrorResponse])
-      )
-    )
+        500 -> ApiResponse("Pipeline error", Schematic[JobErrorResponse]),
+      ),
+    ),
   )
   def ingestJob(
-      r: ValidatedRequest
+    r: ValidatedRequest
   )(authReq: AuthenticatedRequest): Response[String] = {
     // Use getBody to access the already-validated body (stream is consumed by Web.post)
     r.getBody[IngestJobRequest] match {
@@ -114,7 +114,7 @@ class JobRoutes(
         val response = JobErrorResponse(
           success = false,
           error = s"Invalid request body: ${validationError.message}",
-          details = None
+          details = None,
         )
         Response(write(response), 400, withCors(r.original, jsonHeaders))
 
@@ -128,7 +128,7 @@ class JobRoutes(
           source = body.source.getOrElse(if isServiceCall then "service" else "manual"),
           createApplication = if isServiceCall then false else body.createApplication.getOrElse(false),
           notes = if isServiceCall then None else body.notes,
-          skipStream = isServiceCall
+          skipStream = isServiceCall,
         )
 
         val result = pipeline.run(input, authReq.profileId)
@@ -140,7 +140,7 @@ class JobRoutes(
             jobId = output.job.jobId.getOrElse(0L),
             streamId = output.streamEntry.flatMap(_.streamId),
             applicationId = output.application.flatMap(_.applicationId),
-            message = s"Successfully ingested job: ${output.job.title}"
+            message = s"Successfully ingested job: ${output.job.title}",
           )
           Response(write(response), 200, withCors(r.original, jsonHeaders))
         } else {
@@ -148,7 +148,7 @@ class JobRoutes(
           val response = JobErrorResponse(
             success = false,
             error = error.message,
-            details = error.cause.map(_.getMessage)
+            details = error.cause.map(_.getMessage),
           )
           Response(write(response), 500, withCors(r.original, jsonHeaders))
         }
@@ -160,9 +160,9 @@ class JobRoutes(
 
 object JobRoutes {
   def apply(
-      basePath: String,
-      pipeline: JobIngestionPipeline,
-      corsConfig: CorsConfig
+    basePath: String,
+    pipeline: JobIngestionPipeline,
+    corsConfig: CorsConfig,
   ): JobRoutes =
     new JobRoutes(basePath, pipeline, corsConfig)
 }

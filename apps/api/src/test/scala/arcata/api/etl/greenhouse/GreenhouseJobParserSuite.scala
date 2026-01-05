@@ -72,7 +72,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = fullJobJson,
           apiUrl = "https://boards-api.greenhouse.io/v1/boards/temporal/jobs/4974513007",
           sourceUrl = "https://boards.greenhouse.io/temporal/jobs/4974513007",
-          companyId = Some(100L)
+          companyId = Some(100L),
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -111,7 +111,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = remoteJobJson,
           apiUrl = "https://boards-api.greenhouse.io/v1/boards/acme/jobs/123456",
           sourceUrl = "https://boards.greenhouse.io/acme/jobs/123456",
-          companyId = None
+          companyId = None,
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -127,7 +127,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = noSalaryJson,
           apiUrl = "https://boards-api.greenhouse.io/v1/boards/company/jobs/456",
           sourceUrl = "https://boards.greenhouse.io/company/jobs/456",
-          companyId = Some(200L)
+          companyId = Some(200L),
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -149,7 +149,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = minimalJobJson,
           apiUrl = "https://boards-api.greenhouse.io/v1/boards/test/jobs/789",
           sourceUrl = "https://example.com/jobs/789",
-          companyId = None
+          companyId = None,
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -172,7 +172,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = "not valid json",
           apiUrl = "https://example.com/api",
           sourceUrl = "https://example.com/job",
-          companyId = None
+          companyId = None,
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -186,7 +186,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = incompleteJson,
           apiUrl = "https://example.com/api",
           sourceUrl = "https://example.com/job",
-          companyId = None
+          companyId = None,
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -209,7 +209,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = jsonWithEntities,
           apiUrl = "https://example.com/api",
           sourceUrl = "https://example.com/job",
-          companyId = None
+          companyId = None,
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -242,7 +242,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = jsonWith150k,
           apiUrl = "https://example.com/api",
           sourceUrl = "https://example.com/job",
-          companyId = None
+          companyId = None,
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -269,7 +269,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           json = jsonWithMinOnly,
           apiUrl = "https://example.com/api",
           sourceUrl = "https://example.com/job",
-          companyId = None
+          companyId = None,
         )
 
         val result = GreenhouseJobParser.run(input, ctx)
@@ -290,7 +290,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           "Remote - San Francisco",
           "Fully Remote",
           "REMOTE",
-          "remote opportunity"
+          "remote opportunity",
         )
 
         for pattern <- remotePatterns do
@@ -308,7 +308,7 @@ object GreenhouseJobParserSuite extends TestSuite:
             json = json,
             apiUrl = "https://example.com/api",
             sourceUrl = "https://example.com/job",
-            companyId = None
+            companyId = None,
           )
 
           val result = GreenhouseJobParser.run(input, ctx)
@@ -321,7 +321,7 @@ object GreenhouseJobParserSuite extends TestSuite:
           "San Francisco, CA",
           "New York, NY",
           "London, UK",
-          "Austin, TX"
+          "Austin, TX",
         )
 
         for pattern <- nonRemotePatterns do
@@ -339,7 +339,7 @@ object GreenhouseJobParserSuite extends TestSuite:
             json = json,
             apiUrl = "https://example.com/api",
             sourceUrl = "https://example.com/job",
-            companyId = None
+            companyId = None,
           )
 
           val result = GreenhouseJobParser.run(input, ctx)

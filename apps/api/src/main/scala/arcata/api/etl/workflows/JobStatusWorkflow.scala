@@ -13,8 +13,8 @@ import arcata.api.etl.steps.*
  *   Only check jobs not verified in this many days
  */
 case class JobStatusInput(
-    batchSize: Int = 1000,
-    olderThanDays: Int = 7
+  batchSize: Int = 1000,
+  olderThanDays: Int = 7,
 )
 
 /**
@@ -30,10 +30,10 @@ case class JobStatusInput(
  *   Number of database updates succeeded
  */
 case class JobStatusOutput(
-    totalChecked: Int,
-    openCount: Int,
-    closedCount: Int,
-    updatedCount: Int
+  totalChecked: Int,
+  openCount: Int,
+  closedCount: Int,
+  updatedCount: Int,
 )
 
 /**
@@ -58,9 +58,11 @@ case class JobStatusOutput(
  * }}}
  */
 class JobStatusWorkflow(
-    supabaseClient: SupabaseClient
-)(using ac: castor.Context)
-    extends BaseWorkflow[JobStatusInput, JobStatusOutput]:
+  supabaseClient: SupabaseClient
+)(
+  using
+  ac: castor.Context
+) extends BaseWorkflow[JobStatusInput, JobStatusOutput]:
 
   val name = "JobStatusWorkflow"
 
@@ -70,46 +72,50 @@ class JobStatusWorkflow(
   private val statusUpdater = JobStatusUpdater(supabaseClient)
 
   override def execute(
-      input: JobStatusInput,
-      ctx: PipelineContext
+    input: JobStatusInput,
+    ctx: PipelineContext,
   ): Either[StepError, JobStatusOutput] = {
     for
       // Step 1: Fetch jobs to check
       fetchResult <- jobsFetcher.run(
         JobsToCheckInput(input.batchSize, input.olderThanDays),
-        ctx
+        ctx,
       )
 
       // Step 2: Check each job's status by re-fetching URLs
       checkResult <- statusChecker.run(
         JobStatusCheckerInput(fetchResult.jobs),
-        ctx
+        ctx,
       )
 
       // Step 3: Update job statuses in database
       updateResult <- statusUpdater.run(
         JobStatusUpdaterInput(checkResult.results),
-        ctx
+        ctx,
       )
     yield JobStatusOutput(
       totalChecked = checkResult.totalChecked,
       openCount = checkResult.openCount,
       closedCount = checkResult.closedCount,
-      updatedCount = updateResult.updatedCount
+      updatedCount = updateResult.updatedCount,
     )
   }
 
   // Override for detailed success logging
   override def onSuccess(result: PipelineResult[JobStatusOutput]): Unit = {
-    result.output.foreach { out =>
-      logger.info(
-        s"[$name] Completed in ${result.durationMs}ms: " +
-          s"checked=${out.totalChecked}, open=${out.openCount}, " +
-          s"closed=${out.closedCount}, updated=${out.updatedCount}"
-      )
+    result.output.foreach {
+      out =>
+        logger.info(
+          s"[$name] Completed in ${result.durationMs}ms: " +
+            s"checked=${out.totalChecked}, open=${out.openCount}, " +
+            s"closed=${out.closedCount}, updated=${out.updatedCount}"
+        )
     }
   }
 
 object JobStatusWorkflow:
-  def apply(supabaseClient: SupabaseClient)(using ac: castor.Context): JobStatusWorkflow =
+  def apply(supabaseClient: SupabaseClient)(
+    using
+    ac: castor.Context
+  ): JobStatusWorkflow =
     new JobStatusWorkflow(supabaseClient)

@@ -12,7 +12,7 @@ import arcata.api.etl.framework.*
  *   Sequence of jobs to check
  */
 case class JobStatusCheckerInput(
-    jobs: Seq[Job]
+  jobs: Seq[Job]
 )
 
 /**
@@ -26,9 +26,9 @@ case class JobStatusCheckerInput(
  *   Why the job was determined to be open or closed
  */
 case class JobCheckResult(
-    job: Job,
-    isOpen: Boolean,
-    reason: Option[String]
+  job: Job,
+  isOpen: Boolean,
+  reason: Option[String],
 )
 
 /**
@@ -44,10 +44,10 @@ case class JobCheckResult(
  *   Number of jobs determined to be closed
  */
 case class JobStatusCheckerOutput(
-    results: Seq[JobCheckResult],
-    totalChecked: Int,
-    openCount: Int,
-    closedCount: Int
+  results: Seq[JobCheckResult],
+  totalChecked: Int,
+  openCount: Int,
+  closedCount: Int,
 )
 
 /**
@@ -78,12 +78,12 @@ class JobStatusChecker extends BaseStep[JobStatusCheckerInput, JobStatusCheckerO
     "position is no longer available",
     "job posting has been removed",
     "this role has been filled",
-    "we are no longer accepting applications"
+    "we are no longer accepting applications",
   )
 
   override def execute(
-      input: JobStatusCheckerInput,
-      ctx: PipelineContext
+    input: JobStatusCheckerInput,
+    ctx: PipelineContext,
   ): Either[StepError, JobStatusCheckerOutput] = {
     val results = input.jobs.map(checkJobStatus)
 
@@ -91,7 +91,7 @@ class JobStatusChecker extends BaseStep[JobStatusCheckerInput, JobStatusCheckerO
       results = results,
       totalChecked = results.size,
       openCount = results.count(_.isOpen),
-      closedCount = results.count(!_.isOpen)
+      closedCount = results.count(!_.isOpen),
     )
 
     logger.info(
@@ -113,7 +113,7 @@ class JobStatusChecker extends BaseStep[JobStatusCheckerInput, JobStatusCheckerO
           val response = requests.get(
             url,
             check = false, // Don't throw on non-2xx
-            maxRedirects = 5
+            maxRedirects = 5,
           )
           (response.statusCode, response.text())
         } match

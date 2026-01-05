@@ -23,14 +23,14 @@ import upickle.default.*
  *   User's notes about the application
  */
 final case class JobApplication(
-    applicationId: Option[Long] = None,
-    jobId: Option[Long] = None,
-    profileId: String,
-    jobProfileId: Option[Long] = None,
-    statusId: Option[Long] = None,
-    statusOrder: Int = 0,
-    applicationDate: Option[String] = None,
-    notes: Option[String] = None
+  applicationId: Option[Long] = None,
+  jobId: Option[Long] = None,
+  profileId: String,
+  jobProfileId: Option[Long] = None,
+  statusId: Option[Long] = None,
+  statusOrder: Int = 0,
+  applicationDate: Option[String] = None,
+  notes: Option[String] = None,
 )
 
 object JobApplication:
@@ -39,7 +39,7 @@ object JobApplication:
     app => {
       val obj = ujson.Obj(
         "profile_id" -> app.profileId,
-        "status_order" -> app.statusOrder
+        "status_order" -> app.statusOrder,
       )
       app.applicationId.foreach(v => obj("application_id") = ujson.Num(v.toDouble))
       app.jobId.foreach(v => obj("job_id") = ujson.Num(v.toDouble))
@@ -59,7 +59,7 @@ object JobApplication:
         statusId = obj.get("status_id").flatMap(v => if v.isNull then None else Some(v.num.toLong)),
         statusOrder = obj.get("status_order").map(v => v.num.toInt).getOrElse(0),
         applicationDate = obj.get("application_date").flatMap(v => if v.isNull then None else Some(v.str)),
-        notes = obj.get("notes").flatMap(v => if v.isNull then None else Some(v.str))
+        notes = obj.get("notes").flatMap(v => if v.isNull then None else Some(v.str)),
       )
-    }
+    },
   )

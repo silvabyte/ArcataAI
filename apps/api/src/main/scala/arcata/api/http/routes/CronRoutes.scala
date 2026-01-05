@@ -16,12 +16,12 @@ import upickle.default.*
 @Schematic.title("JobStatusCheckRequest")
 @Schematic.description("Request to trigger the job status check workflow")
 final case class JobStatusCheckRequest(
-    @Schematic.description("Maximum number of jobs to check (default 100)")
-    batchSize: Option[Int] = None,
-    @Schematic.description("Only check jobs not verified in this many days (default 7)")
-    olderThanDays: Option[Int] = None
+  @Schematic.description("Maximum number of jobs to check (default 100)")
+  batchSize: Option[Int] = None,
+  @Schematic.description("Only check jobs not verified in this many days (default 7)")
+  olderThanDays: Option[Int] = None,
 ) derives Schematic,
-      ReadWriter
+    ReadWriter
 
 /**
  * Response when a workflow is accepted for async processing.
@@ -29,16 +29,16 @@ final case class JobStatusCheckRequest(
 @Schematic.title("WorkflowAcceptedResponse")
 @Schematic.description("Response when a workflow is accepted for background processing")
 final case class WorkflowAcceptedResponse(
-    @Schematic.description("Whether the workflow was accepted")
-    accepted: Boolean,
-    @Schematic.description("Unique identifier for this workflow run")
-    runId: String,
-    @Schematic.description("Name of the workflow that was triggered")
-    workflow: String,
-    @Schematic.description("Human-readable message")
-    message: String
+  @Schematic.description("Whether the workflow was accepted")
+  accepted: Boolean,
+  @Schematic.description("Unique identifier for this workflow run")
+  runId: String,
+  @Schematic.description("Name of the workflow that was triggered")
+  workflow: String,
+  @Schematic.description("Human-readable message")
+  message: String,
 ) derives Schematic,
-      ReadWriter
+    ReadWriter
 
 /**
  * Error response for cron endpoints.
@@ -46,12 +46,12 @@ final case class WorkflowAcceptedResponse(
 @Schematic.title("CronErrorResponse")
 @Schematic.description("Error response for cron/workflow operations")
 final case class CronErrorResponse(
-    @Schematic.description("Whether the workflow was accepted (always false for errors)")
-    accepted: Boolean,
-    @Schematic.description("Error message")
-    error: String
+  @Schematic.description("Whether the workflow was accepted (always false for errors)")
+  accepted: Boolean,
+  @Schematic.description("Error message")
+  error: String,
 ) derives Schematic,
-      ReadWriter
+    ReadWriter
 
 /**
  * Request body for triggering job discovery workflow.
@@ -59,12 +59,12 @@ final case class CronErrorResponse(
 @Schematic.title("JobDiscoveryRequest")
 @Schematic.description("Request to trigger the job discovery workflow")
 final case class JobDiscoveryRequest(
-    @Schematic.description(
-      "Optional source ID to filter to a specific source (e.g., 'greenhouse'). If omitted, all sources are processed."
-    )
-    sourceId: Option[String] = None
+  @Schematic.description(
+    "Optional source ID to filter to a specific source (e.g., 'greenhouse'). If omitted, all sources are processed."
+  )
+  sourceId: Option[String] = None
 ) derives Schematic,
-      ReadWriter
+    ReadWriter
 
 /**
  * Routes for triggering cron/background workflows.
@@ -83,9 +83,9 @@ final case class JobDiscoveryRequest(
  *   CORS configuration for response headers
  */
 class CronRoutes(
-    jobStatusWorkflow: JobStatusWorkflow,
-    jobDiscoveryWorkflow: JobDiscoveryWorkflow,
-    corsConfig: CorsConfig
+  jobStatusWorkflow: JobStatusWorkflow,
+  jobDiscoveryWorkflow: JobDiscoveryWorkflow,
+  corsConfig: CorsConfig,
 ) extends cask.Routes {
   private val jsonHeaders = Seq("Content-Type" -> "application/json")
 
@@ -116,16 +116,16 @@ class CronRoutes(
       body = Some(Schematic[JobStatusCheckRequest]),
       responses = Map(
         202 -> ApiResponse("Workflow accepted", Schematic[WorkflowAcceptedResponse]),
-        401 -> ApiResponse("Unauthorized - invalid API key", Schematic[CronErrorResponse])
-      )
-    )
+        401 -> ApiResponse("Unauthorized - invalid API key", Schematic[CronErrorResponse]),
+      ),
+    ),
   )
   def triggerJobStatusCheck(r: ValidatedRequest)(authReq: AuthenticatedRequest): Response[String] = {
     r.getBody[JobStatusCheckRequest] match {
       case Left(validationError) =>
         val response = CronErrorResponse(
           accepted = false,
-          error = s"Invalid request body: ${validationError.message}"
+          error = s"Invalid request body: ${validationError.message}",
         )
         Response(write(response), 400, withCors(r.original, jsonHeaders))
 
@@ -133,7 +133,7 @@ class CronRoutes(
         val runId = java.util.UUID.randomUUID().toString
         val input = JobStatusInput(
           batchSize = body.batchSize.getOrElse(100),
-          olderThanDays = body.olderThanDays.getOrElse(7)
+          olderThanDays = body.olderThanDays.getOrElse(7),
         )
 
         // Fire and forget - send to actor
@@ -144,7 +144,7 @@ class CronRoutes(
           runId = runId,
           workflow = "JobStatusWorkflow",
           message =
-            s"Job status check workflow started with batchSize=${input.batchSize}, olderThanDays=${input.olderThanDays}"
+            s"Job status check workflow started with batchSize=${input.batchSize}, olderThanDays=${input.olderThanDays}",
         )
         Response(write(response), 202, withCors(r.original, jsonHeaders))
     }
@@ -172,16 +172,16 @@ class CronRoutes(
       body = Some(Schematic[JobDiscoveryRequest]),
       responses = Map(
         202 -> ApiResponse("Workflow accepted", Schematic[WorkflowAcceptedResponse]),
-        401 -> ApiResponse("Unauthorized - invalid API key", Schematic[CronErrorResponse])
-      )
-    )
+        401 -> ApiResponse("Unauthorized - invalid API key", Schematic[CronErrorResponse]),
+      ),
+    ),
   )
   def triggerJobDiscovery(r: ValidatedRequest)(authReq: AuthenticatedRequest): Response[String] = {
     r.getBody[JobDiscoveryRequest] match {
       case Left(validationError) =>
         val response = CronErrorResponse(
           accepted = false,
-          error = s"Invalid request body: ${validationError.message}"
+          error = s"Invalid request body: ${validationError.message}",
         )
         Response(write(response), 400, withCors(r.original, jsonHeaders))
 
@@ -200,7 +200,7 @@ class CronRoutes(
           accepted = true,
           runId = runId,
           workflow = "JobDiscoveryWorkflow",
-          message = s"Job discovery workflow started for $sourceMsg"
+          message = s"Job discovery workflow started for $sourceMsg",
         )
         Response(write(response), 202, withCors(r.original, jsonHeaders))
     }
@@ -211,8 +211,8 @@ class CronRoutes(
 
 object CronRoutes:
   def apply(
-      jobStatusWorkflow: JobStatusWorkflow,
-      jobDiscoveryWorkflow: JobDiscoveryWorkflow,
-      corsConfig: CorsConfig
+    jobStatusWorkflow: JobStatusWorkflow,
+    jobDiscoveryWorkflow: JobDiscoveryWorkflow,
+    corsConfig: CorsConfig,
   ): CronRoutes =
     new CronRoutes(jobStatusWorkflow, jobDiscoveryWorkflow, corsConfig)

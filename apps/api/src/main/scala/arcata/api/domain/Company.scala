@@ -37,23 +37,23 @@ import upickle.default.*
  *   ATS platform type (greenhouse, lever, ashby, workday, icims, workable, custom)
  */
 final case class Company(
-    companyId: Option[Long] = None,
-    companyName: Option[String] = None,
-    companyDomain: Option[String] = None,
-    companyJobsUrl: Option[String] = None,
-    companyLinkedinUrl: Option[String] = None,
-    companyCity: Option[String] = None,
-    companyState: Option[String] = None,
-    primaryIndustry: Option[String] = None,
-    employeeCountMin: Option[Int] = None,
-    employeeCountMax: Option[Int] = None,
-    // Enrichment fields
-    industry: Option[String] = None,
-    companySize: Option[String] = None,
-    description: Option[String] = None,
-    headquarters: Option[String] = None,
-    // Job source tracking
-    companyJobsSource: Option[String] = None
+  companyId: Option[Long] = None,
+  companyName: Option[String] = None,
+  companyDomain: Option[String] = None,
+  companyJobsUrl: Option[String] = None,
+  companyLinkedinUrl: Option[String] = None,
+  companyCity: Option[String] = None,
+  companyState: Option[String] = None,
+  primaryIndustry: Option[String] = None,
+  employeeCountMin: Option[Int] = None,
+  employeeCountMax: Option[Int] = None,
+  // Enrichment fields
+  industry: Option[String] = None,
+  companySize: Option[String] = None,
+  description: Option[String] = None,
+  headquarters: Option[String] = None,
+  // Job source tracking
+  companyJobsSource: Option[String] = None,
 )
 
 object Company:
@@ -99,7 +99,7 @@ object Company:
         companySize = obj.get("company_size").flatMap(v => if v.isNull then None else Some(v.str)),
         description = obj.get("description").flatMap(v => if v.isNull then None else Some(v.str)),
         headquarters = obj.get("headquarters").flatMap(v => if v.isNull then None else Some(v.str)),
-        companyJobsSource = obj.get("company_jobs_source").flatMap(v => if v.isNull then None else Some(v.str))
+        companyJobsSource = obj.get("company_jobs_source").flatMap(v => if v.isNull then None else Some(v.str)),
       )
-    }
+    },
   )

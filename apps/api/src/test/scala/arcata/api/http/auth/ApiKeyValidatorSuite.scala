@@ -18,8 +18,9 @@ object ApiKeyValidatorSuite extends TestSuite:
     val exchange = new HttpServerExchange(null) // Required by Undertow API for testing
     // scalafix:on DisableSyntax.null
     val headerMap = exchange.getRequestHeaders
-    headers.foreach { case (k, v) =>
-      headerMap.put(new HttpString(k), v)
+    headers.foreach {
+      case (k, v) =>
+        headerMap.put(new HttpString(k), v)
     }
     Request(exchange, Seq.empty, Map.empty)
   }

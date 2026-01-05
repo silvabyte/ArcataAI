@@ -35,7 +35,7 @@ object HtmlCleaner:
     "aside",
     "form",
     "link", // stylesheet/preload links add noise
-    "code" // hidden JSON config blobs (Netflix/Eightfold pattern)
+    "code", // hidden JSON config blobs (Netflix/Eightfold pattern)
   )
 
   /** Attributes to strip from all elements */
@@ -52,7 +52,7 @@ object HtmlCleaner:
     "onblur",
     "nonce",
     "crossorigin",
-    "integrity"
+    "integrity",
   )
 
   /** Maximum content length after cleaning (chars) */
@@ -77,9 +77,10 @@ object HtmlCleaner:
     // IMPORTANT: Extract JSON-LD from anywhere in the document BEFORE removing head
     // Many sites (Ashby, etc.) put JSON-LD in <head>, which we otherwise remove
     val jsonLdScripts = doc.select("script[type=application/ld+json]").asScala.toList
-    val jsonLdContents = jsonLdScripts.map { script =>
-      val rawContent = script.data()
-      Parser.unescapeEntities(rawContent, false)
+    val jsonLdContents = jsonLdScripts.map {
+      script =>
+        val rawContent = script.data()
+        Parser.unescapeEntities(rawContent, false)
     }
 
     // Remove unwanted elements entirely (including head, which may contain JSON-LD)
@@ -135,17 +136,18 @@ object HtmlCleaner:
 
   /** Strip unwanted attributes from all elements */
   private def stripAttributes(doc: Document): Unit = {
-    doc.getAllElements.asScala.foreach { elem =>
-      // Remove specific attributes
-      REMOVE_ATTRIBUTES.foreach(attr => elem.removeAttr(attr))
+    doc.getAllElements.asScala.foreach {
+      elem =>
+        // Remove specific attributes
+        REMOVE_ATTRIBUTES.foreach(attr => elem.removeAttr(attr))
 
-      // Remove all data-* attributes
-      elem
-        .attributes()
-        .asScala
-        .map(_.getKey)
-        .filter(_.startsWith("data-"))
-        .toList // Materialize before modifying
-        .foreach(elem.removeAttr)
+        // Remove all data-* attributes
+        elem
+          .attributes()
+          .asScala
+          .map(_.getKey)
+          .filter(_.startsWith("data-"))
+          .toList // Materialize before modifying
+          .foreach(elem.removeAttr)
     }
   }

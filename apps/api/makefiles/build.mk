@@ -35,12 +35,16 @@ format-check:
 	$(MILL) mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources
 
 # Run Scalafix linter (check mode)
-lint:
-	$(MILL) api.fixCheck || true
-	$(MILL) api.test.fixCheck || true
+# Runs clean first to ensure fresh state
+lint: clean
+	@echo "Running format check..."
+	$(MILL) mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources || (echo "Format issues found. Run 'make format' to fix." && exit 1)
+	@echo "Running Scalafix check..."
+	$(MILL) api.fixCheck
+	$(MILL) api.test.fixCheck
 
-# Auto-fix linting issues
-fix:
+# Auto-fix all linting and formatting issues
+fix: format
 	$(MILL) api.fix || true
 	$(MILL) api.test.fix || true
 

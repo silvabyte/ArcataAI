@@ -18,7 +18,7 @@ final class JobExtractionAgent(config: AIConfig):
     apiKey = config.apiKey,
     modelId = config.model,
     strictModelValidation = false,
-    timeouts = ProviderTimeouts(60_000 * 5, 60_000 * 5)
+    timeouts = ProviderTimeouts(60_000 * 5, 60_000 * 5),
   )
 
   private val agent = Agent(
@@ -36,7 +36,7 @@ Guidelines:
 - If information is not clearly present, leave the field empty rather than guessing""",
     provider = provider,
     model = config.model,
-    temperature = Some(0.1) // Low temperature for consistent extraction
+    temperature = Some(0.1), // Low temperature for consistent extraction
   )
 
   /**
@@ -58,7 +58,7 @@ Source URL: $url
 
 Content:
 $content""",
-        RequestMetadata()
+        RequestMetadata(),
       )
       .map(_.data)
   }

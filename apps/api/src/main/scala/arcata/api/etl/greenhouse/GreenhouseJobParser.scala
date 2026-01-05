@@ -16,10 +16,10 @@ case class GreenhouseLocation(name: String) derives ReadWriter
 
 /** Pay range information from Greenhouse API (when ?pay_transparency=true). */
 case class GreenhousePayRange(
-    min_cents: Option[Long] = None,
-    max_cents: Option[Long] = None,
-    currency_type: Option[String] = None,
-    title: Option[String] = None
+  min_cents: Option[Long] = None,
+  max_cents: Option[Long] = None,
+  currency_type: Option[String] = None,
+  title: Option[String] = None,
 ) derives ReadWriter
 
 /**
@@ -32,15 +32,15 @@ case class GreenhousePayRange(
  * All optional fields have default values to handle missing keys in the API response.
  */
 case class GreenhouseJobDetail(
-    id: Long,
-    title: String,
-    content: String,
-    absolute_url: String,
-    location: Option[GreenhouseLocation] = None,
-    updated_at: Option[String] = None,
-    internal_job_id: Option[Long] = None,
-    requisition_id: Option[String] = None,
-    pay_input_ranges: Option[Seq[GreenhousePayRange]] = None
+  id: Long,
+  title: String,
+  content: String,
+  absolute_url: String,
+  location: Option[GreenhouseLocation] = None,
+  updated_at: Option[String] = None,
+  internal_job_id: Option[Long] = None,
+  requisition_id: Option[String] = None,
+  pay_input_ranges: Option[Seq[GreenhousePayRange]] = None,
 ) derives ReadWriter
 
 // =============================================================================
@@ -49,18 +49,18 @@ case class GreenhouseJobDetail(
 
 /** Input for the GreenhouseJobParser step. */
 final case class GreenhouseJobParserInput(
-    json: String,
-    apiUrl: String,
-    sourceUrl: String,
-    companyId: Option[Long]
+  json: String,
+  apiUrl: String,
+  sourceUrl: String,
+  companyId: Option[Long],
 )
 
 /** Output from the GreenhouseJobParser step. */
 final case class GreenhouseJobParserOutput(
-    extracted: ExtractedJobData,
-    sourceUrl: String,
-    companyId: Option[Long],
-    completionState: CompletionState
+  extracted: ExtractedJobData,
+  sourceUrl: String,
+  companyId: Option[Long],
+  completionState: CompletionState,
 )
 
 /**
@@ -91,8 +91,8 @@ object GreenhouseJobParser extends BaseStep[GreenhouseJobParserInput, Greenhouse
   val name = "GreenhouseJobParser"
 
   override def execute(
-      input: GreenhouseJobParserInput,
-      ctx: PipelineContext
+    input: GreenhouseJobParserInput,
+    ctx: PipelineContext,
   ): Either[StepError, GreenhouseJobParserOutput] = {
     logger.info(s"[${ctx.runId}] Parsing Greenhouse job JSON")
 
@@ -102,7 +102,7 @@ object GreenhouseJobParser extends BaseStep[GreenhouseJobParserInput, Greenhouse
           StepError.ExtractionError(
             message = s"Failed to parse Greenhouse JSON: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -119,7 +119,7 @@ object GreenhouseJobParser extends BaseStep[GreenhouseJobParserInput, Greenhouse
             extracted = extracted,
             sourceUrl = input.sourceUrl,
             companyId = input.companyId,
-            completionState = completionState
+            completionState = completionState,
           )
         )
   }
@@ -150,7 +150,7 @@ object GreenhouseJobParser extends BaseStep[GreenhouseJobParserInput, Greenhouse
       applicationUrl = Some(job.absolute_url),
       isRemote = locationName.map(inferIsRemote),
       postedDate = None,
-      closingDate = None
+      closingDate = None,
     )
   }
 

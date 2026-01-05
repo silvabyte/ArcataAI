@@ -26,14 +26,14 @@ import upickle.default.*
  *   Base URL for company's job listings (e.g., "https://jobs.ashbyhq.com/hopper")
  */
 final case class ExtractedCompanyData(
-    name: String,
-    domain: Option[String] = None,
-    industry: Option[String] = None,
-    size: Option[String] = None,
-    description: Option[String] = None,
-    headquarters: Option[String] = None,
-    websiteUrl: Option[String] = None,
-    jobsUrl: Option[String] = None
+  name: String,
+  domain: Option[String] = None,
+  industry: Option[String] = None,
+  size: Option[String] = None,
+  description: Option[String] = None,
+  headquarters: Option[String] = None,
+  websiteUrl: Option[String] = None,
+  jobsUrl: Option[String] = None,
 ) derives ReadWriter, Schematic
 
 object ExtractedCompanyData:

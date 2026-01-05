@@ -16,9 +16,9 @@ import arcata.api.etl.framework.*
  *   ObjectStorage ID (passed through)
  */
 final case class ResumeExtractorInput(
-    text: String,
-    fileName: String,
-    objectId: String
+  text: String,
+  fileName: String,
+  objectId: String,
 )
 
 /**
@@ -32,9 +32,9 @@ final case class ResumeExtractorInput(
  *   ObjectStorage ID (passed through)
  */
 final case class ResumeExtractorOutput(
-    extractedData: ExtractedResumeData,
-    fileName: String,
-    objectId: String
+  extractedData: ExtractedResumeData,
+  fileName: String,
+  objectId: String,
 )
 
 /**
@@ -51,52 +51,51 @@ final class ResumeExtractor(aiConfig: AIConfig) extends BaseStep[ResumeExtractor
   private lazy val agent = ResumeExtractionAgent(aiConfig)
 
   override def execute(
-      input: ResumeExtractorInput,
-      ctx: PipelineContext
+    input: ResumeExtractorInput,
+    ctx: PipelineContext,
   ): Either[StepError, ResumeExtractorOutput] = {
     logger.info(s"[${ctx.runId}] Extracting structured data from ${input.fileName}")
 
-    // Check if text is too short to be a valid resume
     if input.text.trim.length < 50 then
-      return Left(
+      Left(
         StepError.ValidationError(
           message = "Extracted text is too short to be a valid resume (less than 50 characters)",
-          stepName = name
+          stepName = name,
         )
       )
-
-    agent.extract(input.text, input.fileName) match
-      case Left(schemaError) =>
-        val errorMessage = schemaError.toString
-        logger.error(s"[${ctx.runId}] AI extraction failed: $errorMessage")
-        Left(
-          StepError.ExtractionError(
-            message = s"Failed to extract resume data: $errorMessage",
-            stepName = name,
-            cause = Some(new Exception(errorMessage))
+    else
+      agent.extract(input.text, input.fileName) match
+        case Left(schemaError) =>
+          val errorMessage = schemaError.toString
+          logger.error(s"[${ctx.runId}] AI extraction failed: $errorMessage")
+          Left(
+            StepError.ExtractionError(
+              message = s"Failed to extract resume data: $errorMessage",
+              stepName = name,
+              cause = Some(new Exception(errorMessage)),
+            )
           )
-        )
 
-      case Right(extracted) =>
-        // Log what was extracted
-        val contactName = extracted.contact.flatMap(_.name).getOrElse("unknown")
-        val expCount = extracted.experience.map(_.size).getOrElse(0)
-        val eduCount = extracted.education.map(_.size).getOrElse(0)
-        val skillCount = extracted.skills.flatMap(_.categories).map(_.size).getOrElse(0)
-        val customCount = extracted.customSections.map(_.size).getOrElse(0)
+        case Right(extracted) =>
+          // Log what was extracted
+          val contactName = extracted.contact.flatMap(_.name).getOrElse("unknown")
+          val expCount = extracted.experience.map(_.size).getOrElse(0)
+          val eduCount = extracted.education.map(_.size).getOrElse(0)
+          val skillCount = extracted.skills.flatMap(_.categories).map(_.size).getOrElse(0)
+          val customCount = extracted.customSections.map(_.size).getOrElse(0)
 
-        logger.info(
-          s"[${ctx.runId}] Extracted: contact=$contactName, experience=$expCount, " +
-            s"education=$eduCount, skills=$skillCount, customSections=$customCount"
-        )
-
-        Right(
-          ResumeExtractorOutput(
-            extractedData = extracted,
-            fileName = input.fileName,
-            objectId = input.objectId
+          logger.info(
+            s"[${ctx.runId}] Extracted: contact=$contactName, experience=$expCount, " +
+              s"education=$eduCount, skills=$skillCount, customSections=$customCount"
           )
-        )
+
+          Right(
+            ResumeExtractorOutput(
+              extractedData = extracted,
+              fileName = input.fileName,
+              objectId = input.objectId,
+            )
+          )
   }
 
 object ResumeExtractor:

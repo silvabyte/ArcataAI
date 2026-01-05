@@ -54,8 +54,9 @@ class JsonWriter(pretty: Boolean = false) extends Writer:
     json match
       case ujson.Obj(obj) =>
         val coloredObj = obj
-          .map { case (k, v) =>
-            s"$keyColor\"$k\"${Console.RESET}: ${colorize(v, level)}"
+          .map {
+            case (k, v) =>
+              s"$keyColor\"$k\"${Console.RESET}: ${colorize(v, level)}"
           }
           .mkString("{\n  ", ",\n  ", "\n}")
         coloredObj
@@ -70,9 +71,9 @@ class JsonWriter(pretty: Boolean = false) extends Writer:
   }
 
   override def write[M](
-      record: LogRecord[M],
-      output: scribe.output.LogOutput,
-      outputFormat: OutputFormat
+    record: LogRecord[M],
+    output: scribe.output.LogOutput,
+    outputFormat: OutputFormat,
   ): Unit = {
     val json = Obj(
       "timestamp" -> Option(record.timeStamp).map(_.toString).getOrElse(""),
@@ -84,19 +85,20 @@ class JsonWriter(pretty: Boolean = false) extends Writer:
       "line" -> record.line.getOrElse(-1),
       "thread" -> Option(record.thread).map(_.getName).getOrElse(""),
       "data" -> Obj.from(
-        record.data.map { case (k, v) =>
-          k -> Option(v())
-            .map {
-              case s: String => ujson.Str(s)
-              case i: Int => ujson.Num(i)
-              case l: Long => ujson.Num(l.toDouble)
-              case d: Double => ujson.Num(d)
-              case b: Boolean => ujson.Bool(b)
-              case other => ujson.Str(other.toString)
-            }
-            .getOrElse(ujson.Null)
+        record.data.map {
+          case (k, v) =>
+            k -> Option(v())
+              .map {
+                case s: String => ujson.Str(s)
+                case i: Int => ujson.Num(i)
+                case l: Long => ujson.Num(l.toDouble)
+                case d: Double => ujson.Num(d)
+                case b: Boolean => ujson.Bool(b)
+                case other => ujson.Str(other.toString)
+              }
+              .getOrElse(ujson.Null)
         }
-      )
+      ),
     )
 
     val sanitizedJson = sanitizeValue(json)
@@ -136,14 +138,15 @@ object Log:
     .replace()
 
   def makeRecord(
-      message: String,
-      level: Level = Level.Info,
-      data: Map[String, Any] = Map.empty
-  )(using
-      pkg: sourcecode.Pkg,
-      fileName: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
+    message: String,
+    level: Level = Level.Info,
+    data: Map[String, Any] = Map.empty,
+  )(
+    using
+    pkg: sourcecode.Pkg,
+    fileName: sourcecode.FileName,
+    name: sourcecode.Name,
+    line: sourcecode.Line,
   ): LogRecord[String] = {
     LogRecord.simple(
       timeStamp = Instant.now.toEpochMilli(),
@@ -153,57 +156,61 @@ object Log:
       className = LoggerSupport.className(pkg, fileName)._2,
       methodName = Some(name.value),
       line = Some(line.value),
-      data = data.map { case (key, value) => key -> (() => value) }
+      data = data.map { case (key, value) => key -> (() => value) },
     )
   }
 
   def info(
-      message: String,
-      data: Map[String, Any] = Map.empty
-  )(using
-      pkg: sourcecode.Pkg,
-      fileName: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
+    message: String,
+    data: Map[String, Any] = Map.empty,
+  )(
+    using
+    pkg: sourcecode.Pkg,
+    fileName: sourcecode.FileName,
+    name: sourcecode.Name,
+    line: sourcecode.Line,
   ): Unit = {
     val record = makeRecord(message, Level.Info, data)
     logger.log(record)
   }
 
   def error(
-      message: String,
-      data: Map[String, Any] = Map.empty
-  )(using
-      pkg: sourcecode.Pkg,
-      fileName: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
+    message: String,
+    data: Map[String, Any] = Map.empty,
+  )(
+    using
+    pkg: sourcecode.Pkg,
+    fileName: sourcecode.FileName,
+    name: sourcecode.Name,
+    line: sourcecode.Line,
   ): Unit = {
     val record = makeRecord(message, Level.Error, data)
     logger.log(record)
   }
 
   def warn(
-      message: String,
-      data: Map[String, Any] = Map.empty
-  )(using
-      pkg: sourcecode.Pkg,
-      fileName: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
+    message: String,
+    data: Map[String, Any] = Map.empty,
+  )(
+    using
+    pkg: sourcecode.Pkg,
+    fileName: sourcecode.FileName,
+    name: sourcecode.Name,
+    line: sourcecode.Line,
   ): Unit = {
     val record = makeRecord(message, Level.Warn, data)
     logger.log(record)
   }
 
   def debug(
-      message: String,
-      data: Map[String, Any] = Map.empty
-  )(using
-      pkg: sourcecode.Pkg,
-      fileName: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
+    message: String,
+    data: Map[String, Any] = Map.empty,
+  )(
+    using
+    pkg: sourcecode.Pkg,
+    fileName: sourcecode.FileName,
+    name: sourcecode.Name,
+    line: sourcecode.Line,
   ): Unit = {
     val record = makeRecord(message, Level.Debug, data)
     logger.log(record)

@@ -24,12 +24,12 @@ object JwtValidationResult:
 
 /** Parsed JWT claims from a Supabase token. */
 final case class JwtClaims(
-    sub: String,
-    email: Option[String],
-    role: String,
-    aud: String,
-    exp: Long,
-    iat: Long
+  sub: String,
+  email: Option[String],
+  role: String,
+  aud: String,
+  exp: Long,
+  iat: Long,
 ) derives ReadWriter
 
 /**
@@ -87,7 +87,7 @@ final class JwtValidator(jwksProvider: JwksProvider) extends Logging:
             logger.error(s"JWKS fetch failed: ${error.getMessage}")
             JwtValidationResult.Invalid(
               s"Authentication service unavailable: ${error.getMessage}",
-              statusCode = 503
+              statusCode = 503,
             )
 
           case Left(error) =>
@@ -115,7 +115,7 @@ final class JwtValidator(jwksProvider: JwksProvider) extends Logging:
           role = Option(verified.getClaim("role").asString()).getOrElse("authenticated"),
           aud = Option(verified.getAudience).flatMap(_.asScala.headOption).getOrElse(""),
           exp = verified.getExpiresAt.getTime / 1000,
-          iat = verified.getIssuedAt.getTime / 1000
+          iat = verified.getIssuedAt.getTime / 1000,
         )
         logger.info(s"JWT validated successfully for user: ${claims.sub} (email: ${claims.email.getOrElse("none")})")
         JwtValidationResult.Valid(claims.sub, claims)

@@ -25,9 +25,9 @@ final case class DetectedFileType(name: String, mimeType: String)
  *   MIME type claimed by the client (may be spoofed)
  */
 final case class FileValidatorInput(
-    fileBytes: Array[Byte],
-    fileName: String,
-    claimedMimeType: Option[String]
+  fileBytes: Array[Byte],
+  fileName: String,
+  claimedMimeType: Option[String],
 )
 
 /**
@@ -43,10 +43,10 @@ final case class FileValidatorInput(
  *   Size of the file in bytes
  */
 final case class FileValidatorOutput(
-    fileBytes: Array[Byte],
-    fileName: String,
-    detectedType: DetectedFileType,
-    fileSizeBytes: Long
+  fileBytes: Array[Byte],
+  fileName: String,
+  detectedType: DetectedFileType,
+  fileSizeBytes: Long,
 )
 
 /**
@@ -66,46 +66,43 @@ final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorIn
   val name = "FileValidator"
 
   override def execute(
-      input: FileValidatorInput,
-      ctx: PipelineContext
+    input: FileValidatorInput,
+    ctx: PipelineContext,
   ): Either[StepError, FileValidatorOutput] = {
     val bytes = input.fileBytes
     val maxSizeBytes = config.maxFileSizeMb * 1024 * 1024
 
-    // Check if file is empty
     if bytes.isEmpty then
-      return Left(
+      Left(
         StepError.ValidationError(
           message = "File is empty",
-          stepName = name
+          stepName = name,
         )
       )
-
-    // Check file size
-    if bytes.length > maxSizeBytes then
-      return Left(
+    else if bytes.length > maxSizeBytes then
+      Left(
         StepError.ValidationError(
           message =
             s"File size (${bytes.length / 1024 / 1024}MB) exceeds maximum allowed size (${config.maxFileSizeMb}MB)",
-          stepName = name
+          stepName = name,
         )
       )
+    else
+      // Detect file type from magic bytes using BoogieLoops Kit
+      val detectedType = detectFileType(bytes, input.fileName)
 
-    // Detect file type from magic bytes using BoogieLoops Kit
-    val detectedType = detectFileType(bytes, input.fileName)
-
-    logger.info(
-      s"[${ctx.runId}] Validated file: ${input.fileName} (${detectedType.name}, ${bytes.length} bytes)"
-    )
-
-    Right(
-      FileValidatorOutput(
-        fileBytes = bytes,
-        fileName = input.fileName,
-        detectedType = detectedType,
-        fileSizeBytes = bytes.length.toLong
+      logger.info(
+        s"[${ctx.runId}] Validated file: ${input.fileName} (${detectedType.name}, ${bytes.length} bytes)"
       )
-    )
+
+      Right(
+        FileValidatorOutput(
+          fileBytes = bytes,
+          fileName = input.fileName,
+          detectedType = detectedType,
+          fileSizeBytes = bytes.length.toLong,
+        )
+      )
   }
 
   /**
@@ -123,7 +120,10 @@ final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorIn
         // For ZIP-based formats, check extension to distinguish DOCX/ODT/etc.
         if sig.mimeType == "application/zip" then
           ext match
-            case "docx" => DetectedFileType("Word Document (DOCX)", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            case "docx" => DetectedFileType(
+                "Word Document (DOCX)",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              )
             case "odt" => DetectedFileType("OpenDocument Text", "application/vnd.oasis.opendocument.text")
             case "epub" => DetectedFileType("EPUB", "application/epub+zip")
             case _ => DetectedFileType(sig.name, sig.mimeType)

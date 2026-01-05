@@ -52,7 +52,7 @@ trait BaseStep[I, O] extends Logging:
           StepError.UnexpectedError(
             message = s"Unexpected error in step $name: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -79,7 +79,7 @@ trait BaseStep[I, O] extends Logging:
 object BaseStep:
   /** Create a simple step from a function. */
   def apply[I, O](
-      stepName: String
+    stepName: String
   )(f: (I, PipelineContext) => Either[StepError, O]): BaseStep[I, O] = {
     new BaseStep[I, O]:
       def name: String = stepName

@@ -25,7 +25,7 @@ object ApiApp extends cask.Main {
   // Uses global execution context and logs actor errors
   override val actorContext: castor.Context = new castor.Context.Simple(
     ExecutionContext.global,
-    (e: Throwable) => Log.error(s"Actor error: ${e.getMessage}", Map("exception" -> e.toString))
+    (e: Throwable) => Log.error(s"Actor error: ${e.getMessage}", Map("exception" -> e.toString)),
   )
 
   // Initialize clients
@@ -37,7 +37,7 @@ object ApiApp extends cask.Main {
         ObjectStorageClient(
           baseUrl = config.objectStorage.baseUrl,
           tenantId = config.objectStorage.tenantId,
-          apiKey = config.objectStorage.apiKey
+          apiKey = config.objectStorage.apiKey,
         )
       )
     } else {
@@ -55,7 +55,7 @@ object ApiApp extends cask.Main {
   lazy val jobIngestionPipeline: JobIngestionPipeline = JobIngestionPipeline(
     supabaseClient = supabaseClient,
     aiConfig = config.ai,
-    storageClient = storageClient
+    storageClient = storageClient,
   )
 
   // Initialize async workflows
@@ -75,32 +75,34 @@ object ApiApp extends cask.Main {
   lazy val jobRoutes: JobRoutes = JobRoutes(
     basePath = "/api/v1",
     pipeline = jobIngestionPipeline,
-    corsConfig = corsConfig
+    corsConfig = corsConfig,
   )
 
   // Resume parsing pipeline (requires storage client)
-  lazy val resumeParsingPipeline: Option[ResumeParsingPipeline] = storageClient.map { storage =>
-    ResumeParsingPipeline(
-      resumeConfig = config.resume,
-      aiConfig = config.ai,
-      storageClient = storage
-    )
+  lazy val resumeParsingPipeline: Option[ResumeParsingPipeline] = storageClient.map {
+    storage =>
+      ResumeParsingPipeline(
+        resumeConfig = config.resume,
+        aiConfig = config.ai,
+        storageClient = storage,
+      )
   }
 
   // Resume routes (only available if storage is configured)
-  lazy val resumeRoutes: Option[ResumeRoutes] = resumeParsingPipeline.map { pipeline =>
-    ResumeRoutes(
-      basePath = "/api/v1",
-      pipeline = pipeline,
-      corsConfig = corsConfig
-    )
+  lazy val resumeRoutes: Option[ResumeRoutes] = resumeParsingPipeline.map {
+    pipeline =>
+      ResumeRoutes(
+        basePath = "/api/v1",
+        pipeline = pipeline,
+        corsConfig = corsConfig,
+      )
   }
 
   // Cron routes for background workflows (authenticated via API key)
   lazy val cronRoutes: CronRoutes = CronRoutes(
     jobStatusWorkflow = jobStatusWorkflow,
     jobDiscoveryWorkflow = jobDiscoveryWorkflow,
-    corsConfig = corsConfig
+    corsConfig = corsConfig,
   )
 
   // CORS routes (handles OPTIONS preflight requests)
@@ -112,7 +114,7 @@ object ApiApp extends cask.Main {
       corsRoutes,
       indexRoutes,
       jobRoutes,
-      cronRoutes
+      cronRoutes,
     )
     // Add resume routes if storage is configured
     baseRoutes ++ resumeRoutes.toSeq
@@ -128,8 +130,8 @@ object ApiApp extends cask.Main {
       Map(
         "host" -> config.server.host,
         "port" -> config.server.port.toString,
-        "corsOrigins" -> config.server.corsOrigins.mkString(", ")
-      )
+        "corsOrigins" -> config.server.corsOrigins.mkString(", "),
+      ),
     )
     super.main(args)
   }

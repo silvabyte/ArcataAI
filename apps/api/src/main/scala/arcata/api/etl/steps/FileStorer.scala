@@ -16,10 +16,10 @@ import arcata.api.etl.framework.*
  *   User's profile ID for storage isolation
  */
 final case class FileStorerInput(
-    fileBytes: Array[Byte],
-    fileName: String,
-    detectedType: DetectedFileType,
-    profileId: String
+  fileBytes: Array[Byte],
+  fileName: String,
+  detectedType: DetectedFileType,
+  profileId: String,
 )
 
 /**
@@ -35,10 +35,10 @@ final case class FileStorerInput(
  *   UUID of the stored object in ObjectStorage
  */
 final case class FileStorerOutput(
-    fileBytes: Array[Byte],
-    fileName: String,
-    detectedType: DetectedFileType,
-    objectId: String
+  fileBytes: Array[Byte],
+  fileName: String,
+  detectedType: DetectedFileType,
+  objectId: String,
 )
 
 /**
@@ -51,13 +51,13 @@ final case class FileStorerOutput(
  * the same file multiple times won't consume additional space.
  */
 final class FileStorer(storageClient: ObjectStorageClient)
-    extends BaseStep[FileStorerInput, FileStorerOutput]:
+  extends BaseStep[FileStorerInput, FileStorerOutput]:
 
   val name = "FileStorer"
 
   override def execute(
-      input: FileStorerInput,
-      ctx: PipelineContext
+    input: FileStorerInput,
+    ctx: PipelineContext,
   ): Either[StepError, FileStorerOutput] = {
     logger.info(s"[${ctx.runId}] Storing file: ${input.fileName} (${input.fileBytes.length} bytes)")
 
@@ -65,7 +65,7 @@ final class FileStorer(storageClient: ObjectStorageClient)
       content = input.fileBytes,
       fileName = input.fileName,
       mimeType = Some(input.detectedType.mimeType),
-      userId = input.profileId
+      userId = input.profileId,
     ) match
       case Left(err) =>
         val message = err match
@@ -78,7 +78,7 @@ final class FileStorer(storageClient: ObjectStorageClient)
             stepName = name,
             cause = err match
               case StorageError.NetworkError(_, cause) => cause
-              case _ => None
+              case _ => None,
           )
         )
 
@@ -89,7 +89,7 @@ final class FileStorer(storageClient: ObjectStorageClient)
             fileBytes = input.fileBytes,
             fileName = input.fileName,
             detectedType = input.detectedType,
-            objectId = storedObject.objectId
+            objectId = storedObject.objectId,
           )
         )
   }

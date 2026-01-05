@@ -34,7 +34,7 @@ object CompletionScorer:
     "responsibilities" -> 5,
     "benefits" -> 5,
     "jobType" -> 3,
-    "experienceLevel" -> 2
+    "experienceLevel" -> 2,
   )
 
   /** Fields that must be present for extraction to not be Failed */
@@ -57,8 +57,9 @@ object CompletionScorer:
    *   Tuple of (CompletionState, score percentage, missing fields)
    */
   def score(fields: Map[String, Option[String]]): ScoringResult = {
-    val presentFields = fields.filter { case (_, value) =>
-      value.exists(v => v.trim.length >= MinFieldLength)
+    val presentFields = fields.filter {
+      case (_, value) =>
+        value.exists(v => v.trim.length >= MinFieldLength)
     }.keySet
 
     val missingRequired = RequiredFields.diff(presentFields)
@@ -83,7 +84,7 @@ object CompletionScorer:
       maxPoints = MaxScore,
       presentFields = presentFields.toSeq.sorted,
       missingRequired = missingRequired.toSeq.sorted,
-      missingOptional = missingOptional.toSeq.sorted
+      missingOptional = missingOptional.toSeq.sorted,
     )
   }
 
@@ -107,7 +108,7 @@ object CompletionScorer:
       "responsibilities" -> data.responsibilities.filter(_.nonEmpty).map(_.mkString(", ")),
       "benefits" -> data.benefits.filter(_.nonEmpty).map(_.mkString(", ")),
       "jobType" -> data.jobType,
-      "experienceLevel" -> data.experienceLevel
+      "experienceLevel" -> data.experienceLevel,
     )
     score(fields)
   }
@@ -131,13 +132,13 @@ object CompletionScorer:
  *   Optional fields that are missing
  */
 case class ScoringResult(
-    state: CompletionState,
-    score: Double,
-    earnedPoints: Int,
-    maxPoints: Int,
-    presentFields: Seq[String],
-    missingRequired: Seq[String],
-    missingOptional: Seq[String]
+  state: CompletionState,
+  score: Double,
+  earnedPoints: Int,
+  maxPoints: Int,
+  presentFields: Seq[String],
+  missingRequired: Seq[String],
+  missingOptional: Seq[String],
 ):
   /** Format score as percentage string */
   def scorePercent: String = f"${score * 100}%.1f%%"

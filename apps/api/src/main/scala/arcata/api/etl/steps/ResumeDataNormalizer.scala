@@ -16,9 +16,9 @@ import arcata.api.etl.framework.*
  *   ObjectStorage ID (passed through)
  */
 final case class ResumeDataNormalizerInput(
-    extractedData: ExtractedResumeData,
-    fileName: String,
-    objectId: String
+  extractedData: ExtractedResumeData,
+  fileName: String,
+  objectId: String,
 )
 
 /**
@@ -32,9 +32,9 @@ final case class ResumeDataNormalizerInput(
  *   ObjectStorage ID (passed through)
  */
 final case class ResumeDataNormalizerOutput(
-    normalizedData: ExtractedResumeData,
-    fileName: String,
-    objectId: String
+  normalizedData: ExtractedResumeData,
+  fileName: String,
+  objectId: String,
 )
 
 /**
@@ -77,12 +77,12 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
     "sep" -> "09",
     "oct" -> "10",
     "nov" -> "11",
-    "dec" -> "12"
+    "dec" -> "12",
   )
 
   override def execute(
-      input: ResumeDataNormalizerInput,
-      ctx: PipelineContext
+    input: ResumeDataNormalizerInput,
+    ctx: PipelineContext,
   ): Either[StepError, ResumeDataNormalizerOutput] = {
     logger.info(s"[${ctx.runId}] Normalizing resume data from ${input.fileName}")
 
@@ -94,7 +94,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       ResumeDataNormalizerOutput(
         normalizedData = normalized,
         fileName = input.fileName,
-        objectId = input.objectId
+        objectId = input.objectId,
       )
     )
   }
@@ -111,7 +111,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       languages = data.languages.map(normalizeLanguagesData),
       volunteer = data.volunteer.map(normalizeVolunteerList),
       awards = data.awards.map(normalizeAwardList),
-      customSections = data.customSections.map(normalizeCustomSectionList)
+      customSections = data.customSections.map(normalizeCustomSectionList),
     )
   }
 
@@ -123,14 +123,14 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       location = contact.location.map(_.trim).filter(_.nonEmpty),
       linkedIn = contact.linkedIn.map(normalizeUrl).filter(_.nonEmpty),
       github = contact.github.map(normalizeUrl).filter(_.nonEmpty),
-      portfolio = contact.portfolio.map(normalizeUrl).filter(_.nonEmpty)
+      portfolio = contact.portfolio.map(normalizeUrl).filter(_.nonEmpty),
     )
   }
 
   private def normalizeSummary(summary: SummaryInfo): SummaryInfo = {
     summary.copy(
       headline = summary.headline.map(_.trim).filter(_.nonEmpty),
-      summary = summary.summary.map(_.trim).filter(_.nonEmpty)
+      summary = summary.summary.map(_.trim).filter(_.nonEmpty),
     )
   }
 
@@ -152,7 +152,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       startDate = exp.startDate.flatMap(normalizeDate),
       endDate = if isCurrent then Some("") else normalizedEndDate.flatMap(normalizeDate),
       current = Some(isCurrent),
-      highlights = exp.highlights.map(normalizeStringList)
+      highlights = exp.highlights.map(normalizeStringList),
     )
   }
 
@@ -177,16 +177,17 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       current = Some(isCurrent),
       gpa = edu.gpa.map(_.trim).filter(_.nonEmpty),
       honors = edu.honors.map(_.trim).filter(_.nonEmpty),
-      coursework = edu.coursework.map(normalizeStringList)
+      coursework = edu.coursework.map(normalizeStringList),
     )
   }
 
   private def normalizeSkillsData(skills: SkillsData): SkillsData = {
     skills.copy(
-      categories = skills.categories.map(cats =>
-        cats
-          .map(normalizeSkillCategory)
-          .filter(cat => cat.name.exists(_.nonEmpty) || cat.skills.exists(_.nonEmpty))
+      categories = skills.categories.map(
+        cats =>
+          cats
+            .map(normalizeSkillCategory)
+            .filter(cat => cat.name.exists(_.nonEmpty) || cat.skills.exists(_.nonEmpty))
       )
     )
   }
@@ -195,7 +196,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
     cat.copy(
       id = cat.id.filter(_.nonEmpty).orElse(Some(UUID.randomUUID().toString)),
       name = cat.name.map(_.trim).filter(_.nonEmpty),
-      skills = cat.skills.map(skills => skills.map(_.trim).filter(_.nonEmpty).distinct)
+      skills = cat.skills.map(skills => skills.map(_.trim).filter(_.nonEmpty).distinct),
     )
   }
 
@@ -218,7 +219,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       endDate = if isCurrent then Some("") else normalizedEndDate.flatMap(normalizeDate),
       current = Some(isCurrent),
       technologies = proj.technologies.map(normalizeStringList),
-      highlights = proj.highlights.map(normalizeStringList)
+      highlights = proj.highlights.map(normalizeStringList),
     )
   }
 
@@ -230,8 +231,9 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
 
   private def normalizeCertification(cert: Certification): Certification = {
     val normalizedExpDate = cert.expirationDate.map(_.trim).filter(_.nonEmpty)
-    val hasNoExpiration = normalizedExpDate.exists(d =>
-      d.equalsIgnoreCase("none") || d.equalsIgnoreCase("no expiration") || d.equalsIgnoreCase("n/a")
+    val hasNoExpiration = normalizedExpDate.exists(
+      d =>
+        d.equalsIgnoreCase("none") || d.equalsIgnoreCase("no expiration") || d.equalsIgnoreCase("n/a")
     ) || cert.noExpiration.getOrElse(false)
 
     cert.copy(
@@ -242,16 +244,17 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       expirationDate = if hasNoExpiration then Some("") else normalizedExpDate.flatMap(normalizeDate),
       credentialId = cert.credentialId.map(_.trim).filter(_.nonEmpty),
       credentialUrl = cert.credentialUrl.map(normalizeUrl).filter(_.nonEmpty),
-      noExpiration = Some(hasNoExpiration)
+      noExpiration = Some(hasNoExpiration),
     )
   }
 
   private def normalizeLanguagesData(languages: LanguagesData): LanguagesData = {
     languages.copy(
-      entries = languages.entries.map(entries =>
-        entries
-          .map(normalizeLanguageEntry)
-          .filter(entry => entry.language.exists(_.nonEmpty))
+      entries = languages.entries.map(
+        entries =>
+          entries
+            .map(normalizeLanguageEntry)
+            .filter(entry => entry.language.exists(_.nonEmpty))
       )
     )
   }
@@ -260,7 +263,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
     entry.copy(
       id = entry.id.filter(_.nonEmpty).orElse(Some(UUID.randomUUID().toString)),
       language = entry.language.map(_.trim).filter(_.nonEmpty),
-      proficiency = entry.proficiency.map(normalizeProficiency)
+      proficiency = entry.proficiency.map(normalizeProficiency),
     )
   }
 
@@ -295,7 +298,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       startDate = vol.startDate.flatMap(normalizeDate),
       endDate = if isCurrent then Some("") else normalizedEndDate.flatMap(normalizeDate),
       current = Some(isCurrent),
-      highlights = vol.highlights.map(normalizeStringList)
+      highlights = vol.highlights.map(normalizeStringList),
     )
   }
 
@@ -311,7 +314,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       title = award.title.map(_.trim).filter(_.nonEmpty),
       issuer = award.issuer.map(_.trim).filter(_.nonEmpty),
       date = award.date.flatMap(normalizeDate),
-      description = award.description.map(_.trim).filter(_.nonEmpty)
+      description = award.description.map(_.trim).filter(_.nonEmpty),
     )
   }
 
@@ -325,7 +328,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
     section.copy(
       title = section.title.trim,
       content = section.content.map(_.trim).filter(_.nonEmpty),
-      items = section.items.map(normalizeStringList)
+      items = section.items.map(normalizeStringList),
     )
   }
 
