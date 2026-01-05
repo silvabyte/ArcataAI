@@ -24,7 +24,7 @@ export function ResumeFileUpload({
     }
   }, []);
 
-  const validateFile = (file: File): boolean => {
+  const validateFile = useCallback((file: File): boolean => {
     const validTypes = [
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -47,7 +47,7 @@ export function ResumeFileUpload({
     }
 
     return true;
-  };
+  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -91,25 +91,20 @@ export function ResumeFileUpload({
 
   return (
     <div className="space-y-2">
-      <div
+      <button
         aria-label="Upload resume file"
-        className={`relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 transition-colors ${
+        className={`relative flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-transparent p-10 transition-colors ${
           dragActive
             ? "border-blue-500 bg-blue-50"
             : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
         } ${isLoading ? "pointer-events-none opacity-50" : ""}`}
+        disabled={isLoading}
         onClick={onZoneClick}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            onZoneClick();
-          }
-        }}
-        role="button"
-        tabIndex={0}
+        type="button"
       >
         <input
           accept=".pdf,.docx,.doc"
@@ -131,9 +126,11 @@ export function ResumeFileUpload({
           </p>
           <p className="text-gray-500 text-xs">PDF or DOCX (max 10MB)</p>
         </div>
-      </div>
+      </button>
 
-      {error && <p className="text-center text-red-600 text-sm">{error}</p>}
+      {error ? (
+        <p className="text-center text-red-600 text-sm">{error}</p>
+      ) : null}
     </div>
   );
 }

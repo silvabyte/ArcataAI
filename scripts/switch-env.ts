@@ -452,6 +452,50 @@ function detectEnvironment(url: string): string {
   return "unknown";
 }
 
+function getEnvValue(envMap: Map<string, string>, key: string): string {
+  return envMap.get(key) ?? "(not set)";
+}
+
+function displayApiAppStatus(envMap: Map<string, string>): void {
+  const supabaseUrl = getEnvValue(envMap, "SUPABASE_URL");
+  const serviceKey = getEnvValue(envMap, "SUPABASE_SERVICE_ROLE_KEY");
+  const corsOrigins = getEnvValue(envMap, "CORS_ORIGINS");
+  const resumeMaxSize = getEnvValue(envMap, "RESUME_MAX_FILE_SIZE_MB");
+  const osUrl = getEnvValue(envMap, "OBJECT_STORAGE_URL");
+  const osTenantId = getEnvValue(envMap, "OBJECT_STORAGE_TENANT_ID");
+  const osApiKey = getEnvValue(envMap, "OBJECT_STORAGE_API_KEY");
+  const aiGatewayUrl = getEnvValue(envMap, "VERCEL_AI_GATEWAY_URL");
+  const aiApiKey = getEnvValue(envMap, "VERCEL_AI_GATEWAY_API_KEY");
+  const aiModel = getEnvValue(envMap, "AI_MODEL");
+
+  console.log(
+    `  Database:     ${detectEnvironment(supabaseUrl)} (${supabaseUrl})`
+  );
+  console.log(`  Service Key:  ${maskSecret(serviceKey)}`);
+  console.log(`  CORS Origins: ${corsOrigins}`);
+  console.log(`  Resume Max Size: ${resumeMaxSize}MB`);
+  console.log(`  Object Storage URL: ${osUrl}`);
+  console.log(`  Object Storage Tenant: ${osTenantId}`);
+  console.log(`  Object Storage Key: ${maskSecret(osApiKey)}`);
+  console.log(`  AI Gateway URL: ${aiGatewayUrl}`);
+  console.log(`  AI Gateway Key: ${maskSecret(aiApiKey)}`);
+  console.log(`  AI Model: ${aiModel}`);
+}
+
+function displayFrontendAppStatus(envMap: Map<string, string>): void {
+  const supabaseUrl = getEnvValue(envMap, "VITE_SUPABASE_URL");
+  const anonKey = getEnvValue(envMap, "VITE_SUPABASE_KEY");
+  const apiUrl = getEnvValue(envMap, "VITE_API_URL");
+  const hqUrl = getEnvValue(envMap, "VITE_HQ_BASE_URL");
+  const authUrl = getEnvValue(envMap, "VITE_AUTH_BASE_URL");
+
+  console.log(`  Database: ${detectEnvironment(supabaseUrl)} (${supabaseUrl})`);
+  console.log(`  Anon Key: ${maskSecret(anonKey)}`);
+  console.log(`  API URL:  ${detectEnvironment(apiUrl)} (${apiUrl})`);
+  console.log(`  HQ URL:   ${detectEnvironment(hqUrl)} (${hqUrl})`);
+  console.log(`  Auth URL: ${detectEnvironment(authUrl)} (${authUrl})`);
+}
+
 async function showStatus(): Promise<void> {
   console.log("\nCurrent Environment Status\n");
 
@@ -460,44 +504,9 @@ async function showStatus(): Promise<void> {
     console.log(`${app.toUpperCase()}:`);
 
     if (app === "api") {
-      const supabaseUrl = envMap.get("SUPABASE_URL") ?? "(not set)";
-      const serviceKey = envMap.get("SUPABASE_SERVICE_ROLE_KEY") ?? "(not set)";
-      const corsOrigins = envMap.get("CORS_ORIGINS") ?? "(not set)";
-      const resumeMaxSize =
-        envMap.get("RESUME_MAX_FILE_SIZE_MB") ?? "(not set)";
-      const osUrl = envMap.get("OBJECT_STORAGE_URL") ?? "(not set)";
-      const osTenantId = envMap.get("OBJECT_STORAGE_TENANT_ID") ?? "(not set)";
-      const osApiKey = envMap.get("OBJECT_STORAGE_API_KEY") ?? "(not set)";
-      const aiGatewayUrl = envMap.get("VERCEL_AI_GATEWAY_URL") ?? "(not set)";
-      const aiApiKey = envMap.get("VERCEL_AI_GATEWAY_API_KEY") ?? "(not set)";
-      const aiModel = envMap.get("AI_MODEL") ?? "(not set)";
-
-      console.log(
-        `  Database:     ${detectEnvironment(supabaseUrl)} (${supabaseUrl})`
-      );
-      console.log(`  Service Key:  ${maskSecret(serviceKey)}`);
-      console.log(`  CORS Origins: ${corsOrigins}`);
-      console.log(`  Resume Max Size: ${resumeMaxSize}MB`);
-      console.log(`  Object Storage URL: ${osUrl}`);
-      console.log(`  Object Storage Tenant: ${osTenantId}`);
-      console.log(`  Object Storage Key: ${maskSecret(osApiKey)}`);
-      console.log(`  AI Gateway URL: ${aiGatewayUrl}`);
-      console.log(`  AI Gateway Key: ${maskSecret(aiApiKey)}`);
-      console.log(`  AI Model: ${aiModel}`);
+      displayApiAppStatus(envMap);
     } else {
-      const supabaseUrl = envMap.get("VITE_SUPABASE_URL") ?? "(not set)";
-      const anonKey = envMap.get("VITE_SUPABASE_KEY") ?? "(not set)";
-      const apiUrl = envMap.get("VITE_API_URL") ?? "(not set)";
-      const hqUrl = envMap.get("VITE_HQ_BASE_URL") ?? "(not set)";
-      const authUrl = envMap.get("VITE_AUTH_BASE_URL") ?? "(not set)";
-
-      console.log(
-        `  Database: ${detectEnvironment(supabaseUrl)} (${supabaseUrl})`
-      );
-      console.log(`  Anon Key: ${maskSecret(anonKey)}`);
-      console.log(`  API URL:  ${detectEnvironment(apiUrl)} (${apiUrl})`);
-      console.log(`  HQ URL:   ${detectEnvironment(hqUrl)} (${hqUrl})`);
-      console.log(`  Auth URL: ${detectEnvironment(authUrl)} (${authUrl})`);
+      displayFrontendAppStatus(envMap);
     }
     console.log();
   }

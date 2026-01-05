@@ -425,8 +425,8 @@ function ExperienceNodeComponent({
 
               {entry.highlights.length > 0 && (
                 <ul className="mt-3 list-disc space-y-1.5 pl-4 text-gray-600 text-sm leading-relaxed">
-                  {entry.highlights.map((highlight, index) => (
-                    <li key={`${highlight}-${index}`}>{highlight}</li>
+                  {entry.highlights.map((highlight, highlightIndex) => (
+                    <li key={`${highlight}-${highlightIndex}`}>{highlight}</li>
                   ))}
                 </ul>
               )}

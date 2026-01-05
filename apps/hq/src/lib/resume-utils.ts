@@ -2,7 +2,7 @@ import {
   createDefaultResumeTemplate,
   type ResumeData,
 } from "@arcata/components";
-import type { SerializedEditorState } from "lexical";
+import type { SerializedEditorState, SerializedLexicalNode } from "lexical";
 
 /**
  * Converts parsed ResumeData into a Lexical SerializedEditorState.
@@ -16,7 +16,8 @@ export function convertToEditorState(data: ResumeData): SerializedEditorState {
   const children = newState.root.children;
 
   // Helper to find node by type
-  const findNode = (type: string) => children.find((c: any) => c.type === type);
+  const findNode = (type: string) =>
+    children.find((c: SerializedLexicalNode) => c.type === type);
 
   // Update Contact
   if (data.contact) {
