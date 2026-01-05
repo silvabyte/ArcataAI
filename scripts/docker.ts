@@ -33,7 +33,7 @@ const APPS: Record<string, { port: number; imageName: string }> = {
   // Future apps can be added here
 };
 
-const COMMANDS = ["build", "push", "build-push", "run", "stop"] as const;
+const COMMANDS = ["build", "push", "build-push", "run", "stop", "restart"] as const;
 type Command = (typeof COMMANDS)[number];
 
 type DockerEnv = {
@@ -82,6 +82,7 @@ Commands:
   build-push  Build and push image to ghcr.io
   run         Run local image in a container
   stop        Stop and remove local container
+  restart     Rebuild image, stop container, and start fresh
 
 Apps: ${Object.keys(APPS).join(", ")}
 
@@ -90,6 +91,7 @@ Examples:
   bun run scripts/docker.ts build-push --app=api
   bun run scripts/docker.ts run --app=api
   bun run scripts/docker.ts stop --app=api
+  bun run scripts/docker.ts restart --app=api
 
 NPM Scripts:
   bun run docker:build:api
@@ -97,6 +99,7 @@ NPM Scripts:
   bun run docker:build-push:api
   bun run docker:run:api
   bun run docker:stop:api
+  bun run docker:restart:api
 `);
 }
 
@@ -191,6 +194,22 @@ async function stopLocal(config: {
   console.log(`[INFO] Stopped ${containerName}`);
 }
 
+async function cmdRestart(
+  appDir: string,
+  config: { port: number; imageName: string }
+): Promise<void> {
+  // 1. Rebuild the image fresh
+  await cmdBuild(appDir, config);
+
+  // 2. Stop and remove the container
+  await stopLocal(config);
+
+  // 3. Start new container
+  await runLocal(appDir, config);
+
+  console.log(`[SUCCESS] Restarted ${config.imageName} with fresh image`);
+}
+
 async function cmdBuild(
   appDir: string,
   config: { port: number; imageName: string }
@@ -249,6 +268,7 @@ const COMMAND_HANDLERS: Record<
   "build-push": cmdBuildPush,
   run: runLocal,
   stop: (_appDir, config) => stopLocal(config),
+  restart: cmdRestart,
 };
 
 async function main(): Promise<void> {
