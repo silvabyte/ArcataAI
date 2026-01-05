@@ -2,6 +2,7 @@ package arcata.api.etl.steps
 
 import arcata.api.config.ResumeConfig
 import arcata.api.etl.framework.*
+import boogieloops.kit.MagicNumber
 
 /**
  * Detected file type from magic bytes.
@@ -56,11 +57,8 @@ final case class FileValidatorOutput(
  * - File type is allowed (PDF, DOCX, or TXT) using magic byte detection
  * - File is not empty
  *
- * Magic byte detection prevents file extension spoofing attacks where a malicious file is renamed
- * to appear as a PDF or DOCX.
- *
- * TODO: Replace inline magic byte detection with boogieloops.kit.MagicNumber once Kit is published
- * to Maven Central (see BoogieLoops PR #25).
+ * Uses BoogieLoops Kit MagicNumber for file type detection, which prevents file extension spoofing
+ * attacks where a malicious file is renamed to appear as a PDF or DOCX.
  */
 final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorInput, FileValidatorOutput]:
 
@@ -72,11 +70,6 @@ final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorIn
     "application/zip", // DOCX is ZIP-based
     "text/plain"
   )
-
-  // Magic byte signatures for file type detection
-  // Based on boogieloops.kit.MagicNumber patterns
-  private val PdfMagic = Array[Byte](0x25, 0x50, 0x44, 0x46) // %PDF
-  private val ZipMagic = Array[Byte](0x50, 0x4b, 0x03, 0x04) // PK..
 
   override def execute(
       input: FileValidatorInput,
@@ -98,12 +91,13 @@ final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorIn
     if bytes.length > maxSizeBytes then
       return Left(
         StepError.ValidationError(
-          message = s"File size (${bytes.length / 1024 / 1024}MB) exceeds maximum allowed size (${config.maxFileSizeMb}MB)",
+          message =
+            s"File size (${bytes.length / 1024 / 1024}MB) exceeds maximum allowed size (${config.maxFileSizeMb}MB)",
           stepName = name
         )
       )
 
-    // Detect file type from magic bytes
+    // Detect file type from magic bytes using BoogieLoops Kit
     val detectedType = detectFileType(bytes, input.fileName)
 
     // Validate file type is allowed
@@ -139,26 +133,24 @@ final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorIn
   }
 
   /**
-   * Detect file type from magic bytes.
+   * Detect file type from magic bytes using BoogieLoops Kit MagicNumber.
    *
    * Falls back to extension-based detection for plain text files which have no magic bytes.
    */
   private def detectFileType(bytes: Array[Byte], fileName: String): DetectedFileType = {
-    if bytes.length >= 4 then
-      // Check PDF magic bytes
-      if bytes.take(4).sameElements(PdfMagic) then
-        return DetectedFileType("PDF", "application/pdf")
+    // Use MagicNumber for detection (needs at least HeaderLength bytes)
+    val header = bytes.take(MagicNumber.HeaderLength)
 
-      // Check ZIP magic bytes (DOCX is ZIP-based)
-      if bytes.take(4).sameElements(ZipMagic) then
-        return DetectedFileType("ZIP/DOCX", "application/zip")
-
-    // Fall back to extension-based detection for text files
-    val ext = fileName.toLowerCase.split('.').lastOption.getOrElse("")
-    ext match
-      case "txt" | "text" => DetectedFileType("Plain Text", "text/plain")
-      case "md"           => DetectedFileType("Markdown", "text/plain")
-      case _              => DetectedFileType("Unknown", "application/octet-stream")
+    MagicNumber.detect(header) match
+      case Some(sig) =>
+        DetectedFileType(sig.name, sig.mimeType)
+      case None =>
+        // Fall back to extension-based detection for text files (no magic bytes)
+        val ext = fileName.toLowerCase.split('.').lastOption.getOrElse("")
+        ext match
+          case "txt" | "text" => DetectedFileType("Plain Text", "text/plain")
+          case "md" => DetectedFileType("Markdown", "text/plain")
+          case _ => DetectedFileType("Unknown", "application/octet-stream")
   }
 
   /**

@@ -1,3 +1,5 @@
+import type { ResumeData } from "@arcata/components";
+
 export type IngestJobRequest = {
   url: string;
   source?: string;
@@ -45,6 +47,10 @@ export type IngestJobResult =
   | { ok: true; data: IngestJobResponse }
   | { ok: false; error: JobErrorResponse };
 
+export type ParseResumeResult =
+  | { ok: true; data: ResumeData }
+  | { ok: false; error: string };
+
 /**
  * Get the API base URL from environment.
  * Defaults to localhost:4203 for development.
@@ -91,6 +97,44 @@ export async function ingestJob(
         details:
           error instanceof Error ? error.message : "Failed to connect to API",
       },
+    };
+  }
+}
+
+/**
+ * Parse a resume file via the Scala API.
+ */
+export async function parseResume(
+  file: File,
+  token: string
+): Promise<ParseResumeResult> {
+  const url = `${getApiUrl()}/api/v1/resumes/parse`;
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      return { ok: true, data: data.data };
+    }
+
+    return {
+      ok: false,
+      error: data.error || "Failed to parse resume",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Network error",
     };
   }
 }

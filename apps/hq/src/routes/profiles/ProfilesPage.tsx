@@ -2,12 +2,14 @@ import { createDefaultResumeTemplate } from "@arcata/components";
 import { db, type JobProfile } from "@arcata/db";
 import { PencilIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { DocumentPlusIcon } from "@heroicons/react/24/outline";
+import type { SerializedEditorState } from "lexical";
 import { useCallback, useState } from "react";
 import {
   type LoaderFunctionArgs,
   useLoaderData,
   useNavigate,
 } from "react-router-dom";
+import { NewProfileDialog } from "./NewProfileDialog";
 
 type LoaderData = {
   profiles: JobProfile[];
@@ -54,10 +56,9 @@ function getStatusLabel(status: JobProfile["status"]): string {
 
 type EmptyStateProps = {
   onCreateProfile: () => void;
-  isCreating: boolean;
 };
 
-function EmptyState({ onCreateProfile, isCreating }: EmptyStateProps) {
+function EmptyState({ onCreateProfile }: EmptyStateProps) {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="text-center">
@@ -73,13 +74,12 @@ function EmptyState({ onCreateProfile, isCreating }: EmptyStateProps) {
         </p>
         <div className="mt-6">
           <button
-            className="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-gray-900 focus-visible:outline-offset-2 disabled:opacity-50"
-            disabled={isCreating}
+            className="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-gray-900 focus-visible:outline-offset-2"
             onClick={onCreateProfile}
             type="button"
           >
             <PlusIcon aria-hidden="true" className="mr-1.5 -ml-0.5 size-5" />
-            {isCreating ? "Creating..." : "New Profile"}
+            New Profile
           </button>
         </div>
       </div>
@@ -102,7 +102,9 @@ function ProfileCard({ profile, onEdit }: ProfileCardProps) {
               {profile.name}
             </h3>
             <span
-              className={`inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 font-medium text-xs ring-1 ring-inset ${getStatusBadgeClasses(profile.status)}`}
+              className={`inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 font-medium text-xs ring-1 ring-inset ${getStatusBadgeClasses(
+                profile.status
+              )}`}
             >
               {getStatusLabel(profile.status)}
             </span>
@@ -134,15 +136,9 @@ type ProfileGridProps = {
   profiles: JobProfile[];
   onEdit: (id: number) => void;
   onCreateProfile: () => void;
-  isCreating: boolean;
 };
 
-function ProfileGrid({
-  profiles,
-  onEdit,
-  onCreateProfile,
-  isCreating,
-}: ProfileGridProps) {
+function ProfileGrid({ profiles, onEdit, onCreateProfile }: ProfileGridProps) {
   return (
     <div className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
@@ -156,13 +152,12 @@ function ProfileGrid({
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <button
-            className="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-gray-900 focus-visible:outline-offset-2 disabled:opacity-50"
-            disabled={isCreating}
+            className="inline-flex items-center rounded-md bg-gray-900 px-3 py-2 font-semibold text-sm text-white shadow-xs hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-gray-900 focus-visible:outline-offset-2"
             onClick={onCreateProfile}
             type="button"
           >
             <PlusIcon aria-hidden="true" className="mr-1.5 -ml-0.5 size-5" />
-            {isCreating ? "Creating..." : "New Profile"}
+            New Profile
           </button>
         </div>
       </div>
@@ -182,36 +177,38 @@ function ProfileGrid({
 export function ProfilesPage() {
   const { profiles, error } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
-  const [isCreating, setIsCreating] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleCreateProfile = useCallback(async () => {
-    setIsCreating(true);
-    try {
-      // Get current user's profile_id from the first profile or fetch it
-      // For now, we'll use the supabase auth to get the user id
-      // TODO: current user should be loaded from loader on page load...
-      const { getCurrentUser } = await import("@arcata/db");
-      const user = await getCurrentUser();
-      if (!user) {
-        throw new Error("Not authenticated");
+  const handleCreateProfile = useCallback(
+    async (name: string, resumeData?: SerializedEditorState) => {
+      try {
+        // Get current user's profile_id from the first profile or fetch it
+        // For now, we'll use the supabase auth to get the user id
+        // TODO: current user should be loaded from loader on page load...
+        const { getCurrentUser } = await import("@arcata/db");
+        const user = await getCurrentUser();
+        if (!user) {
+          throw new Error("Not authenticated");
+        }
+
+        const result = await db.job_profiles.create<JobProfile[]>({
+          profile_id: user.id,
+          name,
+          status: "draft",
+          resume_data: resumeData || createDefaultResumeTemplate(),
+        });
+
+        const created = result[0];
+        if (created) {
+          navigate(`/profiles/${created.job_profile_id}`);
+        }
+      } catch (err) {
+        console.error("Failed to create profile:", err);
+        throw err;
       }
-
-      const result = await db.job_profiles.create<JobProfile[]>({
-        profile_id: user.id,
-        name: "Untitled Profile",
-        status: "draft",
-        resume_data: createDefaultResumeTemplate(),
-      });
-
-      const created = result[0];
-      if (created) {
-        navigate(`/profiles/${created.job_profile_id}`);
-      }
-    } catch (err) {
-      console.error("Failed to create profile:", err);
-      setIsCreating(false);
-    }
-  }, [navigate]);
+    },
+    [navigate]
+  );
 
   const handleEdit = useCallback(
     (id: number) => {
@@ -233,21 +230,22 @@ export function ProfilesPage() {
     );
   }
 
-  if (profiles.length === 0) {
-    return (
-      <EmptyState
-        isCreating={isCreating}
-        onCreateProfile={handleCreateProfile}
-      />
-    );
-  }
-
   return (
-    <ProfileGrid
-      isCreating={isCreating}
-      onCreateProfile={handleCreateProfile}
-      onEdit={handleEdit}
-      profiles={profiles}
-    />
+    <>
+      <NewProfileDialog
+        onCreate={handleCreateProfile}
+        onOpenChange={setIsDialogOpen}
+        open={isDialogOpen}
+      />
+      {profiles.length === 0 ? (
+        <EmptyState onCreateProfile={() => setIsDialogOpen(true)} />
+      ) : (
+        <ProfileGrid
+          onCreateProfile={() => setIsDialogOpen(true)}
+          onEdit={handleEdit}
+          profiles={profiles}
+        />
+      )}
+    </>
   );
 }

@@ -22,10 +22,12 @@ object api extends ScalaModule with ScalafmtModule {
     // Logging
     ivy"com.outr::scribe:3.6.6",
     // BoogieLoops schema + web for OpenAPI generation and validation
-    ivy"dev.boogieloop::schema:0.5.5",
-    ivy"dev.boogieloop::web:0.5.5",
+    ivy"dev.boogieloop::schema:0.6.0",
+    ivy"dev.boogieloop::web:0.6.0",
     // BoogieLoops AI for LLM extraction
-    ivy"dev.boogieloop::ai:0.5.5",
+    ivy"dev.boogieloop::ai:0.6.0",
+    // BoogieLoops Kit for file type detection
+    ivy"dev.boogieloop::kit:0.6.0",
     // JWT validation (for Supabase JWTs)
     ivy"com.auth0:java-jwt:4.4.0",
     // HTML parsing and cleaning

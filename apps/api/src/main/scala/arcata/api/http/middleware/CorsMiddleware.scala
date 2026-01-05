@@ -63,10 +63,25 @@ class CorsRoutes(config: CorsConfig) extends cask.Routes:
       case None => Response("", statusCode = 204, headers = Seq.empty)
   }
 
-  // Handle OPTIONS for API paths
+  // Handle OPTIONS preflight for API paths
+  // Each route that accepts POST/PUT/DELETE needs an OPTIONS handler for CORS preflight
+
+  // Jobs
   @cask.route("/api/v1/jobs/ingest", methods = Seq("options"))
   def optionsJobsIngest(request: cask.Request): Response[String] = preflightResponse(request)
 
+  // Resumes
+  @cask.route("/api/v1/resumes/parse", methods = Seq("options"))
+  def optionsResumesParse(request: cask.Request): Response[String] = preflightResponse(request)
+
+  // Cron endpoints
+  @cask.route("/api/v1/cron/check-job-status", methods = Seq("options"))
+  def optionsCronJobStatus(request: cask.Request): Response[String] = preflightResponse(request)
+
+  @cask.route("/api/v1/cron/discover-jobs", methods = Seq("options"))
+  def optionsCronDiscoverJobs(request: cask.Request): Response[String] = preflightResponse(request)
+
+  // Health/ping (GET only, but adding for completeness)
   @cask.route("/api/v1/ping", methods = Seq("options"))
   def optionsPing(request: cask.Request): Response[String] = preflightResponse(request)
 

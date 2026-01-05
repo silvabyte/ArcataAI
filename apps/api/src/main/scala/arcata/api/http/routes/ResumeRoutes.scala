@@ -1,6 +1,7 @@
 package arcata.api.http.routes
 
 import scala.jdk.CollectionConverters.*
+import scala.util.Using
 
 import arcata.api.domain.*
 import arcata.api.etl.{ResumeParsingInput, ResumeParsingPipeline}
@@ -10,8 +11,15 @@ import boogieloops.schema.derivation.Schematic
 import boogieloops.web.*
 import boogieloops.web.Web.ValidatedRequestReader
 import cask.model.Response
-import io.undertow.server.handlers.form.FormParserFactory
+import io.undertow.server.handlers.form.{FormData, FormParserFactory}
 import upickle.default.*
+
+/** Extracted file data from multipart form. */
+private final case class ExtractedFile(
+    bytes: Array[Byte],
+    fileName: String,
+    mimeType: Option[String]
+)
 
 /** Response for successful resume parsing. */
 @Schematic.title("ParseResumeResponse")
@@ -93,62 +101,31 @@ class ResumeRoutes(
   def parseResume(
       r: ValidatedRequest
   )(authReq: AuthenticatedRequest): Response[String] = {
-    // Parse multipart form data
+    // Parse multipart form data and extract file
     val parser = FormParserFactory.builder().build().createParser(r.original.exchange)
     val form = parser.parseBlocking()
 
-    // Find the file upload
-    var fileBytes: Option[Array[Byte]] = None
-    var fileName: Option[String] = None
-    var mimeType: Option[String] = None
-
-    val it = form.iterator()
-    while (it.hasNext) {
-      val name = it.next()
-      val vs = form.get(name).iterator()
-      while (vs.hasNext) {
-        val v = vs.next()
-        if (v.isFileItem && name == "file") {
-          val fi = v.getFileItem
-          // Read file bytes
-          val is = fi.getInputStream
-          try {
-            fileBytes = Some(is.readAllBytes())
-          } finally {
-            is.close()
-          }
-          // Get file name from FormValue
-          fileName = Option(v.getFileName).filter(_.nonEmpty)
-          // Get content type from headers if available
-          mimeType = Option(v.getHeaders)
-            .flatMap(h => Option(h.getFirst("Content-Type")))
-            .filter(_.nonEmpty)
-        }
-      }
-    }
-
-    // Validate we have a file
-    (fileBytes, fileName) match {
-      case (None, _) =>
+    extractFileFromForm(form) match {
+      case None =>
         val response = ResumeErrorResponse(
           success = false,
           error = "No file uploaded. Please provide a file in the 'file' field."
         )
-        return Response(write(response), 400, withCors(r.original, jsonHeaders))
+        Response(write(response), 400, withCors(r.original, jsonHeaders))
 
-      case (_, None) =>
+      case Some(file) if file.fileName.isEmpty =>
         val response = ResumeErrorResponse(
           success = false,
           error = "File name is required."
         )
-        return Response(write(response), 400, withCors(r.original, jsonHeaders))
+        Response(write(response), 400, withCors(r.original, jsonHeaders))
 
-      case (Some(bytes), Some(name)) =>
+      case Some(file) =>
         // Run the pipeline
         val input = ResumeParsingInput(
-          fileBytes = bytes,
-          fileName = name,
-          claimedMimeType = mimeType,
+          fileBytes = file.bytes,
+          fileName = file.fileName,
+          claimedMimeType = file.mimeType,
           profileId = authReq.profileId
         )
 
@@ -171,15 +148,42 @@ class ResumeRoutes(
             details = error.cause.map(_.getMessage)
           )
           // Use 400 for validation errors, 500 for other errors
-          val statusCode = error.message.contains("not allowed") ||
-            error.message.contains("exceeds") ||
-            error.message.contains("empty") match {
-            case true  => 400
-            case false => 500
+          val statusCode = {
+            if error.message.contains("not allowed") ||
+              error.message.contains("exceeds") ||
+              error.message.contains("empty")
+            then 400
+            else 500
           }
           Response(write(response), statusCode, withCors(r.original, jsonHeaders))
         }
     }
+  }
+
+  /**
+   * Extract file data from multipart form in an immutable way.
+   */
+  private def extractFileFromForm(form: FormData): Option[ExtractedFile] = {
+    val it = form.iterator()
+    while (it.hasNext) {
+      val name = it.next()
+      if (name == "file") {
+        val vs = form.get(name).iterator()
+        while (vs.hasNext) {
+          val v = vs.next()
+          if (v.isFileItem) {
+            val fi = v.getFileItem
+            val bytes = Using.resource(fi.getInputStream)(_.readAllBytes())
+            val fileName = Option(v.getFileName).filter(_.nonEmpty).getOrElse("")
+            val mimeType = Option(v.getHeaders)
+              .flatMap(h => Option(h.getFirst("Content-Type")))
+              .filter(_.nonEmpty)
+            return Some(ExtractedFile(bytes, fileName, mimeType))
+          }
+        }
+      }
+    }
+    None
   }
 
   initialize()

@@ -71,7 +71,7 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
     val result = input.detectedType.mimeType match
       case "application/pdf" => extractFromPdf(input.fileBytes, ctx)
       case "application/zip" => extractFromDocx(input.fileBytes, ctx)
-      case "text/plain"      => extractFromText(input.fileBytes, ctx)
+      case "text/plain" => extractFromText(input.fileBytes, ctx)
       case other =>
         Left(
           StepError.ExtractionError(

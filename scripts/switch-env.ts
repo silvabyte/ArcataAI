@@ -45,6 +45,16 @@ type EnvConfig = {
     hqUrl: string;
     authUrl: string;
   };
+  objectStorage: {
+    url: string;
+    tenantId: string;
+    apiKey: string;
+  };
+  ai: {
+    gatewayUrl: string;
+    apiKey: string;
+    model: string;
+  };
   resume: {
     maxFileSizeMb: number;
   };
@@ -275,6 +285,74 @@ async function switchDatabase(
         });
         envMap.set("RESUME_MAX_FILE_SIZE_MB", newMaxFileSize);
       }
+
+      // Object Storage config
+      const oldOsUrl = envMap.get("OBJECT_STORAGE_URL") ?? "";
+      if (oldOsUrl !== config.objectStorage.url) {
+        changes.push({
+          app,
+          key: "OBJECT_STORAGE_URL",
+          oldValue: oldOsUrl,
+          newValue: config.objectStorage.url,
+        });
+        envMap.set("OBJECT_STORAGE_URL", config.objectStorage.url);
+      }
+
+      const oldOsTenantId = envMap.get("OBJECT_STORAGE_TENANT_ID") ?? "";
+      if (oldOsTenantId !== config.objectStorage.tenantId) {
+        changes.push({
+          app,
+          key: "OBJECT_STORAGE_TENANT_ID",
+          oldValue: oldOsTenantId,
+          newValue: config.objectStorage.tenantId,
+        });
+        envMap.set("OBJECT_STORAGE_TENANT_ID", config.objectStorage.tenantId);
+      }
+
+      const oldOsApiKey = envMap.get("OBJECT_STORAGE_API_KEY") ?? "";
+      if (oldOsApiKey !== config.objectStorage.apiKey) {
+        changes.push({
+          app,
+          key: "OBJECT_STORAGE_API_KEY",
+          oldValue: maskSecret(oldOsApiKey),
+          newValue: maskSecret(config.objectStorage.apiKey),
+        });
+        envMap.set("OBJECT_STORAGE_API_KEY", config.objectStorage.apiKey);
+      }
+
+      // AI config
+      const oldAiGatewayUrl = envMap.get("VERCEL_AI_GATEWAY_URL") ?? "";
+      if (oldAiGatewayUrl !== config.ai.gatewayUrl) {
+        changes.push({
+          app,
+          key: "VERCEL_AI_GATEWAY_URL",
+          oldValue: oldAiGatewayUrl,
+          newValue: config.ai.gatewayUrl,
+        });
+        envMap.set("VERCEL_AI_GATEWAY_URL", config.ai.gatewayUrl);
+      }
+
+      const oldAiApiKey = envMap.get("VERCEL_AI_GATEWAY_API_KEY") ?? "";
+      if (oldAiApiKey !== config.ai.apiKey) {
+        changes.push({
+          app,
+          key: "VERCEL_AI_GATEWAY_API_KEY",
+          oldValue: maskSecret(oldAiApiKey),
+          newValue: maskSecret(config.ai.apiKey),
+        });
+        envMap.set("VERCEL_AI_GATEWAY_API_KEY", config.ai.apiKey);
+      }
+
+      const oldAiModel = envMap.get("AI_MODEL") ?? "";
+      if (oldAiModel !== config.ai.model) {
+        changes.push({
+          app,
+          key: "AI_MODEL",
+          oldValue: oldAiModel,
+          newValue: config.ai.model,
+        });
+        envMap.set("AI_MODEL", config.ai.model);
+      }
     } else {
       // Frontend apps (hq, auth)
       const oldUrl = envMap.get("VITE_SUPABASE_URL") ?? "";
@@ -387,6 +465,12 @@ async function showStatus(): Promise<void> {
       const corsOrigins = envMap.get("CORS_ORIGINS") ?? "(not set)";
       const resumeMaxSize =
         envMap.get("RESUME_MAX_FILE_SIZE_MB") ?? "(not set)";
+      const osUrl = envMap.get("OBJECT_STORAGE_URL") ?? "(not set)";
+      const osTenantId = envMap.get("OBJECT_STORAGE_TENANT_ID") ?? "(not set)";
+      const osApiKey = envMap.get("OBJECT_STORAGE_API_KEY") ?? "(not set)";
+      const aiGatewayUrl = envMap.get("VERCEL_AI_GATEWAY_URL") ?? "(not set)";
+      const aiApiKey = envMap.get("VERCEL_AI_GATEWAY_API_KEY") ?? "(not set)";
+      const aiModel = envMap.get("AI_MODEL") ?? "(not set)";
 
       console.log(
         `  Database:     ${detectEnvironment(supabaseUrl)} (${supabaseUrl})`
@@ -394,6 +478,12 @@ async function showStatus(): Promise<void> {
       console.log(`  Service Key:  ${maskSecret(serviceKey)}`);
       console.log(`  CORS Origins: ${corsOrigins}`);
       console.log(`  Resume Max Size: ${resumeMaxSize}MB`);
+      console.log(`  Object Storage URL: ${osUrl}`);
+      console.log(`  Object Storage Tenant: ${osTenantId}`);
+      console.log(`  Object Storage Key: ${maskSecret(osApiKey)}`);
+      console.log(`  AI Gateway URL: ${aiGatewayUrl}`);
+      console.log(`  AI Gateway Key: ${maskSecret(aiApiKey)}`);
+      console.log(`  AI Model: ${aiModel}`);
     } else {
       const supabaseUrl = envMap.get("VITE_SUPABASE_URL") ?? "(not set)";
       const anonKey = envMap.get("VITE_SUPABASE_KEY") ?? "(not set)";

@@ -12,6 +12,16 @@
     "hqUrl": "http://localhost:4201",
     "authUrl": "http://localhost:4200"
   },
+  "objectStorage": {
+    "url": "https://s3.audetic.link/api/v1",
+    "tenantId": "arcata",
+    "apiKey": "your-object-storage-api-key"
+  },
+  "ai": {
+    "gatewayUrl": "https://ai-gateway.vercel.sh/v1",
+    "apiKey": "your-vercel-ai-gateway-api-key",
+    "model": "gpt-4o-mini"
+  },
   "resume": {
     "maxFileSizeMb": 10
   }

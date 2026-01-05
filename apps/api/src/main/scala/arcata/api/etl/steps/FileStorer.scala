@@ -70,15 +70,15 @@ final class FileStorer(storageClient: ObjectStorageClient)
       case Left(err) =>
         val message = err match
           case StorageError.NetworkError(msg, _) => s"Failed to connect to storage: $msg"
-          case StorageError.ApiError(code, msg)  => s"Storage API error ($code): $msg"
-          case StorageError.NotFound(id)         => s"Storage not found: $id"
+          case StorageError.ApiError(code, msg) => s"Storage API error ($code): $msg"
+          case StorageError.NotFound(id) => s"Storage not found: $id"
         Left(
           StepError.LoadError(
             message = message,
             stepName = name,
             cause = err match
               case StorageError.NetworkError(_, cause) => cause
-              case _                                   => None
+              case _ => None
           )
         )
 

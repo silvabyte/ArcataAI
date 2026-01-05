@@ -12,6 +12,16 @@
     "hqUrl": "https://hq.your-domain.com",
     "authUrl": "https://auth.your-domain.com"
   },
+  "objectStorage": {
+    "url": "https://s3.audetic.link/api/v1",
+    "tenantId": "arcata",
+    "apiKey": "your-object-storage-api-key"
+  },
+  "ai": {
+    "gatewayUrl": "https://ai-gateway.vercel.sh/v1",
+    "apiKey": "your-vercel-ai-gateway-api-key",
+    "model": "gpt-4o-mini"
+  },
   "resume": {
     "maxFileSizeMb": 10
   }
