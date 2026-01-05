@@ -36,10 +36,8 @@ object api extends ScalaModule with ScalafmtModule {
     ivy"com.vladsch.flexmark:flexmark-html2md-converter:0.64.8",
     // Actor framework for async workflows
     ivy"com.lihaoyi::castor:0.3.0",
-    // PDF text extraction
-    ivy"org.apache.pdfbox:pdfbox:3.0.4",
-    // DOCX text extraction
-    ivy"org.apache.poi:poi-ooxml:5.3.0".exclude(("org.apache.logging.log4j", "log4j-api"))
+    // PDF text extraction (minimal deps, no logging framework conflicts)
+    ivy"com.github.librepdf:openpdf:2.0.3"
   )
 
   def scalacOptions = Seq(

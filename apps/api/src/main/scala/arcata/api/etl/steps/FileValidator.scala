@@ -53,23 +53,17 @@ final case class FileValidatorOutput(
  * ETL step that validates uploaded resume files.
  *
  * Validates:
- * - File size is within limits
- * - File type is allowed (PDF, DOCX, or TXT) using magic byte detection
  * - File is not empty
+ * - File size is within limits
+ * - File type can be detected (for routing to appropriate extractor)
  *
- * Uses BoogieLoops Kit MagicNumber for file type detection, which prevents file extension spoofing
- * attacks where a malicious file is renamed to appear as a PDF or DOCX.
+ * Uses BoogieLoops Kit MagicNumber for file type detection. The actual format support
+ * is determined by the TextExtractor step - this step just validates basic constraints
+ * and detects the file type for routing.
  */
 final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorInput, FileValidatorOutput]:
 
   val name = "FileValidator"
-
-  // Allowed MIME types for resume files
-  private val AllowedMimeTypes = Set(
-    "application/pdf",
-    "application/zip", // DOCX is ZIP-based
-    "text/plain"
-  )
 
   override def execute(
       input: FileValidatorInput,
@@ -100,24 +94,6 @@ final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorIn
     // Detect file type from magic bytes using BoogieLoops Kit
     val detectedType = detectFileType(bytes, input.fileName)
 
-    // Validate file type is allowed
-    if !AllowedMimeTypes.contains(detectedType.mimeType) then
-      return Left(
-        StepError.ValidationError(
-          message = s"File type '${detectedType.name}' is not allowed. Accepted types: PDF, DOCX, TXT",
-          stepName = name
-        )
-      )
-
-    // For DOCX, verify it's actually a DOCX and not just any ZIP
-    if detectedType.mimeType == "application/zip" && !isDocx(input.fileName) then
-      return Left(
-        StepError.ValidationError(
-          message = "Only DOCX files are accepted for ZIP-based documents. Please upload a .docx file.",
-          stepName = name
-        )
-      )
-
     logger.info(
       s"[${ctx.runId}] Validated file: ${input.fileName} (${detectedType.name}, ${bytes.length} bytes)"
     )
@@ -135,29 +111,33 @@ final class FileValidator(config: ResumeConfig) extends BaseStep[FileValidatorIn
   /**
    * Detect file type from magic bytes using BoogieLoops Kit MagicNumber.
    *
-   * Falls back to extension-based detection for plain text files which have no magic bytes.
+   * Falls back to extension-based detection for text-based formats which have no magic bytes.
    */
   private def detectFileType(bytes: Array[Byte], fileName: String): DetectedFileType = {
     // Use MagicNumber for detection (needs at least HeaderLength bytes)
     val header = bytes.take(MagicNumber.HeaderLength)
+    val ext = fileName.toLowerCase.split('.').lastOption.getOrElse("")
 
     MagicNumber.detect(header) match
       case Some(sig) =>
-        DetectedFileType(sig.name, sig.mimeType)
+        // For ZIP-based formats, check extension to distinguish DOCX/ODT/etc.
+        if sig.mimeType == "application/zip" then
+          ext match
+            case "docx" => DetectedFileType("Word Document (DOCX)", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            case "odt" => DetectedFileType("OpenDocument Text", "application/vnd.oasis.opendocument.text")
+            case "epub" => DetectedFileType("EPUB", "application/epub+zip")
+            case _ => DetectedFileType(sig.name, sig.mimeType)
+        else
+          DetectedFileType(sig.name, sig.mimeType)
       case None =>
-        // Fall back to extension-based detection for text files (no magic bytes)
-        val ext = fileName.toLowerCase.split('.').lastOption.getOrElse("")
+        // Fall back to extension-based detection for text-based formats (no magic bytes)
         ext match
           case "txt" | "text" => DetectedFileType("Plain Text", "text/plain")
-          case "md" => DetectedFileType("Markdown", "text/plain")
+          case "md" | "markdown" => DetectedFileType("Markdown", "text/markdown")
+          case "rtf" => DetectedFileType("Rich Text Format", "application/rtf")
+          case "html" | "htm" => DetectedFileType("HTML", "text/html")
+          case "json" => DetectedFileType("JSON", "application/json")
           case _ => DetectedFileType("Unknown", "application/octet-stream")
-  }
-
-  /**
-   * Check if the file name indicates a DOCX file.
-   */
-  private def isDocx(fileName: String): Boolean = {
-    fileName.toLowerCase.endsWith(".docx")
   }
 
 object FileValidator:

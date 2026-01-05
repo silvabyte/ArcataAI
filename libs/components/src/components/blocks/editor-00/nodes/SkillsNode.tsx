@@ -259,9 +259,9 @@ function SkillsNodeComponent({
   }
 
   // Display mode
-  const hasContent = data.categories.some(
-    (cat) => cat.name !== "" || cat.skills.length > 0
-  );
+  const hasContent =
+    data?.categories?.some((cat) => cat.name !== "" || cat.skills.length > 0) ??
+    false;
 
   return (
     <button

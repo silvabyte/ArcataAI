@@ -199,7 +199,10 @@ function ExperienceEntryEditor({
           </span>
           <div className="mt-1 space-y-2">
             {entry.highlights.map((highlight, index) => (
-              <div className="flex items-center gap-2" key={highlight}>
+              <div
+                className="flex items-center gap-2"
+                key={`${highlight}-${index}`}
+              >
                 <span className="flex-1 text-gray-700 text-sm">
                   {highlight}
                 </span>
@@ -366,7 +369,7 @@ function ExperienceNodeComponent({
           {data.map((entry, index) => (
             <ExperienceEntryEditor
               entry={entry}
-              key={entry.id}
+              key={entry.id || `entry-${index}`}
               onChange={(e) => handleEntryChange(index, e)}
               onDelete={() => handleDeleteEntry(index)}
             />
@@ -396,8 +399,8 @@ function ExperienceNodeComponent({
       </h3>
       {data.length > 0 ? (
         <div className="space-y-6">
-          {data.map((entry) => (
-            <div className="relative pl-4" key={entry.id}>
+          {data.map((entry, index) => (
+            <div className="relative pl-4" key={entry.id || `entry-${index}`}>
               {/* Timeline line */}
               <div className="absolute top-0 bottom-0 left-0 w-px bg-gray-200 group-hover:bg-gray-300" />
 
@@ -422,8 +425,8 @@ function ExperienceNodeComponent({
 
               {entry.highlights.length > 0 && (
                 <ul className="mt-3 list-disc space-y-1.5 pl-4 text-gray-600 text-sm leading-relaxed">
-                  {entry.highlights.map((highlight) => (
-                    <li key={highlight}>{highlight}</li>
+                  {entry.highlights.map((highlight, index) => (
+                    <li key={`${highlight}-${index}`}>{highlight}</li>
                   ))}
                 </ul>
               )}

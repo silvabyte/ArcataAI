@@ -20,8 +20,8 @@ RUN chmod +x mill && ./mill api.assembly
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
 
-# Install curl for healthchecks
-RUN apk add --no-cache curl
+# Install curl for healthchecks, pandoc for DOC/DOCX/RTF text extraction
+RUN apk add --no-cache curl pandoc
 
 WORKDIR /app
 
