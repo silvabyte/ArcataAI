@@ -39,7 +39,7 @@ object api extends ScalaModule with ScalafmtModule {
     // PDF text extraction
     ivy"org.apache.pdfbox:pdfbox:3.0.4",
     // DOCX text extraction
-    ivy"org.apache.poi:poi-ooxml:5.3.0"
+    ivy"org.apache.poi:poi-ooxml:5.3.0".exclude(("org.apache.logging.log4j", "log4j-api"))
   )
 
   def scalacOptions = Seq(
