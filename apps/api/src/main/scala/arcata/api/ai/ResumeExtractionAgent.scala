@@ -34,6 +34,11 @@ IMPORTANT - Field naming conventions (must match exactly):
 - Experience entries: id, company, title, location, startDate, endDate, current, highlights
 - Education entries: id, institution, degree, field, location, startDate, endDate, current, gpa, honors, coursework
 - Skills: categories array, each with id, name, and skills array
+- Projects entries: id, name, description, url, startDate, endDate, current, technologies, highlights
+- Certifications entries: id, name, issuer, issueDate, expirationDate, credentialId, credentialUrl, noExpiration
+- Languages: entries array, each with id, language, and proficiency (native/fluent/advanced/intermediate/beginner)
+- Volunteer entries: id, organization, role, location, startDate, endDate, current, highlights
+- Awards entries: id, title, issuer, date, description
 
 Guidelines:
 - Extract contact information: name (full name), email, phone, location, linkedIn URL, github URL, portfolio URL
@@ -41,16 +46,23 @@ Guidelines:
 - Parse work experience entries with company, title, dates, location, and bullet points (highlights array)
 - Extract education with institution, degree, field (major), dates, GPA, and honors (as single string)
 - Organize skills into categories (e.g., "Programming Languages", "Frameworks", "Tools")
-- Extract projects with name, description, technologies, and URLs
-- Parse certifications with name, issuer, dates, and credential IDs
-- List languages spoken if mentioned
+- Extract projects with name, description, technologies array, URL, dates, and highlights array for key features/accomplishments
+- Parse certifications with name, issuer, issue date, expiration date, credential ID, and verification URL
+- Extract languages with proficiency levels (native, fluent, advanced, intermediate, beginner)
+- Extract volunteer experience with organization, role, location, dates, and highlights
+- Extract awards/honors with title, issuing organization, date, and description
+
+CRITICAL - Projects Section:
+- Look for sections titled "Projects", "Personal Projects", "Side Projects", "Open Source", etc.
+- Each project should have a name, description, and technologies used
+- Include highlights array for key accomplishments or features of each project
 
 CRITICAL - Custom Sections:
 - If the resume contains sections that don't fit standard categories (e.g., "Publications", 
-  "Awards", "Volunteer Work", "Speaking Engagements", "Patents", "Interests"), 
-  extract them as customSections with the section title and content.
-- NEVER discard or ignore any content. Every piece of information must be captured either
-  in a standard field or in customSections.
+  "Speaking Engagements", "Patents", "Interests"), extract them as customSections.
+- Awards should go in the awards field, NOT customSections
+- Volunteer work should go in the volunteer field, NOT customSections
+- NEVER discard or ignore any content. Every piece of information must be captured.
 
 Date formats:
 - Output dates as they appear in the resume (normalization happens later)
