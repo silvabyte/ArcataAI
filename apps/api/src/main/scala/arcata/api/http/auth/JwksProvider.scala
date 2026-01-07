@@ -37,7 +37,14 @@ class JwksProvider(jwksUrl: String) extends Logging:
 
   logger.info(s"JwksProvider initialized with URL: $jwksUrl")
 
-  /** Fetch keys and find the one matching the given kid. */
+  /**
+   * Fetch keys and find the one matching the given kid.
+   *
+   * @param kid
+   *   The key ID from the JWT header to look up
+   * @return
+   *   The matching EC public key, or an error if not found or fetch failed
+   */
   def getKey(kid: String): Either[JwksError, ECPublicKey] = {
     fetchKeys().flatMap {
       keys =>
@@ -52,7 +59,12 @@ class JwksProvider(jwksUrl: String) extends Logging:
     }
   }
 
-  /** Fetch all keys from the JWKS endpoint. */
+  /**
+   * Fetch all keys from the JWKS endpoint.
+   *
+   * @return
+   *   Sequence of JWK keys, or an error if fetch or parsing failed
+   */
   def fetchKeys(): Either[JwksError, Seq[JwkKey]] = {
     logger.debug(s"Fetching JWKS from: $jwksUrl")
     Try(requests.get(jwksUrl, readTimeout = 5000, connectTimeout = 5000)) match
@@ -102,8 +114,23 @@ class JwksProvider(jwksUrl: String) extends Logging:
   }
 
 object JwksProvider:
+  /**
+   * Create a new JwksProvider with the given JWKS URL.
+   *
+   * @param jwksUrl
+   *   The URL to fetch JWKS from (e.g., https://project.supabase.co/auth/v1/.well-known/jwks.json)
+   * @return
+   *   A configured JwksProvider instance
+   */
   def apply(jwksUrl: String): JwksProvider = new JwksProvider(jwksUrl)
 
-  /** Derive JWKS URL from Supabase project URL. */
+  /**
+   * Derive JWKS URL from Supabase project URL.
+   *
+   * @param supabaseUrl
+   *   The Supabase project URL (e.g., https://project.supabase.co)
+   * @return
+   *   The full JWKS endpoint URL
+   */
   def jwksUrlFor(supabaseUrl: String): String =
     s"$supabaseUrl/auth/v1/.well-known/jwks.json"

@@ -76,8 +76,22 @@ trait BaseStep[I, O] extends Logging:
         self.run(input, ctx).flatMap(next.run(_, ctx))
   }
 
+/** Factory methods for creating BaseStep instances. */
 object BaseStep:
-  /** Create a simple step from a function. */
+  /**
+   * Create a simple step from a function.
+   *
+   * @tparam I
+   *   Input type for the step
+   * @tparam O
+   *   Output type for the step
+   * @param stepName
+   *   Name for logging and error reporting
+   * @param f
+   *   The step logic as a function from (input, context) to Either[StepError, output]
+   * @return
+   *   A configured BaseStep instance
+   */
   def apply[I, O](
     stepName: String
   )(f: (I, PipelineContext) => Either[StepError, O]): BaseStep[I, O] = {
@@ -86,10 +100,32 @@ object BaseStep:
       def execute(input: I, ctx: PipelineContext): Either[StepError, O] = f(input, ctx)
   }
 
-  /** Create a step that always succeeds with the input unchanged (identity step). */
+  /**
+   * Create a step that always succeeds with the input unchanged (identity step).
+   *
+   * @tparam A
+   *   The input/output type
+   * @param stepName
+   *   Name for logging and error reporting
+   * @return
+   *   A pass-through step that returns its input unchanged
+   */
   def identity[A](stepName: String): BaseStep[A, A] =
     apply(stepName)((input, _) => Right(input))
 
-  /** Create a step that always fails with the given error. */
+  /**
+   * Create a step that always fails with the given error.
+   *
+   * @tparam I
+   *   Input type for the step
+   * @tparam O
+   *   Output type for the step
+   * @param stepName
+   *   Name for logging and error reporting
+   * @param error
+   *   The error to return
+   * @return
+   *   A step that always fails with the specified error
+   */
   def fail[I, O](stepName: String, error: StepError): BaseStep[I, O] =
     apply(stepName)((_, _) => Left(error))
