@@ -12,7 +12,7 @@ object DomainModelsSuite extends TestSuite:
           companyName = Some("Acme Corp"),
           companyDomain = Some("acme.com"),
           industry = Some("Technology"),
-          companySize = Some("medium")
+          companySize = Some("medium"),
         )
 
         val json = write(company)
@@ -47,7 +47,7 @@ object DomainModelsSuite extends TestSuite:
           title = "Software Engineer",
           description = Some("Build great things"),
           location = Some("Remote"),
-          qualifications = Some(Seq("Scala", "TypeScript"))
+          qualifications = Some(Seq("Scala", "TypeScript")),
         )
 
         val json = write(job)
@@ -82,7 +82,7 @@ object DomainModelsSuite extends TestSuite:
           title = "Senior Developer",
           companyName = Some("Tech Corp"),
           qualifications = Some(List("Python", "Go")),
-          responsibilities = Some(List("Lead team", "Write code"))
+          responsibilities = Some(List("Lead team", "Write code")),
         )
 
         val json = write(data)
@@ -107,7 +107,7 @@ object DomainModelsSuite extends TestSuite:
           jobId = 456L,
           profileId = "user-123",
           source = "manual",
-          status = Some("new")
+          status = Some("new"),
         )
 
         val json = write(entry)
@@ -124,7 +124,7 @@ object DomainModelsSuite extends TestSuite:
           jobId = Some(456L),
           profileId = "user-123",
           statusOrder = 5,
-          notes = Some("Great opportunity")
+          notes = Some("Great opportunity"),
         )
 
         val json = write(app)

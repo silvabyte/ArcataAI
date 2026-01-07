@@ -36,11 +36,11 @@ object JwtValidatorSuite extends TestSuite:
 
   // Helper to create a valid ES256 JWT
   private def createToken(
-      sub: String = "user-123",
-      email: Option[String] = Some("test@example.com"),
-      role: String = "authenticated",
-      expiresIn: Long = 3600000,
-      kid: String = testKid
+    sub: String = "user-123",
+    email: Option[String] = Some("test@example.com"),
+    role: String = "authenticated",
+    expiresIn: Long = 3600000,
+    kid: String = testKid,
   ): String = {
     val algorithm = Algorithm.ECDSA256(testPublicKey, testPrivateKey)
     val now = System.currentTimeMillis()

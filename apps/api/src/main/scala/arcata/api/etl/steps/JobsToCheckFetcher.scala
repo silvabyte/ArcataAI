@@ -13,8 +13,8 @@ import arcata.api.etl.framework.*
  *   Only include jobs not checked in this many days (or never checked)
  */
 case class JobsToCheckInput(
-    batchSize: Int = 100,
-    olderThanDays: Int = 7
+  batchSize: Int = 100,
+  olderThanDays: Int = 7,
 )
 
 /**
@@ -24,7 +24,7 @@ case class JobsToCheckInput(
  *   Sequence of jobs that need status checking
  */
 case class JobsToCheckOutput(
-    jobs: Seq[Job]
+  jobs: Seq[Job]
 )
 
 /**
@@ -43,8 +43,8 @@ class JobsToCheckFetcher(supabaseClient: SupabaseClient) extends BaseStep[JobsTo
   val name = "JobsToCheckFetcher"
 
   override def execute(
-      input: JobsToCheckInput,
-      ctx: PipelineContext
+    input: JobsToCheckInput,
+    ctx: PipelineContext,
   ): Either[StepError, JobsToCheckOutput] = {
     val jobs = supabaseClient.findJobsToCheck(input.batchSize, input.olderThanDays)
     logger.info(s"[${ctx.runId}] Found ${jobs.size} jobs to check")

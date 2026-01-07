@@ -5,8 +5,9 @@ import utest.*
 object BasePipelineSuite extends TestSuite:
   val tests = Tests {
     test("fromStep creates pipeline from step") {
-      val step = BaseStep("addTen") { (input: Int, _: PipelineContext) =>
-        Right(input + 10)
+      val step = BaseStep("addTen") {
+        (input: Int, _: PipelineContext) =>
+          Right(input + 10)
       }
       val pipeline = BasePipeline.fromStep("AddTenPipeline", step)
 
@@ -31,9 +32,10 @@ object BasePipelineSuite extends TestSuite:
     }
 
     test("pipeline tracks duration") {
-      val step = BaseStep("sleep") { (_: Unit, _: PipelineContext) =>
-        Thread.sleep(10)
-        Right("done")
+      val step = BaseStep("sleep") {
+        (_: Unit, _: PipelineContext) =>
+          Thread.sleep(10)
+          Right("done")
       }
       val pipeline = BasePipeline.fromStep("SleepPipeline", step)
 
@@ -66,8 +68,9 @@ object BasePipelineSuite extends TestSuite:
     }
 
     test("runWithContext uses provided context") {
-      val step = BaseStep("checkContext") { (_: Unit, ctx: PipelineContext) =>
-        Right(ctx.runId)
+      val step = BaseStep("checkContext") {
+        (_: Unit, ctx: PipelineContext) =>
+          Right(ctx.runId)
       }
       val pipeline = BasePipeline.fromStep("ContextPipeline", step)
       val ctx = PipelineContext.withRunId("custom-run-123", "profile")

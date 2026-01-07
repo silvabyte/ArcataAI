@@ -15,20 +15,34 @@ import arcata.api.config.ConfigError
  */
 object AuthConfig:
 
-  /** JWKS provider for fetching Supabase public keys. */
+  /**
+   * JWKS provider for fetching Supabase public keys.
+   *
+   * Initialized lazily from SUPABASE_URL environment variable. Throws ConfigError if the
+   * environment variable is not set.
+   */
   private lazy val jwksProvider: JwksProvider = {
     val supabaseUrl = sys.env.getOrElse(
       "SUPABASE_URL",
-      throw ConfigError("Required environment variable 'SUPABASE_URL' is not set") // scalafix:ok DisableSyntax.throw
+      throw ConfigError("Required environment variable 'SUPABASE_URL' is not set"), // scalafix:ok DisableSyntax.throw
 
     )
     JwksProvider(JwksProvider.jwksUrlFor(supabaseUrl))
   }
 
-  /** JWT validator for user authentication via Supabase tokens. */
+  /**
+   * JWT validator for user authentication via Supabase tokens.
+   *
+   * Uses the JWKS provider to validate ES256-signed JWTs from Supabase Auth.
+   */
   lazy val jwtValidator: JwtValidator = JwtValidator(jwksProvider)
 
-  /** Valid API keys for service-to-service authentication. */
+  /**
+   * Valid API keys for service-to-service authentication.
+   *
+   * Loaded from the API_KEYS environment variable as a comma-separated list. Empty set if not
+   * configured.
+   */
   lazy val validApiKeys: Set[String] = {
     sys.env
       .get("API_KEYS")
@@ -36,5 +50,10 @@ object AuthConfig:
       .getOrElse(Set.empty)
   }
 
-  /** Check if API key authentication is configured. */
+  /**
+   * Check if API key authentication is configured.
+   *
+   * @return
+   *   true if at least one API key is configured, false otherwise
+   */
   def apiKeysConfigured: Boolean = validApiKeys.nonEmpty

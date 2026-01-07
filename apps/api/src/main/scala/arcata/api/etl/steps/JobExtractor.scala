@@ -8,17 +8,17 @@ import arcata.api.extraction.{CompletionScorer, CompletionState}
 
 /** Input for the JobExtractor step. */
 final case class JobExtractorInput(
-    content: String,
-    url: String,
-    objectId: Option[String]
+  content: String,
+  url: String,
+  objectId: Option[String],
 )
 
 /** Output from the JobExtractor step. */
 final case class JobExtractorOutput(
-    extractedData: ExtractedJobData,
-    url: String,
-    objectId: Option[String],
-    completionState: CompletionState
+  extractedData: ExtractedJobData,
+  url: String,
+  objectId: Option[String],
+  completionState: CompletionState,
 )
 
 /**
@@ -41,8 +41,8 @@ final class JobExtractor(aiConfig: AIConfig) extends BaseStep[JobExtractorInput,
   private val extractionAgent = JobExtractionAgent(aiConfig)
 
   override def execute(
-      input: JobExtractorInput,
-      ctx: PipelineContext
+    input: JobExtractorInput,
+    ctx: PipelineContext,
   ): Either[StepError, JobExtractorOutput] = {
     logger.info(s"[${ctx.runId}] Extracting job data from: ${input.url}")
     logger.debug(s"[${ctx.runId}] Content length: ${input.content.length} chars")
@@ -58,7 +58,7 @@ final class JobExtractor(aiConfig: AIConfig) extends BaseStep[JobExtractorInput,
             extractedData = extractedData,
             url = input.url,
             objectId = input.objectId,
-            completionState = scoringResult.state
+            completionState = scoringResult.state,
           )
         )
 
@@ -69,7 +69,7 @@ final class JobExtractor(aiConfig: AIConfig) extends BaseStep[JobExtractorInput,
           StepError.TransformationError(
             message = s"AI extraction failed: $errorMessage",
             stepName = name,
-            cause = Some(new Exception(errorMessage))
+            cause = Some(new Exception(errorMessage)),
           )
         )
   }

@@ -16,9 +16,9 @@ import arcata.api.etl.framework.*
  *   ObjectStorage ID (passed through)
  */
 final case class ResumeDataNormalizerInput(
-    extractedData: ExtractedResumeData,
-    fileName: String,
-    objectId: String
+  extractedData: ExtractedResumeData,
+  fileName: String,
+  objectId: String,
 )
 
 /**
@@ -32,9 +32,9 @@ final case class ResumeDataNormalizerInput(
  *   ObjectStorage ID (passed through)
  */
 final case class ResumeDataNormalizerOutput(
-    normalizedData: ExtractedResumeData,
-    fileName: String,
-    objectId: String
+  normalizedData: ExtractedResumeData,
+  fileName: String,
+  objectId: String,
 )
 
 /**
@@ -77,12 +77,12 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
     "sep" -> "09",
     "oct" -> "10",
     "nov" -> "11",
-    "dec" -> "12"
+    "dec" -> "12",
   )
 
   override def execute(
-      input: ResumeDataNormalizerInput,
-      ctx: PipelineContext
+    input: ResumeDataNormalizerInput,
+    ctx: PipelineContext,
   ): Either[StepError, ResumeDataNormalizerOutput] = {
     logger.info(s"[${ctx.runId}] Normalizing resume data from ${input.fileName}")
 
@@ -94,7 +94,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       ResumeDataNormalizerOutput(
         normalizedData = normalized,
         fileName = input.fileName,
-        objectId = input.objectId
+        objectId = input.objectId,
       )
     )
   }
@@ -108,8 +108,10 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       skills = data.skills.map(normalizeSkillsData),
       projects = data.projects.map(normalizeProjectList),
       certifications = data.certifications.map(normalizeCertificationList),
-      languages = data.languages.map(normalizeStringList),
-      customSections = data.customSections.map(normalizeCustomSectionList)
+      languages = data.languages.map(normalizeLanguagesData),
+      volunteer = data.volunteer.map(normalizeVolunteerList),
+      awards = data.awards.map(normalizeAwardList),
+      customSections = data.customSections.map(normalizeCustomSectionList),
     )
   }
 
@@ -121,14 +123,14 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       location = contact.location.map(_.trim).filter(_.nonEmpty),
       linkedIn = contact.linkedIn.map(normalizeUrl).filter(_.nonEmpty),
       github = contact.github.map(normalizeUrl).filter(_.nonEmpty),
-      portfolio = contact.portfolio.map(normalizeUrl).filter(_.nonEmpty)
+      portfolio = contact.portfolio.map(normalizeUrl).filter(_.nonEmpty),
     )
   }
 
   private def normalizeSummary(summary: SummaryInfo): SummaryInfo = {
     summary.copy(
       headline = summary.headline.map(_.trim).filter(_.nonEmpty),
-      summary = summary.summary.map(_.trim).filter(_.nonEmpty)
+      summary = summary.summary.map(_.trim).filter(_.nonEmpty),
     )
   }
 
@@ -150,7 +152,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       startDate = exp.startDate.flatMap(normalizeDate),
       endDate = if isCurrent then Some("") else normalizedEndDate.flatMap(normalizeDate),
       current = Some(isCurrent),
-      highlights = exp.highlights.map(normalizeStringList)
+      highlights = exp.highlights.map(normalizeStringList),
     )
   }
 
@@ -175,16 +177,17 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
       current = Some(isCurrent),
       gpa = edu.gpa.map(_.trim).filter(_.nonEmpty),
       honors = edu.honors.map(_.trim).filter(_.nonEmpty),
-      coursework = edu.coursework.map(normalizeStringList)
+      coursework = edu.coursework.map(normalizeStringList),
     )
   }
 
   private def normalizeSkillsData(skills: SkillsData): SkillsData = {
     skills.copy(
-      categories = skills.categories.map(cats =>
-        cats
-          .map(normalizeSkillCategory)
-          .filter(cat => cat.name.exists(_.nonEmpty) || cat.skills.exists(_.nonEmpty))
+      categories = skills.categories.map(
+        cats =>
+          cats
+            .map(normalizeSkillCategory)
+            .filter(cat => cat.name.exists(_.nonEmpty) || cat.skills.exists(_.nonEmpty))
       )
     )
   }
@@ -193,7 +196,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
     cat.copy(
       id = cat.id.filter(_.nonEmpty).orElse(Some(UUID.randomUUID().toString)),
       name = cat.name.map(_.trim).filter(_.nonEmpty),
-      skills = cat.skills.map(skills => skills.map(_.trim).filter(_.nonEmpty).distinct)
+      skills = cat.skills.map(skills => skills.map(_.trim).filter(_.nonEmpty).distinct),
     )
   }
 
@@ -204,13 +207,19 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
   }
 
   private def normalizeProject(proj: Project): Project = {
+    val normalizedEndDate = proj.endDate.map(_.trim).filter(_.nonEmpty)
+    val isCurrent = normalizedEndDate.exists(d => d.equalsIgnoreCase("present") || d.equalsIgnoreCase("current"))
+
     proj.copy(
+      id = proj.id.filter(_.nonEmpty).orElse(Some(UUID.randomUUID().toString)),
       name = proj.name.map(_.trim).filter(_.nonEmpty),
       description = proj.description.map(_.trim).filter(_.nonEmpty),
-      technologies = proj.technologies.map(normalizeStringList),
       url = proj.url.map(normalizeUrl).filter(_.nonEmpty),
       startDate = proj.startDate.flatMap(normalizeDate),
-      endDate = proj.endDate.flatMap(normalizeDate)
+      endDate = if isCurrent then Some("") else normalizedEndDate.flatMap(normalizeDate),
+      current = Some(isCurrent),
+      technologies = proj.technologies.map(normalizeStringList),
+      highlights = proj.highlights.map(normalizeStringList),
     )
   }
 
@@ -221,13 +230,91 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
   }
 
   private def normalizeCertification(cert: Certification): Certification = {
+    val normalizedExpDate = cert.expirationDate.map(_.trim).filter(_.nonEmpty)
+    val hasNoExpiration = normalizedExpDate.exists(
+      d =>
+        d.equalsIgnoreCase("none") || d.equalsIgnoreCase("no expiration") || d.equalsIgnoreCase("n/a")
+    ) || cert.noExpiration.getOrElse(false)
+
     cert.copy(
+      id = cert.id.filter(_.nonEmpty).orElse(Some(UUID.randomUUID().toString)),
       name = cert.name.map(_.trim).filter(_.nonEmpty),
       issuer = cert.issuer.map(_.trim).filter(_.nonEmpty),
-      dateObtained = cert.dateObtained.map(_.trim).filter(_.nonEmpty),
-      expirationDate = cert.expirationDate.map(_.trim).filter(_.nonEmpty),
+      issueDate = cert.issueDate.flatMap(normalizeDate),
+      expirationDate = if hasNoExpiration then Some("") else normalizedExpDate.flatMap(normalizeDate),
       credentialId = cert.credentialId.map(_.trim).filter(_.nonEmpty),
-      url = cert.url.map(normalizeUrl).filter(_.nonEmpty)
+      credentialUrl = cert.credentialUrl.map(normalizeUrl).filter(_.nonEmpty),
+      noExpiration = Some(hasNoExpiration),
+    )
+  }
+
+  private def normalizeLanguagesData(languages: LanguagesData): LanguagesData = {
+    languages.copy(
+      entries = languages.entries.map(
+        entries =>
+          entries
+            .map(normalizeLanguageEntry)
+            .filter(entry => entry.language.exists(_.nonEmpty))
+      )
+    )
+  }
+
+  private def normalizeLanguageEntry(entry: LanguageEntry): LanguageEntry = {
+    entry.copy(
+      id = entry.id.filter(_.nonEmpty).orElse(Some(UUID.randomUUID().toString)),
+      language = entry.language.map(_.trim).filter(_.nonEmpty),
+      proficiency = entry.proficiency.map(normalizeProficiency),
+    )
+  }
+
+  /**
+   * Normalize proficiency level to match frontend enum values.
+   */
+  private def normalizeProficiency(proficiency: String): String = {
+    proficiency.trim.toLowerCase match
+      case "native" | "native speaker" | "mother tongue" => "native"
+      case "fluent" | "professional" | "full professional" => "fluent"
+      case "advanced" | "professional working" => "advanced"
+      case "intermediate" | "limited working" => "intermediate"
+      case "beginner" | "elementary" | "basic" => "beginner"
+      case other => other // Pass through unknown values
+  }
+
+  private def normalizeVolunteerList(volunteer: List[VolunteerExperience]): List[VolunteerExperience] = {
+    volunteer
+      .map(normalizeVolunteer)
+      .filter(v => v.organization.exists(_.nonEmpty) || v.role.exists(_.nonEmpty))
+  }
+
+  private def normalizeVolunteer(vol: VolunteerExperience): VolunteerExperience = {
+    val normalizedEndDate = vol.endDate.map(_.trim).filter(_.nonEmpty)
+    val isCurrent = normalizedEndDate.exists(d => d.equalsIgnoreCase("present") || d.equalsIgnoreCase("current"))
+
+    vol.copy(
+      id = vol.id.filter(_.nonEmpty).orElse(Some(UUID.randomUUID().toString)),
+      organization = vol.organization.map(_.trim).filter(_.nonEmpty),
+      role = vol.role.map(_.trim).filter(_.nonEmpty),
+      location = vol.location.map(_.trim).filter(_.nonEmpty),
+      startDate = vol.startDate.flatMap(normalizeDate),
+      endDate = if isCurrent then Some("") else normalizedEndDate.flatMap(normalizeDate),
+      current = Some(isCurrent),
+      highlights = vol.highlights.map(normalizeStringList),
+    )
+  }
+
+  private def normalizeAwardList(awards: List[Award]): List[Award] = {
+    awards
+      .map(normalizeAward)
+      .filter(award => award.title.exists(_.nonEmpty))
+  }
+
+  private def normalizeAward(award: Award): Award = {
+    award.copy(
+      id = award.id.filter(_.nonEmpty).orElse(Some(UUID.randomUUID().toString)),
+      title = award.title.map(_.trim).filter(_.nonEmpty),
+      issuer = award.issuer.map(_.trim).filter(_.nonEmpty),
+      date = award.date.flatMap(normalizeDate),
+      description = award.description.map(_.trim).filter(_.nonEmpty),
     )
   }
 
@@ -241,7 +328,7 @@ object ResumeDataNormalizer extends BaseStep[ResumeDataNormalizerInput, ResumeDa
     section.copy(
       title = section.title.trim,
       content = section.content.map(_.trim).filter(_.nonEmpty),
-      items = section.items.map(normalizeStringList)
+      items = section.items.map(normalizeStringList),
     )
   }
 

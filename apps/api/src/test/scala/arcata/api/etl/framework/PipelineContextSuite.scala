@@ -33,7 +33,7 @@ object PipelineContextSuite extends TestSuite:
         .create("profile-1")
         .withMetadataEntries(
           "key1" -> "value1",
-          "key2" -> "value2"
+          "key2" -> "value2",
         )
 
       assert(ctx.getMetadata("key1") == Some("value1"))

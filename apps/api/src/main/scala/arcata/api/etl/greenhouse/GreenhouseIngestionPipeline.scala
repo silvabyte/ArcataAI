@@ -7,17 +7,17 @@ import arcata.api.etl.steps.*
 
 /** Input for the GreenhouseIngestionPipeline. */
 final case class GreenhouseIngestionInput(
-    apiUrl: String,
-    sourceUrl: String,
-    companyId: Option[Long],
-    profileId: String,
-    source: String
+  apiUrl: String,
+  sourceUrl: String,
+  companyId: Option[Long],
+  profileId: String,
+  source: String,
 )
 
 /** Output from the GreenhouseIngestionPipeline. */
 final case class GreenhouseIngestionOutput(
-    job: Job,
-    streamEntry: Option[JobStreamEntry]
+  job: Job,
+  streamEntry: Option[JobStreamEntry],
 )
 
 /**
@@ -43,8 +43,8 @@ final case class GreenhouseIngestionOutput(
  *   - CompanyResolver (company already known from discovery)
  */
 final class GreenhouseIngestionPipeline(
-    supabaseClient: SupabaseClient,
-    progressEmitter: ProgressEmitter = ProgressEmitter.noop
+  supabaseClient: SupabaseClient,
+  progressEmitter: ProgressEmitter = ProgressEmitter.noop,
 ) extends BasePipeline[GreenhouseIngestionInput, GreenhouseIngestionOutput]:
 
   val name = "GreenhouseIngestionPipeline"
@@ -57,8 +57,8 @@ final class GreenhouseIngestionPipeline(
   private val streamLoader = StreamLoader(supabaseClient)
 
   override def execute(
-      input: GreenhouseIngestionInput,
-      ctx: PipelineContext
+    input: GreenhouseIngestionInput,
+    ctx: PipelineContext,
   ): Either[StepError, GreenhouseIngestionOutput] = {
     // Step 0: Check if job already exists
     progressEmitter.emit(0, 1, "checking", "Looking up job...")
@@ -79,9 +79,9 @@ final class GreenhouseIngestionPipeline(
   }
 
   private def handleExistingJob(
-      job: Job,
-      input: GreenhouseIngestionInput,
-      ctx: PipelineContext
+    job: Job,
+    input: GreenhouseIngestionInput,
+    ctx: PipelineContext,
   ): Either[StepError, GreenhouseIngestionOutput] = {
     val totalSteps = 2
 
@@ -92,14 +92,15 @@ final class GreenhouseIngestionPipeline(
       StreamLoaderInput(
         job = job,
         profileId = input.profileId,
-        source = input.source
+        source = input.source,
       ),
-      ctx
-    ).map { streamOutput =>
-      GreenhouseIngestionOutput(
-        job = job,
-        streamEntry = Some(streamOutput.streamEntry)
-      )
+      ctx,
+    ).map {
+      streamOutput =>
+        GreenhouseIngestionOutput(
+          job = job,
+          streamEntry = Some(streamOutput.streamEntry),
+        )
     }
 
     result.foreach(_ => progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added"))
@@ -107,8 +108,8 @@ final class GreenhouseIngestionPipeline(
   }
 
   private def handleNewJob(
-      input: GreenhouseIngestionInput,
-      ctx: PipelineContext
+    input: GreenhouseIngestionInput,
+    ctx: PipelineContext,
   ): Either[StepError, GreenhouseIngestionOutput] = {
     val totalSteps = 5
 
@@ -120,9 +121,9 @@ final class GreenhouseIngestionPipeline(
         GreenhouseJobFetcherInput(
           apiUrl = input.apiUrl,
           sourceUrl = input.sourceUrl,
-          companyId = input.companyId
+          companyId = input.companyId,
         ),
-        ctx
+        ctx,
       )
 
       // Step 2: Parse JSON to ExtractedJobData
@@ -133,9 +134,9 @@ final class GreenhouseIngestionPipeline(
             json = fetcherOutput.json,
             apiUrl = fetcherOutput.apiUrl,
             sourceUrl = fetcherOutput.sourceUrl,
-            companyId = fetcherOutput.companyId
+            companyId = fetcherOutput.companyId,
           ),
-          ctx
+          ctx,
         )
       }
 
@@ -147,9 +148,9 @@ final class GreenhouseIngestionPipeline(
             extracted = parserOutput.extracted,
             sourceUrl = parserOutput.sourceUrl,
             objectId = None,
-            completionState = parserOutput.completionState
+            completionState = parserOutput.completionState,
           ),
-          ctx
+          ctx,
         )
       }
 
@@ -165,9 +166,9 @@ final class GreenhouseIngestionPipeline(
             company = company,
             url = transformerOutput.sourceUrl,
             objectId = None,
-            completionState = Some(transformerOutput.completionState.toString)
+            completionState = Some(transformerOutput.completionState.toString),
           ),
-          ctx
+          ctx,
         )
       }
 
@@ -178,23 +179,23 @@ final class GreenhouseIngestionPipeline(
           StreamLoaderInput(
             job = jobOutput.job,
             profileId = input.profileId,
-            source = input.source
+            source = input.source,
           ),
-          ctx
+          ctx,
         )
       }
     yield {
       progressEmitter.emit(totalSteps, totalSteps, "complete", "Job added successfully")
       GreenhouseIngestionOutput(
         job = streamOutput.job,
-        streamEntry = Some(streamOutput.streamEntry)
+        streamEntry = Some(streamOutput.streamEntry),
       )
     }
   }
 
 object GreenhouseIngestionPipeline:
   def apply(
-      supabaseClient: SupabaseClient,
-      progressEmitter: ProgressEmitter = ProgressEmitter.noop
+    supabaseClient: SupabaseClient,
+    progressEmitter: ProgressEmitter = ProgressEmitter.noop,
   ): GreenhouseIngestionPipeline =
     new GreenhouseIngestionPipeline(supabaseClient, progressEmitter)

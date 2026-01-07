@@ -47,15 +47,20 @@ case class WorkflowRun[I](input: I, profileId: String)
  * @tparam O
  *   Output type for the workflow/pipeline
  */
-abstract class BaseWorkflow[I, O](using ac: castor.Context)
-    extends SimpleActor[WorkflowRun[I]]
-    with BasePipeline[I, O]
-    with Logging:
+abstract class BaseWorkflow[I, O](
+  using
+  ac: castor.Context
+) extends SimpleActor[WorkflowRun[I]]
+  with BasePipeline[I, O]
+  with Logging:
 
   /**
    * Called when pipeline completes successfully.
    *
    * Override to customize success handling (e.g., send notifications, update metrics).
+   *
+   * @param result
+   *   The successful pipeline result containing output and timing info
    */
   def onSuccess(result: PipelineResult[O]): Unit =
     logger.info(s"[$name] Workflow completed: runId=${result.runId}, duration=${result.durationMs}ms")
@@ -64,6 +69,9 @@ abstract class BaseWorkflow[I, O](using ac: castor.Context)
    * Called when pipeline fails.
    *
    * Override to customize failure handling (e.g., send alerts, retry logic).
+   *
+   * @param result
+   *   The failed pipeline result containing error details and timing info
    */
   def onFailure(result: PipelineResult[O]): Unit =
     logger.error(s"[$name] Workflow failed: runId=${result.runId}, error=${result.error.map(_.message)}")

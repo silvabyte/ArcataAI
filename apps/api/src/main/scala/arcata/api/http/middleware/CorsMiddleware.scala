@@ -7,10 +7,10 @@ import cask.model.Response
  * CORS configuration for the API.
  */
 final case class CorsConfig private (
-    allowedOrigins: List[String],
-    allowedMethods: String = "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-    allowedHeaders: String = "Content-Type, Authorization, X-Requested-With, X-API-Key",
-    maxAge: String = "86400"
+  allowedOrigins: List[String],
+  allowedMethods: String = "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+  allowedHeaders: String = "Content-Type, Authorization, X-Requested-With, X-API-Key",
+  maxAge: String = "86400",
 ):
   /** Check if an origin is allowed */
   def isAllowed(origin: String): Boolean =
@@ -24,8 +24,8 @@ final case class CorsConfig private (
       Map(
         "origin" -> origin,
         "allowed" -> allowed.toString,
-        "allowedOrigins" -> allowedOrigins.mkString(", ")
-      )
+        "allowedOrigins" -> allowedOrigins.mkString(", "),
+      ),
     )
     if allowed then
       Seq(
@@ -33,7 +33,7 @@ final case class CorsConfig private (
         "Access-Control-Allow-Methods" -> allowedMethods,
         "Access-Control-Allow-Headers" -> allowedHeaders,
         "Access-Control-Max-Age" -> maxAge,
-        "Access-Control-Allow-Credentials" -> "true"
+        "Access-Control-Allow-Credentials" -> "true",
       )
     else Seq.empty
   }
@@ -55,8 +55,8 @@ class CorsRoutes(config: CorsConfig) extends cask.Routes:
         "path" -> path,
         "origin" -> origin.getOrElse("(none)"),
         "allowed" -> origin.exists(config.isAllowed).toString,
-        "allowedOrigins" -> config.allowedOrigins.mkString(", ")
-      )
+        "allowedOrigins" -> config.allowedOrigins.mkString(", "),
+      ),
     )
     origin.filter(config.isAllowed) match
       case Some(o) => Response("", statusCode = 204, headers = config.headersFor(o))
@@ -92,14 +92,14 @@ class CorsRoutes(config: CorsConfig) extends cask.Routes:
 
 object CorsConfig:
   def apply(
-      allowedOrigins: List[String],
-      allowedMethods: String = "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-      allowedHeaders: String = "Content-Type, Authorization, X-Requested-With, X-API-Key",
-      maxAge: String = "86400"
+    allowedOrigins: List[String],
+    allowedMethods: String = "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+    allowedHeaders: String = "Content-Type, Authorization, X-Requested-With, X-API-Key",
+    maxAge: String = "86400",
   ): CorsConfig = {
     Log.info(
       "CORS config initialized",
-      Map("allowedOrigins" -> allowedOrigins.mkString(", "))
+      Map("allowedOrigins" -> allowedOrigins.mkString(", ")),
     )
     new CorsConfig(allowedOrigins, allowedMethods, allowedHeaders, maxAge)
   }

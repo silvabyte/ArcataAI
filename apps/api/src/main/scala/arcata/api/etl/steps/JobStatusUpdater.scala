@@ -10,7 +10,7 @@ import arcata.api.etl.framework.*
  *   Check results from JobStatusChecker
  */
 case class JobStatusUpdaterInput(
-    results: Seq[JobCheckResult]
+  results: Seq[JobCheckResult]
 )
 
 /**
@@ -24,9 +24,9 @@ case class JobStatusUpdaterInput(
  *   Number of jobs marked as closed
  */
 case class JobStatusUpdaterOutput(
-    updatedCount: Int,
-    failedCount: Int,
-    closedCount: Int
+  updatedCount: Int,
+  failedCount: Int,
+  closedCount: Int,
 )
 
 /**
@@ -46,8 +46,8 @@ class JobStatusUpdater(supabaseClient: SupabaseClient) extends BaseStep[JobStatu
   val name = "JobStatusUpdater"
 
   override def execute(
-      input: JobStatusUpdaterInput,
-      ctx: PipelineContext
+    input: JobStatusUpdaterInput,
+    ctx: PipelineContext,
   ): Either[StepError, JobStatusUpdaterOutput] = {
     // Process results and accumulate counts using fold (immutable)
     val (updatedCount, failedCount, closedCount) = input.results.foldLeft((0, 0, 0)) {

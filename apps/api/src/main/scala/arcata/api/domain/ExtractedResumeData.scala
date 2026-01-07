@@ -24,13 +24,13 @@ import upickle.default.*
  *   Personal website or portfolio URL
  */
 final case class ContactInfo(
-    name: Option[String] = None,
-    email: Option[String] = None,
-    phone: Option[String] = None,
-    location: Option[String] = None,
-    linkedIn: Option[String] = None,
-    github: Option[String] = None,
-    portfolio: Option[String] = None
+  name: Option[String] = None,
+  email: Option[String] = None,
+  phone: Option[String] = None,
+  location: Option[String] = None,
+  linkedIn: Option[String] = None,
+  github: Option[String] = None,
+  portfolio: Option[String] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -42,8 +42,8 @@ final case class ContactInfo(
  *   Professional summary or objective statement
  */
 final case class SummaryInfo(
-    headline: Option[String] = None,
-    summary: Option[String] = None
+  headline: Option[String] = None,
+  summary: Option[String] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -69,14 +69,14 @@ final case class SummaryInfo(
  *   Key accomplishments as bullet points
  */
 final case class WorkExperience(
-    id: Option[String] = None,
-    company: Option[String] = None,
-    title: Option[String] = None,
-    location: Option[String] = None,
-    startDate: Option[String] = None,
-    endDate: Option[String] = None,
-    current: Option[Boolean] = None,
-    highlights: Option[List[String]] = None
+  id: Option[String] = None,
+  company: Option[String] = None,
+  title: Option[String] = None,
+  location: Option[String] = None,
+  startDate: Option[String] = None,
+  endDate: Option[String] = None,
+  current: Option[Boolean] = None,
+  highlights: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -108,17 +108,17 @@ final case class WorkExperience(
  *   Relevant coursework
  */
 final case class Education(
-    id: Option[String] = None,
-    institution: Option[String] = None,
-    degree: Option[String] = None,
-    field: Option[String] = None,
-    location: Option[String] = None,
-    startDate: Option[String] = None,
-    endDate: Option[String] = None,
-    current: Option[Boolean] = None,
-    gpa: Option[String] = None,
-    honors: Option[String] = None,
-    coursework: Option[List[String]] = None
+  id: Option[String] = None,
+  institution: Option[String] = None,
+  degree: Option[String] = None,
+  field: Option[String] = None,
+  location: Option[String] = None,
+  startDate: Option[String] = None,
+  endDate: Option[String] = None,
+  current: Option[Boolean] = None,
+  gpa: Option[String] = None,
+  honors: Option[String] = None,
+  coursework: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -132,9 +132,9 @@ final case class Education(
  *   List of skills in this category
  */
 final case class SkillCategory(
-    id: Option[String] = None,
-    name: Option[String] = None,
-    skills: Option[List[String]] = None
+  id: Option[String] = None,
+  name: Option[String] = None,
+  skills: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -144,57 +144,161 @@ final case class SkillCategory(
  *   List of skill categories
  */
 final case class SkillsData(
-    categories: Option[List[SkillCategory]] = None
+  categories: Option[List[SkillCategory]] = None
 ) derives ReadWriter, Schematic
 
 /**
  * Project entry extracted from a resume.
  *
+ * Field names match the frontend Lexical ProjectsNode schema.
+ *
+ * @param id
+ *   Unique identifier for the entry
  * @param name
  *   Project name
  * @param description
  *   What the project does
- * @param technologies
- *   Technologies or tools used
  * @param url
  *   Link to project (GitHub, demo, etc.)
  * @param startDate
- *   When the project was started
+ *   Start date in YYYY-MM format
  * @param endDate
- *   When the project ended (if applicable)
+ *   End date in YYYY-MM format, or empty string if current
+ * @param current
+ *   Whether this is an ongoing project
+ * @param technologies
+ *   Technologies or tools used
+ * @param highlights
+ *   Key accomplishments or features as bullet points
  */
 final case class Project(
-    name: Option[String] = None,
-    description: Option[String] = None,
-    technologies: Option[List[String]] = None,
-    url: Option[String] = None,
-    startDate: Option[String] = None,
-    endDate: Option[String] = None
+  id: Option[String] = None,
+  name: Option[String] = None,
+  description: Option[String] = None,
+  url: Option[String] = None,
+  startDate: Option[String] = None,
+  endDate: Option[String] = None,
+  current: Option[Boolean] = None,
+  technologies: Option[List[String]] = None,
+  highlights: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
  * Certification or credential extracted from a resume.
  *
+ * Field names match the frontend Lexical CertificationsNode schema.
+ *
+ * @param id
+ *   Unique identifier for the entry
  * @param name
  *   Certification name
  * @param issuer
  *   Issuing organization
- * @param dateObtained
- *   When the certification was obtained
+ * @param issueDate
+ *   When the certification was obtained in YYYY-MM format
  * @param expirationDate
- *   Expiration date if applicable
+ *   Expiration date in YYYY-MM format if applicable
  * @param credentialId
  *   Credential ID if provided
- * @param url
+ * @param credentialUrl
  *   Verification URL
+ * @param noExpiration
+ *   Whether this credential does not expire
  */
 final case class Certification(
-    name: Option[String] = None,
-    issuer: Option[String] = None,
-    dateObtained: Option[String] = None,
-    expirationDate: Option[String] = None,
-    credentialId: Option[String] = None,
-    url: Option[String] = None
+  id: Option[String] = None,
+  name: Option[String] = None,
+  issuer: Option[String] = None,
+  issueDate: Option[String] = None,
+  expirationDate: Option[String] = None,
+  credentialId: Option[String] = None,
+  credentialUrl: Option[String] = None,
+  noExpiration: Option[Boolean] = None,
+) derives ReadWriter, Schematic
+
+/**
+ * Language entry with proficiency level.
+ *
+ * Field names match the frontend Lexical LanguagesNode schema.
+ *
+ * @param id
+ *   Unique identifier for the entry
+ * @param language
+ *   Name of the language
+ * @param proficiency
+ *   Proficiency level: native, fluent, advanced, intermediate, or beginner
+ */
+final case class LanguageEntry(
+  id: Option[String] = None,
+  language: Option[String] = None,
+  proficiency: Option[String] = None,
+) derives ReadWriter, Schematic
+
+/**
+ * Languages data with structured entries.
+ *
+ * @param entries
+ *   List of language entries with proficiency levels
+ */
+final case class LanguagesData(
+  entries: Option[List[LanguageEntry]] = None
+) derives ReadWriter, Schematic
+
+/**
+ * Volunteer experience entry extracted from a resume.
+ *
+ * Field names match the frontend Lexical VolunteerNode schema.
+ *
+ * @param id
+ *   Unique identifier for the entry
+ * @param organization
+ *   Organization or charity name
+ * @param role
+ *   Volunteer role or title
+ * @param location
+ *   Location of the organization
+ * @param startDate
+ *   Start date in YYYY-MM format
+ * @param endDate
+ *   End date in YYYY-MM format, or empty string if current
+ * @param current
+ *   Whether currently volunteering here
+ * @param highlights
+ *   Key contributions as bullet points
+ */
+final case class VolunteerExperience(
+  id: Option[String] = None,
+  organization: Option[String] = None,
+  role: Option[String] = None,
+  location: Option[String] = None,
+  startDate: Option[String] = None,
+  endDate: Option[String] = None,
+  current: Option[Boolean] = None,
+  highlights: Option[List[String]] = None,
+) derives ReadWriter, Schematic
+
+/**
+ * Award or honor entry extracted from a resume.
+ *
+ * Field names match the frontend Lexical AwardsNode schema.
+ *
+ * @param id
+ *   Unique identifier for the entry
+ * @param title
+ *   Award title or name
+ * @param issuer
+ *   Issuing organization
+ * @param date
+ *   Date received in YYYY-MM format
+ * @param description
+ *   Description of the award
+ */
+final case class Award(
+  id: Option[String] = None,
+  title: Option[String] = None,
+  issuer: Option[String] = None,
+  date: Option[String] = None,
+  description: Option[String] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -210,9 +314,9 @@ final case class Certification(
  *   Structured items if the section contains a list
  */
 final case class CustomSection(
-    title: String,
-    content: Option[String] = None,
-    items: Option[List[String]] = None
+  title: String,
+  content: Option[String] = None,
+  items: Option[List[String]] = None,
 ) derives ReadWriter, Schematic
 
 /**
@@ -236,20 +340,26 @@ final case class CustomSection(
  * @param certifications
  *   Certifications and credentials
  * @param languages
- *   Languages spoken
+ *   Languages spoken with proficiency levels
+ * @param volunteer
+ *   Volunteer experience entries
+ * @param awards
+ *   Awards and honors
  * @param customSections
- *   Any sections that don't fit standard categories (awards, publications, volunteer work, etc.)
+ *   Any sections that don't fit standard categories (publications, patents, etc.)
  */
 final case class ExtractedResumeData(
-    contact: Option[ContactInfo] = None,
-    summary: Option[SummaryInfo] = None,
-    experience: Option[List[WorkExperience]] = None,
-    education: Option[List[Education]] = None,
-    skills: Option[SkillsData] = None,
-    projects: Option[List[Project]] = None,
-    certifications: Option[List[Certification]] = None,
-    languages: Option[List[String]] = None,
-    customSections: Option[List[CustomSection]] = None
+  contact: Option[ContactInfo] = None,
+  summary: Option[SummaryInfo] = None,
+  experience: Option[List[WorkExperience]] = None,
+  education: Option[List[Education]] = None,
+  skills: Option[SkillsData] = None,
+  projects: Option[List[Project]] = None,
+  certifications: Option[List[Certification]] = None,
+  languages: Option[LanguagesData] = None,
+  volunteer: Option[List[VolunteerExperience]] = None,
+  awards: Option[List[Award]] = None,
+  customSections: Option[List[CustomSection]] = None,
 ) derives ReadWriter, Schematic
 
 object ExtractedResumeData:

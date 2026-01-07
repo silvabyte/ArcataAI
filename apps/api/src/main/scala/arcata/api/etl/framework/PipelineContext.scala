@@ -16,10 +16,10 @@ import java.time.Instant
  *   Arbitrary key-value metadata for step communication
  */
 final case class PipelineContext(
-    runId: String,
-    profileId: String,
-    startedAt: Instant,
-    metadata: Map[String, String] = Map.empty
+  runId: String,
+  profileId: String,
+  startedAt: Instant,
+  metadata: Map[String, String] = Map.empty,
 ):
   /** Add a metadata entry to the context. */
   def withMetadata(key: String, value: String): PipelineContext =
@@ -39,7 +39,7 @@ object PipelineContext:
     PipelineContext(
       runId = UUID.randomUUID().toString,
       profileId = profileId,
-      startedAt = Instant.now()
+      startedAt = Instant.now(),
     )
   }
 
@@ -48,6 +48,6 @@ object PipelineContext:
     PipelineContext(
       runId = runId,
       profileId = profileId,
-      startedAt = Instant.now()
+      startedAt = Instant.now(),
     )
   }

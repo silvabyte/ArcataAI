@@ -15,7 +15,7 @@ import arcata.api.etl.sources.{DiscoveredJob, JobSource}
  *   registered sources are processed.
  */
 case class JobDiscoveryInput(
-    sourceId: Option[String] = None
+  sourceId: Option[String] = None
 )
 
 /**
@@ -33,11 +33,11 @@ case class JobDiscoveryInput(
  *   Breakdown of discovered jobs per source
  */
 case class JobDiscoveryOutput(
-    totalDiscovered: Int,
-    totalIngested: Int,
-    totalSkipped: Int,
-    totalFailed: Int,
-    bySource: Map[String, Int]
+  totalDiscovered: Int,
+  totalIngested: Int,
+  totalSkipped: Int,
+  totalFailed: Int,
+  bySource: Map[String, Int],
 )
 
 /**
@@ -71,11 +71,13 @@ case class JobDiscoveryOutput(
  * }}}
  */
 class JobDiscoveryWorkflow(
-    supabaseClient: SupabaseClient,
-    aiConfig: AIConfig,
-    storageClient: Option[ObjectStorageClient] = None
-)(using ac: castor.Context)
-    extends BaseWorkflow[JobDiscoveryInput, JobDiscoveryOutput]:
+  supabaseClient: SupabaseClient,
+  aiConfig: AIConfig,
+  storageClient: Option[ObjectStorageClient] = None,
+)(
+  using
+  ac: castor.Context
+) extends BaseWorkflow[JobDiscoveryInput, JobDiscoveryOutput]:
 
   val name = "JobDiscoveryWorkflow"
 
@@ -83,15 +85,15 @@ class JobDiscoveryWorkflow(
   private val aiIngestionPipeline = JobIngestionPipeline(
     supabaseClient,
     aiConfig,
-    storageClient
+    storageClient,
   )
 
   // Optimized pipeline for Greenhouse jobs (no AI, uses structured API data)
   private val greenhouseIngestionPipeline = GreenhouseIngestionPipeline(supabaseClient)
 
   override def execute(
-      input: JobDiscoveryInput,
-      ctx: PipelineContext
+    input: JobDiscoveryInput,
+    ctx: PipelineContext,
   ): Either[StepError, JobDiscoveryOutput] = {
     // Get sources to process
     val sources = input.sourceId match
@@ -103,57 +105,59 @@ class JobDiscoveryWorkflow(
             Seq.empty
       case None => JobSource.all
 
-    if sources.isEmpty then return Right(JobDiscoveryOutput(0, 0, 0, 0, Map.empty))
+    if sources.isEmpty then Right(JobDiscoveryOutput(0, 0, 0, 0, Map.empty))
+    else
+      // Process all sources and aggregate results
+      val sourceResults = sources.map {
+        source =>
+          logger.info(s"[${ctx.runId}] Processing source: ${source.name} (${source.sourceId})")
+          processSource(source, ctx)
+      }
 
-    // Process all sources and aggregate results
-    val sourceResults = sources.map { source =>
-      logger.info(s"[${ctx.runId}] Processing source: ${source.name} (${source.sourceId})")
-      processSource(source, ctx)
-    }
+      // Aggregate results from all sources
+      val totalDiscovered = sourceResults.map(_.discovered).sum
+      val totalIngested = sourceResults.map(_.ingested).sum
+      val totalSkipped = sourceResults.map(_.skipped).sum
+      val totalFailed = sourceResults.map(_.failed).sum
+      val bySource = sourceResults.map(r => r.sourceId -> r.discovered).toMap
 
-    // Aggregate results from all sources
-    val totalDiscovered = sourceResults.map(_.discovered).sum
-    val totalIngested = sourceResults.map(_.ingested).sum
-    val totalSkipped = sourceResults.map(_.skipped).sum
-    val totalFailed = sourceResults.map(_.failed).sum
-    val bySource = sourceResults.map(r => r.sourceId -> r.discovered).toMap
-
-    Right(
-      JobDiscoveryOutput(
-        totalDiscovered = totalDiscovered,
-        totalIngested = totalIngested,
-        totalSkipped = totalSkipped,
-        totalFailed = totalFailed,
-        bySource = bySource
+      Right(
+        JobDiscoveryOutput(
+          totalDiscovered = totalDiscovered,
+          totalIngested = totalIngested,
+          totalSkipped = totalSkipped,
+          totalFailed = totalFailed,
+          bySource = bySource,
+        )
       )
-    )
   }
 
   /** Result from processing a single source. */
   private case class SourceResult(
-      sourceId: String,
-      discovered: Int,
-      ingested: Int,
-      skipped: Int,
-      failed: Int
+    sourceId: String,
+    discovered: Int,
+    ingested: Int,
+    skipped: Int,
+    failed: Int,
   )
 
   /** Process a single job source and return aggregated results. */
   private def processSource(
-      source: JobSource,
-      ctx: PipelineContext
+    source: JobSource,
+    ctx: PipelineContext,
   ): SourceResult = {
     val jobs = source.discoverJobs(supabaseClient)
     logger.info(s"[${ctx.runId}] Discovered ${jobs.size} jobs from ${source.name}")
 
     // Process each job and collect results
-    val jobResults = jobs.zipWithIndex.map { case (job, idx) =>
-      // Rate limiting delay (skip on first job)
-      if idx > 0 && source.config.delayBetweenRequestsMs > 0 then
-        Thread.sleep(source.config.delayBetweenRequestsMs) // scalafix:ok
+    val jobResults = jobs.zipWithIndex.map {
+      case (job, idx) =>
+        // Rate limiting delay (skip on first job)
+        if idx > 0 && source.config.delayBetweenRequestsMs > 0 then
+          Thread.sleep(source.config.delayBetweenRequestsMs)
 
-      logger.debug(s"[${ctx.runId}] Processing job ${idx + 1}/${jobs.size}: ${job.url}")
-      processJob(job, source.sourceId, ctx)
+        logger.debug(s"[${ctx.runId}] Processing job ${idx + 1}/${jobs.size}: ${job.url}")
+        processJob(job, source.sourceId, ctx)
     }
 
     SourceResult(
@@ -161,7 +165,7 @@ class JobDiscoveryWorkflow(
       discovered = jobs.size,
       ingested = jobResults.count(_ == JobResult.Ingested),
       skipped = jobResults.count(_ == JobResult.Skipped),
-      failed = jobResults.count(_ == JobResult.Failed)
+      failed = jobResults.count(_ == JobResult.Failed),
     )
   }
 
@@ -177,9 +181,9 @@ class JobDiscoveryWorkflow(
    *   - Other sources or missing API URL -> JobIngestionPipeline (AI-powered)
    */
   private def processJob(
-      job: DiscoveredJob,
-      sourceId: String,
-      ctx: PipelineContext
+    job: DiscoveredJob,
+    sourceId: String,
+    ctx: PipelineContext,
   ): JobResult = {
     // Route to appropriate pipeline based on source and available data
     val result = (job.source, job.apiUrl) match {
@@ -192,9 +196,9 @@ class JobDiscoveryWorkflow(
             sourceUrl = job.url,
             companyId = job.companyId,
             profileId = "system",
-            source = s"discovery:$sourceId"
+            source = s"discovery:$sourceId",
           ),
-          "system"
+          "system",
         )
 
       case _ =>
@@ -205,9 +209,9 @@ class JobDiscoveryWorkflow(
             url = job.url,
             profileId = "system",
             source = s"discovery:$sourceId",
-            createApplication = false
+            createApplication = false,
           ),
-          "system"
+          "system",
         )
     }
 
@@ -239,14 +243,15 @@ class JobDiscoveryWorkflow(
   }
 
   override def onSuccess(result: PipelineResult[JobDiscoveryOutput]): Unit = {
-    result.output.foreach { out =>
-      val sourceBreakdown = out.bySource.map { case (k, v) => s"$k=$v" }.mkString(", ")
-      logger.info(
-        s"[$name] Completed in ${result.durationMs}ms: " +
-          s"discovered=${out.totalDiscovered}, ingested=${out.totalIngested}, " +
-          s"skipped=${out.totalSkipped}, failed=${out.totalFailed} " +
-          s"[by source: $sourceBreakdown]"
-      )
+    result.output.foreach {
+      out =>
+        val sourceBreakdown = out.bySource.map { case (k, v) => s"$k=$v" }.mkString(", ")
+        logger.info(
+          s"[$name] Completed in ${result.durationMs}ms: " +
+            s"discovered=${out.totalDiscovered}, ingested=${out.totalIngested}, " +
+            s"skipped=${out.totalSkipped}, failed=${out.totalFailed} " +
+            s"[by source: $sourceBreakdown]"
+        )
     }
   }
 
@@ -258,8 +263,11 @@ class JobDiscoveryWorkflow(
 
 object JobDiscoveryWorkflow:
   def apply(
-      supabaseClient: SupabaseClient,
-      aiConfig: AIConfig,
-      storageClient: Option[ObjectStorageClient] = None
-  )(using ac: castor.Context): JobDiscoveryWorkflow =
+    supabaseClient: SupabaseClient,
+    aiConfig: AIConfig,
+    storageClient: Option[ObjectStorageClient] = None,
+  )(
+    using
+    ac: castor.Context
+  ): JobDiscoveryWorkflow =
     new JobDiscoveryWorkflow(supabaseClient, aiConfig, storageClient)

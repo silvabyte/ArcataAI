@@ -9,43 +9,43 @@ import scala.util.{Failure, Success, Try}
  * variables have sensible defaults.
  */
 final case class Config(
-    server: ServerConfig,
-    supabase: SupabaseConfig,
-    objectStorage: ObjectStorageConfig,
-    ai: AIConfig,
-    resume: ResumeConfig
+  server: ServerConfig,
+  supabase: SupabaseConfig,
+  objectStorage: ObjectStorageConfig,
+  ai: AIConfig,
+  resume: ResumeConfig,
 )
 
 /** HTTP server configuration. */
 final case class ServerConfig(
-    host: String,
-    port: Int,
-    corsOrigins: List[String]
+  host: String,
+  port: Int,
+  corsOrigins: List[String],
 )
 
 /** Supabase configuration for database access. JWT validation uses JWKS from the URL. */
 final case class SupabaseConfig(
-    url: String,
-    serviceRoleKey: String
+  url: String,
+  serviceRoleKey: String,
 )
 
 /** Object storage configuration for s3.audetic.link service. */
 final case class ObjectStorageConfig(
-    baseUrl: String,
-    tenantId: String,
-    apiKey: String
+  baseUrl: String,
+  tenantId: String,
+  apiKey: String,
 )
 
 /** AI provider configuration for job parsing and company enrichment. */
 final case class AIConfig(
-    baseUrl: String, // Vercel AI Gateway: https://api.vercel.ai/v1
-    apiKey: String, // VERCEL_AI_GATEWAY_API_KEY
-    model: String // anthropic/claude-sonnet-4-20250514
+  baseUrl: String, // Vercel AI Gateway: https://api.vercel.ai/v1
+  apiKey: String, // VERCEL_AI_GATEWAY_API_KEY
+  model: String, // anthropic/claude-sonnet-4-20250514
 )
 
 /** Resume parsing configuration. */
 final case class ResumeConfig(
-    maxFileSizeMb: Int // Maximum allowed resume file size in megabytes
+  maxFileSizeMb: Int // Maximum allowed resume file size in megabytes
 )
 
 object Config:
@@ -67,7 +67,7 @@ object Config:
       supabase = supabase,
       objectStorage = objectStorage,
       ai = ai,
-      resume = resume
+      resume = resume,
     )
   }
 
@@ -88,7 +88,7 @@ object Config:
     val portStr = getEnvOrDefault("API_PORT", "4203")
     val corsOriginsStr = getEnvOrDefault(
       "CORS_ORIGINS",
-      "http://localhost:4201,http://localhost:4200,https://f6c0bn-pical.spa.godeploy.app"
+      "http://localhost:4201,http://localhost:4200,https://f6c0bn-pical.spa.godeploy.app",
     )
     val corsOrigins = corsOriginsStr.split(",").map(_.trim).filter(_.nonEmpty).toList
 
@@ -105,7 +105,7 @@ object Config:
       serviceRoleKey <- getEnvRequired("SUPABASE_SERVICE_ROLE_KEY")
     yield SupabaseConfig(
       url = url,
-      serviceRoleKey = serviceRoleKey
+      serviceRoleKey = serviceRoleKey,
     )
   }
 
@@ -115,7 +115,7 @@ object Config:
         baseUrl = getEnvOrDefault("OBJECT_STORAGE_URL", "https://s3.audetic.link/api/v1"),
         // this app does not have multi-tenancy, so just provide a fixed tenant here
         tenantId = getEnvOrDefault("OBJECT_STORAGE_TENANT_ID", "arcata-ai"),
-        apiKey = getEnvOrDefault("OBJECT_STORAGE_API_KEY", "")
+        apiKey = getEnvOrDefault("OBJECT_STORAGE_API_KEY", ""),
       )
     )
   }
@@ -126,7 +126,7 @@ object Config:
     yield AIConfig(
       baseUrl = getEnvOrDefault("VERCEL_AI_GATEWAY_URL", "https://api.vercel.ai/v1"),
       apiKey = apiKey,
-      model = getEnvOrDefault("AI_MODEL", "anthropic/claude-haiku-4.5")
+      model = getEnvOrDefault("AI_MODEL", "anthropic/claude-haiku-4.5"),
     )
   }
 

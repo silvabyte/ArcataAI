@@ -22,13 +22,13 @@ object GreenhouseDiscovery extends Logging {
 
   /** Greenhouse list API response - minimal fields for discovery. */
   private case class GreenhouseJob(
-      id: Long,
-      title: String,
-      absolute_url: String
+    id: Long,
+    title: String,
+    absolute_url: String,
   ) derives ReadWriter
 
   private case class GreenhouseJobsResponse(
-      jobs: Seq[GreenhouseJob]
+    jobs: Seq[GreenhouseJob]
   ) derives ReadWriter
 
   /**
@@ -45,14 +45,15 @@ object GreenhouseDiscovery extends Logging {
     val companies = supabase.findCompaniesByJobSource("greenhouse", config.companyBatchSize)
     logger.info(s"[Greenhouse] Found ${companies.size} companies with Greenhouse source")
 
-    companies.flatMap { company =>
-      company.companyJobsUrl.flatMap(UrlNormalizer.extractGreenhouseCompanyId) match
-        case Some(ghCompanyId) =>
-          logger.debug(s"[Greenhouse] Fetching jobs for company: $ghCompanyId")
-          fetchJobs(ghCompanyId, company.companyId, config.jobsPerCompany)
-        case None =>
-          logger.warn(s"[Greenhouse] Could not extract company ID from ${company.companyJobsUrl}")
-          Seq.empty
+    companies.flatMap {
+      company =>
+        company.companyJobsUrl.flatMap(UrlNormalizer.extractGreenhouseCompanyId) match
+          case Some(ghCompanyId) =>
+            logger.debug(s"[Greenhouse] Fetching jobs for company: $ghCompanyId")
+            fetchJobs(ghCompanyId, company.companyId, config.jobsPerCompany)
+          case None =>
+            logger.warn(s"[Greenhouse] Could not extract company ID from ${company.companyJobsUrl}")
+            Seq.empty
     }
   }
 
@@ -69,9 +70,9 @@ object GreenhouseDiscovery extends Logging {
    *   Discovered jobs with API URLs for structured data fetching
    */
   private def fetchJobs(
-      ghCompanyId: String,
-      companyId: Option[Long],
-      limit: Int
+    ghCompanyId: String,
+    companyId: Option[Long],
+    limit: Int,
   ): Seq[DiscoveredJob] = {
     val listApiUrl = s"https://boards-api.greenhouse.io/v1/boards/$ghCompanyId/jobs"
 
@@ -80,20 +81,21 @@ object GreenhouseDiscovery extends Logging {
 
       if response.is2xx then
         val parsed = read[GreenhouseJobsResponse](response.text())
-        val jobs = parsed.jobs.take(limit).map { job =>
-          // Build the job detail API URL for structured data fetching
-          val jobDetailApiUrl = s"https://boards-api.greenhouse.io/v1/boards/$ghCompanyId/jobs/${job.id}"
-          DiscoveredJob(
-            url = UrlNormalizer.normalize(job.absolute_url),
-            source = JobSource.Greenhouse,
-            companyId = companyId,
-            apiUrl = Some(jobDetailApiUrl),
-            metadata = Map(
-              "greenhouse_job_id" -> job.id.toString,
-              "greenhouse_company_id" -> ghCompanyId,
-              "title" -> job.title
+        val jobs = parsed.jobs.take(limit).map {
+          job =>
+            // Build the job detail API URL for structured data fetching
+            val jobDetailApiUrl = s"https://boards-api.greenhouse.io/v1/boards/$ghCompanyId/jobs/${job.id}"
+            DiscoveredJob(
+              url = UrlNormalizer.normalize(job.absolute_url),
+              source = JobSource.Greenhouse,
+              companyId = companyId,
+              apiUrl = Some(jobDetailApiUrl),
+              metadata = Map(
+                "greenhouse_job_id" -> job.id.toString,
+                "greenhouse_company_id" -> ghCompanyId,
+                "title" -> job.title,
+              ),
             )
-          )
         }
         logger.info(s"[Greenhouse] Discovered ${jobs.size} jobs from $ghCompanyId")
         jobs
@@ -101,9 +103,10 @@ object GreenhouseDiscovery extends Logging {
         logger.error(s"[Greenhouse] API error for $ghCompanyId: ${response.statusCode}")
         Seq.empty
       }
-    }.recover { case e: Exception =>
-      logger.error(s"[Greenhouse] Failed to fetch ($ghCompanyId): ${e.getMessage}")
-      Seq.empty
+    }.recover {
+      case e: Exception =>
+        logger.error(s"[Greenhouse] Failed to fetch ($ghCompanyId): ${e.getMessage}")
+        Seq.empty
     }.get
   }
 }

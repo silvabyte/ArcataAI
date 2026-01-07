@@ -19,7 +19,7 @@ object CompletionScorerSuite extends TestSuite:
         "responsibilities" -> Some("Build systems, Lead projects"),
         "benefits" -> Some("Health, 401k, Stock options"),
         "jobType" -> Some("Full-time position"),
-        "experienceLevel" -> Some("Senior level")
+        "experienceLevel" -> Some("Senior level"),
         // All 11 fields = 100 points
       )
 
@@ -38,7 +38,7 @@ object CompletionScorerSuite extends TestSuite:
         "description" -> Some("A great job opportunity"),
         "location" -> Some("Remote"),
         "salaryMin" -> Some("100000"),
-        "salaryMax" -> Some("200000")
+        "salaryMax" -> Some("200000"),
         // Missing: qualifications (5), responsibilities (5), benefits (5), jobType (3), experienceLevel (2)
         // Total: 80/100 = 80%
       )
@@ -55,7 +55,7 @@ object CompletionScorerSuite extends TestSuite:
       val fields = Map(
         "title" -> Some("Software Engineer"),
         "companyName" -> Some("Netflix"),
-        "description" -> Some("A great job opportunity")
+        "description" -> Some("A great job opportunity"),
         // Missing all optional fields
         // Total: 60/100 = 60%
       )
@@ -75,7 +75,7 @@ object CompletionScorerSuite extends TestSuite:
         "title" -> Some("Software Engineer"),
         "companyName" -> Some("Netflix"),
         "description" -> Some("Brief description here"),
-        "jobType" -> Some("Full-time")
+        "jobType" -> Some("Full-time"),
         // Total: 63/100 = 63%
       )
 
@@ -91,7 +91,7 @@ object CompletionScorerSuite extends TestSuite:
         "companyName" -> Some("Netflix"),
         "description" -> None, // Missing!
         "location" -> Some("Remote"),
-        "salaryMin" -> Some("100000")
+        "salaryMin" -> Some("100000"),
       )
 
       val result = CompletionScorer.score(fields)
@@ -104,7 +104,7 @@ object CompletionScorerSuite extends TestSuite:
       val fields = Map(
         "title" -> None, // Missing!
         "companyName" -> Some("Netflix"),
-        "description" -> Some("Great job opportunity")
+        "description" -> Some("Great job opportunity"),
       )
 
       val result = CompletionScorer.score(fields)
@@ -116,7 +116,7 @@ object CompletionScorerSuite extends TestSuite:
       val fields = Map(
         "title" -> Some("Software Engineer"),
         "companyName" -> None, // Missing!
-        "description" -> Some("Great job opportunity")
+        "description" -> Some("Great job opportunity"),
       )
 
       val result = CompletionScorer.score(fields)
@@ -128,7 +128,7 @@ object CompletionScorerSuite extends TestSuite:
       val fields = Map(
         "title" -> Some("SE"), // Too short (< 5 chars)
         "companyName" -> Some("Netflix"),
-        "description" -> Some("A great job opportunity")
+        "description" -> Some("A great job opportunity"),
       )
 
       val result = CompletionScorer.score(fields)
@@ -140,7 +140,7 @@ object CompletionScorerSuite extends TestSuite:
       val fields = Map(
         "title" -> Some("Software Engineer"),
         "companyName" -> Some(""), // Empty
-        "description" -> Some("A great job opportunity")
+        "description" -> Some("A great job opportunity"),
       )
 
       val result = CompletionScorer.score(fields)
@@ -152,7 +152,7 @@ object CompletionScorerSuite extends TestSuite:
       val fields = Map(
         "title" -> Some("Software Engineer"),
         "companyName" -> Some("   "), // Whitespace only
-        "description" -> Some("A great job opportunity")
+        "description" -> Some("A great job opportunity"),
       )
 
       val result = CompletionScorer.score(fields)
@@ -164,7 +164,7 @@ object CompletionScorerSuite extends TestSuite:
         "title" -> Some("Software Engineer"),
         "companyName" -> Some("Netflix"),
         "description" -> Some("A great job opportunity"),
-        "location" -> Some("Remote location")
+        "location" -> Some("Remote location"),
       )
 
       val result = CompletionScorer.score(fields)
@@ -187,7 +187,7 @@ object CompletionScorerSuite extends TestSuite:
         "salaryMin" -> Some("100000 USD"),
         "salaryMax" -> Some("200000 USD"),
         "qualifications" -> Some("Required qualifications list"),
-        "responsibilities" -> Some("Key responsibilities here")
+        "responsibilities" -> Some("Key responsibilities here"),
       )
 
       val result = CompletionScorer.score(fields)
@@ -208,7 +208,7 @@ object CompletionScorerSuite extends TestSuite:
         "location" -> Some("Remote Location Here"),
         "salaryMin" -> Some("100000"),
         "salaryMax" -> Some("200000"),
-        "qualifications" -> Some("Required qualifications list")
+        "qualifications" -> Some("Required qualifications list"),
       )
 
       val result = CompletionScorer.score(fields)

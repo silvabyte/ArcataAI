@@ -8,29 +8,29 @@ import upickle.default.*
 
 /** Metadata for a stored object in ObjectStorage. */
 final case class StoredObject(
-    objectId: String,
-    fileName: String,
-    size: Long,
-    bucket: String,
-    lastModified: String,
-    createdAt: String,
-    mimeType: Option[String] = None,
-    checksum: Option[String] = None,
-    etag: Option[String] = None,
-    contentType: Option[String] = None,
-    metadata: Option[Map[String, String]] = None
+  objectId: String,
+  fileName: String,
+  size: Long,
+  bucket: String,
+  lastModified: String,
+  createdAt: String,
+  mimeType: Option[String] = None,
+  checksum: Option[String] = None,
+  etag: Option[String] = None,
+  contentType: Option[String] = None,
+  metadata: Option[Map[String, String]] = None,
 ) derives ReadWriter
 
 /** Response wrapper from ObjectStorage API. */
 final case class FileResponse(
-    file: StoredObject,
-    status: Option[String] = None
+  file: StoredObject,
+  status: Option[String] = None,
 ) derives ReadWriter
 
 /** Error response from ObjectStorage API. */
 final case class ErrorResponse(
-    message: String,
-    status: String
+  message: String,
+  status: String,
 ) derives ReadWriter
 
 /** Errors that can occur during storage operations. */
@@ -51,15 +51,15 @@ object StorageError {
  *   Tenant identifier (e.g., "arcata")
  */
 class ObjectStorageClient(
-    baseUrl: String,
-    tenantId: String,
-    apiKey: String
+  baseUrl: String,
+  tenantId: String,
+  apiKey: String,
 ) extends Logging {
 
   private def tenantHeaders(userId: String): Map[String, String] = Map(
     "x-tenant-id" -> tenantId,
     "x-user-id" -> userId,
-    "x-api-key" -> apiKey
+    "x-api-key" -> apiKey,
   )
 
   /**
@@ -77,21 +77,21 @@ class ObjectStorageClient(
    *   StoredObject on success, StorageError on failure
    */
   def upload(
-      content: Array[Byte],
-      fileName: String,
-      mimeType: Option[String],
-      userId: String
+    content: Array[Byte],
+    fileName: String,
+    mimeType: Option[String],
+    userId: String,
   ): Either[StorageError, StoredObject] = {
     val headers = tenantHeaders(userId) ++ Map(
       "x-file-name" -> fileName,
-      "Content-Type" -> mimeType.getOrElse("application/octet-stream")
+      "Content-Type" -> mimeType.getOrElse("application/octet-stream"),
     ) ++ mimeType.map(m => "x-mimetype" -> m)
 
     Try {
       requests.post(
         s"$baseUrl/files",
         headers = headers,
-        data = content
+        data = content,
       )
     } match {
       case Failure(e) =>
@@ -123,21 +123,21 @@ class ObjectStorageClient(
    *   StoredObject on success, StorageError on failure
    */
   def uploadStream(
-      data: Readable,
-      fileName: String,
-      mimeType: Option[String],
-      userId: String
+    data: Readable,
+    fileName: String,
+    mimeType: Option[String],
+    userId: String,
   ): Either[StorageError, StoredObject] = {
     val headers = tenantHeaders(userId) ++ Map(
       "x-file-name" -> fileName,
-      "Content-Type" -> mimeType.getOrElse("application/octet-stream")
+      "Content-Type" -> mimeType.getOrElse("application/octet-stream"),
     ) ++ mimeType.map(m => "x-mimetype" -> m)
 
     Try {
       requests.post(
         s"$baseUrl/files",
         headers = headers,
-        data = data
+        data = data,
       )
     } match {
       case Failure(e) =>
@@ -165,7 +165,7 @@ class ObjectStorageClient(
     Try {
       requests.get(
         s"$baseUrl/files/$objectId",
-        headers = tenantHeaders(userId)
+        headers = tenantHeaders(userId),
       )
     } match {
       case Failure(e) =>
@@ -199,7 +199,7 @@ class ObjectStorageClient(
     Try {
       requests.get(
         s"$baseUrl/files/$objectId/metadata",
-        headers = tenantHeaders(userId)
+        headers = tenantHeaders(userId),
       )
     } match {
       case Failure(e) =>
@@ -230,7 +230,7 @@ class ObjectStorageClient(
     Try {
       requests.delete(
         s"$baseUrl/files/$objectId",
-        headers = tenantHeaders(userId)
+        headers = tenantHeaders(userId),
       )
     } match {
       case Failure(e) =>
@@ -261,7 +261,7 @@ class ObjectStorageClient(
     Try {
       requests.get(
         s"$baseUrl/files/checksum/$checksum",
-        headers = tenantHeaders(userId)
+        headers = tenantHeaders(userId),
       )
     } match {
       case Failure(e) =>

@@ -12,21 +12,22 @@ object JobTransformerSuite extends TestSuite:
         extracted = ExtractedJobData(
           title = "  Software Engineer  ",
           companyName = Some("  Acme Inc  "),
-          location = Some("  Remote  ")
+          location = Some("  Remote  "),
         ),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.transformed.value.title == "Software Engineer")
-        assert(output.transformed.value.companyName == Some("Acme Inc"))
-        assert(output.transformed.value.location == Some("Remote"))
+      result.foreach {
+        output =>
+          assert(output.transformed.value.title == "Software Engineer")
+          assert(output.transformed.value.companyName == Some("Acme Inc"))
+          assert(output.transformed.value.location == Some("Remote"))
       }
     }
 
@@ -37,22 +38,23 @@ object JobTransformerSuite extends TestSuite:
           companyName = Some(""),
           description = Some(""),
           postedDate = Some(""),
-          closingDate = Some("")
+          closingDate = Some(""),
         ),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.transformed.value.companyName.isEmpty)
-        assert(output.transformed.value.description.isEmpty)
-        assert(output.transformed.value.postedDate.isEmpty)
-        assert(output.transformed.value.closingDate.isEmpty)
+      result.foreach {
+        output =>
+          assert(output.transformed.value.companyName.isEmpty)
+          assert(output.transformed.value.description.isEmpty)
+          assert(output.transformed.value.postedDate.isEmpty)
+          assert(output.transformed.value.closingDate.isEmpty)
       }
     }
 
@@ -61,20 +63,21 @@ object JobTransformerSuite extends TestSuite:
         extracted = ExtractedJobData(
           title = "Engineer",
           companyName = Some("   "),
-          description = Some("\t\n")
+          description = Some("\t\n"),
         ),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.transformed.value.companyName.isEmpty)
-        assert(output.transformed.value.description.isEmpty)
+      result.foreach {
+        output =>
+          assert(output.transformed.value.companyName.isEmpty)
+          assert(output.transformed.value.description.isEmpty)
       }
     }
 
@@ -84,22 +87,23 @@ object JobTransformerSuite extends TestSuite:
           title = "Senior Engineer",
           companyName = Some("Tech Corp"),
           description = Some("Build amazing things"),
-          location = Some("New York, NY")
+          location = Some("New York, NY"),
         ),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.transformed.value.title == "Senior Engineer")
-        assert(output.transformed.value.companyName == Some("Tech Corp"))
-        assert(output.transformed.value.description == Some("Build amazing things"))
-        assert(output.transformed.value.location == Some("New York, NY"))
+      result.foreach {
+        output =>
+          assert(output.transformed.value.title == "Senior Engineer")
+          assert(output.transformed.value.companyName == Some("Tech Corp"))
+          assert(output.transformed.value.description == Some("Build amazing things"))
+          assert(output.transformed.value.location == Some("New York, NY"))
       }
     }
 
@@ -108,20 +112,21 @@ object JobTransformerSuite extends TestSuite:
         extracted = ExtractedJobData(
           title = "Engineer",
           qualifications = Some(List("Python", "", "  ", "JavaScript", "")),
-          benefits = Some(List("  Health  ", "", "Dental"))
+          benefits = Some(List("  Health  ", "", "Dental")),
         ),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.transformed.value.qualifications == Some(List("Python", "JavaScript")))
-        assert(output.transformed.value.benefits == Some(List("Health", "Dental")))
+      result.foreach {
+        output =>
+          assert(output.transformed.value.qualifications == Some(List("Python", "JavaScript")))
+          assert(output.transformed.value.benefits == Some(List("Health", "Dental")))
       }
     }
 
@@ -130,20 +135,21 @@ object JobTransformerSuite extends TestSuite:
         extracted = ExtractedJobData(
           title = "Engineer",
           salaryMin = Some(100000),
-          salaryMax = Some(150000)
+          salaryMax = Some(150000),
         ),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.transformed.value.salaryMin == Some(100000))
-        assert(output.transformed.value.salaryMax == Some(150000))
+      result.foreach {
+        output =>
+          assert(output.transformed.value.salaryMin == Some(100000))
+          assert(output.transformed.value.salaryMax == Some(150000))
       }
     }
 
@@ -151,19 +157,20 @@ object JobTransformerSuite extends TestSuite:
       val input = JobTransformerInput(
         extracted = ExtractedJobData(
           title = "Engineer",
-          isRemote = Some(true)
+          isRemote = Some(true),
         ),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.transformed.value.isRemote == Some(true))
+      result.foreach {
+        output =>
+          assert(output.transformed.value.isRemote == Some(true))
       }
     }
 
@@ -172,7 +179,7 @@ object JobTransformerSuite extends TestSuite:
         extracted = ExtractedJobData(title = "Any Job"),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
@@ -186,17 +193,18 @@ object JobTransformerSuite extends TestSuite:
         extracted = ExtractedJobData(title = "Engineer"),
         sourceUrl = "https://example.com/job",
         objectId = None,
-        completionState = CompletionState.Complete
+        completionState = CompletionState.Complete,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        // Verify the output has the Transformed wrapper
-        val transformed: Transformed[ExtractedJobData] = output.transformed
-        assert(transformed.value.title == "Engineer")
+      result.foreach {
+        output =>
+          // Verify the output has the Transformed wrapper
+          val transformed: Transformed[ExtractedJobData] = output.transformed
+          assert(transformed.value.title == "Engineer")
       }
     }
 
@@ -205,17 +213,18 @@ object JobTransformerSuite extends TestSuite:
         extracted = ExtractedJobData(title = "Engineer"),
         sourceUrl = "https://example.com/specific-job",
         objectId = Some("obj-abc-123"),
-        completionState = CompletionState.Sufficient
+        completionState = CompletionState.Sufficient,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = JobTransformer.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.sourceUrl == "https://example.com/specific-job")
-        assert(output.objectId == Some("obj-abc-123"))
-        assert(output.completionState == CompletionState.Sufficient)
+      result.foreach {
+        output =>
+          assert(output.sourceUrl == "https://example.com/specific-job")
+          assert(output.objectId == Some("obj-abc-123"))
+          assert(output.completionState == CompletionState.Sufficient)
       }
     }
   }

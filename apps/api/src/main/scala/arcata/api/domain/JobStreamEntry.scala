@@ -25,14 +25,14 @@ import upickle.default.*
  *   JSON object with match scores per job profile
  */
 final case class JobStreamEntry(
-    streamId: Option[Long] = None,
-    jobId: Long,
-    profileId: String,
-    source: String,
-    status: Option[String] = Some("new"),
-    bestMatchScore: Option[Double] = None,
-    bestMatchJobProfileId: Option[Long] = None,
-    profileMatches: Option[ujson.Value] = None
+  streamId: Option[Long] = None,
+  jobId: Long,
+  profileId: String,
+  source: String,
+  status: Option[String] = Some("new"),
+  bestMatchScore: Option[Double] = None,
+  bestMatchJobProfileId: Option[Long] = None,
+  profileMatches: Option[ujson.Value] = None,
 )
 
 object JobStreamEntry:
@@ -42,7 +42,7 @@ object JobStreamEntry:
       val obj = ujson.Obj(
         "job_id" -> ujson.Num(entry.jobId.toDouble),
         "profile_id" -> entry.profileId,
-        "source" -> entry.source
+        "source" -> entry.source,
       )
       entry.streamId.foreach(v => obj("stream_id") = ujson.Num(v.toDouble))
       entry.status.foreach(v => obj("status") = v)
@@ -62,7 +62,7 @@ object JobStreamEntry:
         bestMatchScore = obj.get("best_match_score").flatMap(v => if v.isNull then None else Some(v.num)),
         bestMatchJobProfileId =
           obj.get("best_match_job_profile_id").flatMap(v => if v.isNull then None else Some(v.num.toLong)),
-        profileMatches = obj.get("profile_matches").flatMap(v => if v.isNull then None else Some(v))
+        profileMatches = obj.get("profile_matches").flatMap(v => if v.isNull then None else Some(v)),
       )
-    }
+    },
   )

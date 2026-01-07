@@ -11,28 +11,28 @@ import upickle.default.*
 @Schematic.title("StatusResponse")
 @Schematic.description("Simple status response")
 final case class StatusResponse(
-    @Schematic.description("Status indicator")
-    status: String
+  @Schematic.description("Status indicator")
+  status: String
 ) derives Schematic, ReadWriter
 
 /** Ping response */
 @Schematic.title("PingResponse")
 @Schematic.description("Ping response")
 final case class PingResponse(
-    @Schematic.description("Pong message")
-    message: String = "pong"
+  @Schematic.description("Pong message")
+  message: String = "pong"
 ) derives Schematic, ReadWriter
 
 /** API info response */
 @Schematic.title("ApiInfoResponse")
 @Schematic.description("API information response")
 final case class ApiInfoResponse(
-    @Schematic.description("API name")
-    name: String,
-    @Schematic.description("API version")
-    version: String,
-    @Schematic.description("API status")
-    status: String
+  @Schematic.description("API name")
+  name: String,
+  @Schematic.description("API version")
+  version: String,
+  @Schematic.description("API status")
+  status: String,
 ) derives Schematic, ReadWriter
 
 /**
@@ -53,14 +53,14 @@ case class IndexRoutes() extends cask.Routes {
       tags = List("Health"),
       responses = Map(
         200 -> ApiResponse("API is running", Schematic[ApiInfoResponse])
-      )
-    )
+      ),
+    ),
   )
   def index(r: ValidatedRequest): Response[String] = {
     Response(
       write(ApiInfoResponse("Arcata API", "1.0.0", "running")),
       200,
-      jsonHeaders
+      jsonHeaders,
     )
   }
 
@@ -73,14 +73,14 @@ case class IndexRoutes() extends cask.Routes {
       tags = List("Health"),
       responses = Map(
         200 -> ApiResponse("Pong", Schematic[PingResponse])
-      )
-    )
+      ),
+    ),
   )
   def ping(r: ValidatedRequest): Response[String] = {
     Response(
       write(PingResponse()),
       200,
-      jsonHeaders
+      jsonHeaders,
     )
   }
 
@@ -93,14 +93,14 @@ case class IndexRoutes() extends cask.Routes {
       tags = List("Health"),
       responses = Map(
         200 -> ApiResponse("Service is healthy", Schematic[StatusResponse])
-      )
-    )
+      ),
+    ),
   )
   def health(r: ValidatedRequest): Response[String] = {
     Response(
       write(StatusResponse("ok")),
       200,
-      jsonHeaders
+      jsonHeaders,
     )
   }
 
@@ -111,8 +111,8 @@ case class IndexRoutes() extends cask.Routes {
       title = "Arcata API",
       summary = Some("ETL service for job ingestion and enrichment"),
       description = "Specialized backend API for job URL parsing, normalization, and enrichment using AI.",
-      version = "1.0.0"
-    )
+      version = "1.0.0",
+    ),
   )
   def openapi(): String = ""
 

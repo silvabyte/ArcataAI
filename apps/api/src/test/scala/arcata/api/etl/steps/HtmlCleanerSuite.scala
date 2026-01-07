@@ -12,17 +12,18 @@ object HtmlCleanerSuite extends TestSuite:
       val input = HtmlCleanerInput(
         html = "<html><body><h1>Job Title</h1><p>Description</p></body></html>",
         url = "https://example.com/job",
-        objectId = Some("obj-123")
+        objectId = Some("obj-123"),
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = cleaner.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.markdown.contains("Job Title"))
-        assert(output.url == "https://example.com/job")
-        assert(output.objectId == Some("obj-123"))
+      result.foreach {
+        output =>
+          assert(output.markdown.contains("Job Title"))
+          assert(output.url == "https://example.com/job")
+          assert(output.objectId == Some("obj-123"))
       }
     }
 
@@ -31,16 +32,17 @@ object HtmlCleanerSuite extends TestSuite:
       val input = HtmlCleanerInput(
         html = "<p>test</p>",
         url = "https://test.com",
-        objectId = None
+        objectId = None,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = cleaner.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(output.url == "https://test.com")
-        assert(output.objectId.isEmpty)
+      result.foreach {
+        output =>
+          assert(output.url == "https://test.com")
+          assert(output.objectId.isEmpty)
       }
     }
 
@@ -49,17 +51,18 @@ object HtmlCleanerSuite extends TestSuite:
       val input = HtmlCleanerInput(
         html = "<html><body><h1>Title</h1><script>evil()</script></body></html>",
         url = "https://example.com",
-        objectId = None
+        objectId = None,
       )
       val ctx = PipelineContext.create("test-profile")
 
       val result = cleaner.run(input, ctx)
 
       assert(result.isRight)
-      result.foreach { output =>
-        assert(!output.markdown.contains("script"))
-        assert(!output.markdown.contains("evil"))
-        assert(output.markdown.contains("Title"))
+      result.foreach {
+        output =>
+          assert(!output.markdown.contains("script"))
+          assert(!output.markdown.contains("evil"))
+          assert(output.markdown.contains("Title"))
       }
     }
 
@@ -68,7 +71,7 @@ object HtmlCleanerSuite extends TestSuite:
       val input = HtmlCleanerInput(
         html = "",
         url = "https://example.com",
-        objectId = None
+        objectId = None,
       )
       val ctx = PipelineContext.create("test-profile")
 

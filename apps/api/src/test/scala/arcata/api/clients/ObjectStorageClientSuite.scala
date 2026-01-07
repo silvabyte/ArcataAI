@@ -13,10 +13,10 @@ object ObjectStorageClientSuite extends TestSuite:
     private val storage = mutable.Map[String, (Array[Byte], StoredObject)]()
 
     override def upload(
-        content: Array[Byte],
-        fileName: String,
-        mimeType: Option[String],
-        userId: String
+      content: Array[Byte],
+      fileName: String,
+      mimeType: Option[String],
+      userId: String,
     ): Either[StorageError, StoredObject] = {
       val objectId = UUID.randomUUID().toString
       val obj = StoredObject(
@@ -26,7 +26,7 @@ object ObjectStorageClientSuite extends TestSuite:
         bucket = "test-bucket",
         lastModified = java.time.Instant.now().toString,
         createdAt = java.time.Instant.now().toString,
-        mimeType = mimeType
+        mimeType = mimeType,
       )
       storage(objectId) = (content, obj)
       Right(obj)
@@ -62,10 +62,11 @@ object ObjectStorageClientSuite extends TestSuite:
         val result = client.upload(content, "test.txt", Some("text/plain"), "user-1")
 
         assert(result.isRight)
-        result.foreach { obj =>
-          assert(obj.fileName == "test.txt")
-          assert(obj.size == content.length)
-          assert(obj.mimeType == Some("text/plain"))
+        result.foreach {
+          obj =>
+            assert(obj.fileName == "test.txt")
+            assert(obj.size == content.length)
+            assert(obj.mimeType == Some("text/plain"))
         }
       }
 
@@ -80,8 +81,9 @@ object ObjectStorageClientSuite extends TestSuite:
         val downloadResult = client.download(objectId, "user-1")
 
         assert(downloadResult.isRight)
-        downloadResult.foreach { bytes =>
-          assert(bytes.sameElements(content))
+        downloadResult.foreach {
+          bytes =>
+            assert(bytes.sameElements(content))
         }
       }
 
@@ -109,9 +111,10 @@ object ObjectStorageClientSuite extends TestSuite:
         val metadataResult = client.getMetadata(objectId, "user-1")
 
         assert(metadataResult.isRight)
-        metadataResult.foreach { obj =>
-          assert(obj.objectId == objectId)
-          assert(obj.fileName == "data.bin")
+        metadataResult.foreach {
+          obj =>
+            assert(obj.objectId == objectId)
+            assert(obj.fileName == "data.bin")
         }
       }
 
@@ -171,7 +174,7 @@ object ObjectStorageClientSuite extends TestSuite:
           lastModified = "2024-01-01T00:00:00Z",
           createdAt = "2024-01-01T00:00:00Z",
           mimeType = Some("text/plain"),
-          checksum = Some("sha256-hash")
+          checksum = Some("sha256-hash"),
         )
 
         val json = write(obj)

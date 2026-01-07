@@ -22,8 +22,9 @@ object AuthenticatedDecoratorSuite extends TestSuite:
     val exchange = new HttpServerExchange(null) // Required by Undertow API for testing
     // scalafix:on DisableSyntax.null
     val headerMap = exchange.getRequestHeaders
-    headers.foreach { case (k, v) =>
-      headerMap.put(new HttpString(k), v)
+    headers.foreach {
+      case (k, v) =>
+        headerMap.put(new HttpString(k), v)
     }
     Request(exchange, Seq.empty, Map.empty)
   }
@@ -58,7 +59,8 @@ object AuthenticatedDecoratorSuite extends TestSuite:
 
       test("returns 401 for invalid JWT format") {
         // JWT tests require SUPABASE_URL to be set (for JWKS provider)
-        if sys.env.get("SUPABASE_URL").isEmpty then println("Skipping - SUPABASE_URL not set")
+        if sys.env.get("SUPABASE_URL").isEmpty then
+          println("Skipping - SUPABASE_URL not set")
         else {
           val decorator = new authenticated()
           val request = mockRequest(Map("Authorization" -> "Bearer not-a-valid-jwt"))
@@ -79,7 +81,8 @@ object AuthenticatedDecoratorSuite extends TestSuite:
 
       test("returns 401 when Authorization header missing Bearer prefix") {
         // JWT tests require SUPABASE_URL to be set (for JWKS provider)
-        if sys.env.get("SUPABASE_URL").isEmpty then println("Skipping - SUPABASE_URL not set")
+        if sys.env.get("SUPABASE_URL").isEmpty then
+          println("Skipping - SUPABASE_URL not set")
         else {
           val decorator = new authenticated()
           val request = mockRequest(Map("Authorization" -> "some-token"))

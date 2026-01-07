@@ -36,8 +36,8 @@ object AuthResult:
  *   The original HTTP request
  */
 final case class AuthenticatedRequest(
-    profileId: String,
-    claims: Option[JwtClaims],
-    authType: AuthType,
-    request: Request
+  profileId: String,
+  claims: Option[JwtClaims],
+  authType: AuthType,
+  request: Request,
 )

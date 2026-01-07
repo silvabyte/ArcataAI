@@ -13,12 +13,12 @@ import upickle.default.*
 
 /** A single key from a JWKS response. */
 final case class JwkKey(
-    kid: String,
-    kty: String,
-    alg: String,
-    crv: String,
-    x: String,
-    y: String
+  kid: String,
+  kty: String,
+  alg: String,
+  crv: String,
+  x: String,
+  y: String,
 ) derives ReadWriter
 
 /** JWKS response containing public keys. */
@@ -26,7 +26,7 @@ final case class JwksResponse(keys: Seq[JwkKey]) derives ReadWriter
 
 /** Error when JWKS operations fail. */
 final case class JwksError(message: String, cause: Option[Throwable] = None)
-    extends Exception(message, cause.orNull)
+  extends Exception(message, cause.orNull)
 
 /**
  * Fetches and parses JWKS (JSON Web Key Set) from Supabase.
@@ -37,21 +37,34 @@ class JwksProvider(jwksUrl: String) extends Logging:
 
   logger.info(s"JwksProvider initialized with URL: $jwksUrl")
 
-  /** Fetch keys and find the one matching the given kid. */
+  /**
+   * Fetch keys and find the one matching the given kid.
+   *
+   * @param kid
+   *   The key ID from the JWT header to look up
+   * @return
+   *   The matching EC public key, or an error if not found or fetch failed
+   */
   def getKey(kid: String): Either[JwksError, ECPublicKey] = {
-    fetchKeys().flatMap { keys =>
-      logger.debug(s"JWKS contains ${keys.size} keys: ${keys.map(_.kid).mkString(", ")}")
-      keys.find(_.kid == kid) match
-        case Some(jwk) =>
-          logger.debug(s"Found matching key for kid: $kid")
-          parseEcPublicKey(jwk)
-        case None =>
-          logger.warn(s"Key with kid '$kid' not found in JWKS. Available kids: ${keys.map(_.kid).mkString(", ")}")
-          Left(JwksError(s"Key with kid '$kid' not found in JWKS"))
+    fetchKeys().flatMap {
+      keys =>
+        logger.debug(s"JWKS contains ${keys.size} keys: ${keys.map(_.kid).mkString(", ")}")
+        keys.find(_.kid == kid) match
+          case Some(jwk) =>
+            logger.debug(s"Found matching key for kid: $kid")
+            parseEcPublicKey(jwk)
+          case None =>
+            logger.warn(s"Key with kid '$kid' not found in JWKS. Available kids: ${keys.map(_.kid).mkString(", ")}")
+            Left(JwksError(s"Key with kid '$kid' not found in JWKS"))
     }
   }
 
-  /** Fetch all keys from the JWKS endpoint. */
+  /**
+   * Fetch all keys from the JWKS endpoint.
+   *
+   * @return
+   *   Sequence of JWK keys, or an error if fetch or parsing failed
+   */
   def fetchKeys(): Either[JwksError, Seq[JwkKey]] = {
     logger.debug(s"Fetching JWKS from: $jwksUrl")
     Try(requests.get(jwksUrl, readTimeout = 5000, connectTimeout = 5000)) match
@@ -101,8 +114,23 @@ class JwksProvider(jwksUrl: String) extends Logging:
   }
 
 object JwksProvider:
+  /**
+   * Create a new JwksProvider with the given JWKS URL.
+   *
+   * @param jwksUrl
+   *   The URL to fetch JWKS from (e.g., https://project.supabase.co/auth/v1/.well-known/jwks.json)
+   * @return
+   *   A configured JwksProvider instance
+   */
   def apply(jwksUrl: String): JwksProvider = new JwksProvider(jwksUrl)
 
-  /** Derive JWKS URL from Supabase project URL. */
+  /**
+   * Derive JWKS URL from Supabase project URL.
+   *
+   * @param supabaseUrl
+   *   The Supabase project URL (e.g., https://project.supabase.co)
+   * @return
+   *   The full JWKS endpoint URL
+   */
   def jwksUrlFor(supabaseUrl: String): String =
     s"$supabaseUrl/auth/v1/.well-known/jwks.json"

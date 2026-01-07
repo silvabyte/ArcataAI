@@ -88,7 +88,7 @@ object JobSourceSuite extends TestSuite:
         val config = JobSourceConfig(
           companyBatchSize = 10,
           jobsPerCompany = 50,
-          delayBetweenRequestsMs = 500
+          delayBetweenRequestsMs = 500,
         )
         assert(config.companyBatchSize == 10)
         assert(config.jobsPerCompany == 50)
@@ -100,7 +100,7 @@ object JobSourceSuite extends TestSuite:
       test("can be created with minimal fields") {
         val job = DiscoveredJob(
           url = "https://example.com/job/123",
-          source = JobSource.Greenhouse
+          source = JobSource.Greenhouse,
         )
         assert(job.url == "https://example.com/job/123")
         assert(job.source == JobSource.Greenhouse)
@@ -115,7 +115,7 @@ object JobSourceSuite extends TestSuite:
           source = JobSource.Greenhouse,
           companyId = Some(456L),
           apiUrl = Some("https://boards-api.greenhouse.io/v1/boards/acme/jobs/789"),
-          metadata = Map("greenhouse_job_id" -> "789", "title" -> "Engineer")
+          metadata = Map("greenhouse_job_id" -> "789", "title" -> "Engineer"),
         )
         assert(job.url == "https://example.com/job/123")
         assert(job.source == JobSource.Greenhouse)
@@ -129,7 +129,7 @@ object JobSourceSuite extends TestSuite:
         // DiscoveredJob now requires a source for routing to appropriate pipeline
         val job = DiscoveredJob(
           url = "https://example.com/job/123",
-          source = JobSource.Greenhouse
+          source = JobSource.Greenhouse,
         )
         assert(job.source.sourceId == "greenhouse")
       }

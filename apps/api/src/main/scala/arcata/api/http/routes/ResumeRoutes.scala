@@ -16,35 +16,35 @@ import upickle.default.*
 
 /** Extracted file data from multipart form. */
 private final case class ExtractedFile(
-    bytes: Array[Byte],
-    fileName: String,
-    mimeType: Option[String]
+  bytes: Array[Byte],
+  fileName: String,
+  mimeType: Option[String],
 )
 
 /** Response for successful resume parsing. */
 @Schematic.title("ParseResumeResponse")
 @Schematic.description("Response from successful resume parsing")
 final case class ParseResumeResponse(
-    @Schematic.description("Whether the operation succeeded")
-    success: Boolean,
-    @Schematic.description("Extracted resume data")
-    data: ExtractedResumeData,
-    @Schematic.description("ObjectStorage ID of the original file")
-    objectId: String,
-    @Schematic.description("Original file name")
-    fileName: String
+  @Schematic.description("Whether the operation succeeded")
+  success: Boolean,
+  @Schematic.description("Extracted resume data")
+  data: ExtractedResumeData,
+  @Schematic.description("ObjectStorage ID of the original file")
+  objectId: String,
+  @Schematic.description("Original file name")
+  fileName: String,
 ) derives Schematic, ReadWriter
 
 /** Error response for resume operations. */
 @Schematic.title("ResumeErrorResponse")
 @Schematic.description("Error response for resume operations")
 final case class ResumeErrorResponse(
-    @Schematic.description("Whether the operation succeeded (always false for errors)")
-    success: Boolean,
-    @Schematic.description("Error message")
-    error: String,
-    @Schematic.description("Additional error details")
-    details: Option[String] = None
+  @Schematic.description("Whether the operation succeeded (always false for errors)")
+  success: Boolean,
+  @Schematic.description("Error message")
+  error: String,
+  @Schematic.description("Additional error details")
+  details: Option[String] = None,
 ) derives Schematic, ReadWriter
 
 /**
@@ -58,9 +58,9 @@ final case class ResumeErrorResponse(
  *   CORS configuration for response headers
  */
 class ResumeRoutes(
-    basePath: String,
-    pipeline: ResumeParsingPipeline,
-    corsConfig: CorsConfig
+  basePath: String,
+  pipeline: ResumeParsingPipeline,
+  corsConfig: CorsConfig,
 ) extends cask.Routes {
 
   private val jsonHeaders = Seq("Content-Type" -> "application/json")
@@ -94,12 +94,12 @@ class ResumeRoutes(
         200 -> ApiResponse("Resume parsed successfully", Schematic[ParseResumeResponse]),
         400 -> ApiResponse("Invalid request or file", Schematic[ResumeErrorResponse]),
         401 -> ApiResponse("Unauthorized", Schematic[ResumeErrorResponse]),
-        500 -> ApiResponse("Pipeline error", Schematic[ResumeErrorResponse])
-      )
-    )
+        500 -> ApiResponse("Pipeline error", Schematic[ResumeErrorResponse]),
+      ),
+    ),
   )
   def parseResume(
-      r: ValidatedRequest
+    r: ValidatedRequest
   )(authReq: AuthenticatedRequest): Response[String] = {
     // Parse multipart form data and extract file
     val parser = FormParserFactory.builder().build().createParser(r.original.exchange)
@@ -109,14 +109,14 @@ class ResumeRoutes(
       case None =>
         val response = ResumeErrorResponse(
           success = false,
-          error = "No file uploaded. Please provide a file in the 'file' field."
+          error = "No file uploaded. Please provide a file in the 'file' field.",
         )
         Response(write(response), 400, withCors(r.original, jsonHeaders))
 
       case Some(file) if file.fileName.isEmpty =>
         val response = ResumeErrorResponse(
           success = false,
-          error = "File name is required."
+          error = "File name is required.",
         )
         Response(write(response), 400, withCors(r.original, jsonHeaders))
 
@@ -126,7 +126,7 @@ class ResumeRoutes(
           fileBytes = file.bytes,
           fileName = file.fileName,
           claimedMimeType = file.mimeType,
-          profileId = authReq.profileId
+          profileId = authReq.profileId,
         )
 
         val result = pipeline.run(input, authReq.profileId)
@@ -137,7 +137,7 @@ class ResumeRoutes(
             success = true,
             data = output.extractedData,
             objectId = output.objectId,
-            fileName = output.fileName
+            fileName = output.fileName,
           )
           Response(write(response), 200, withCors(r.original, jsonHeaders))
         } else {
@@ -145,7 +145,7 @@ class ResumeRoutes(
           val response = ResumeErrorResponse(
             success = false,
             error = error.message,
-            details = error.cause.map(_.getMessage)
+            details = error.cause.map(_.getMessage),
           )
           // Use 400 for validation errors, 500 for other errors
           val statusCode = {
@@ -161,29 +161,26 @@ class ResumeRoutes(
   }
 
   /**
-   * Extract file data from multipart form in an immutable way.
+   * Extract file data from multipart form using functional iteration.
    */
   private def extractFileFromForm(form: FormData): Option[ExtractedFile] = {
-    val it = form.iterator()
-    while (it.hasNext) {
-      val name = it.next()
-      if (name == "file") {
-        val vs = form.get(name).iterator()
-        while (vs.hasNext) {
-          val v = vs.next()
-          if (v.isFileItem) {
-            val fi = v.getFileItem
-            val bytes = Using.resource(fi.getInputStream)(_.readAllBytes())
-            val fileName = Option(v.getFileName).filter(_.nonEmpty).getOrElse("")
-            val mimeType = Option(v.getHeaders)
-              .flatMap(h => Option(h.getFirst("Content-Type")))
-              .filter(_.nonEmpty)
-            return Some(ExtractedFile(bytes, fileName, mimeType))
-          }
-        }
+    import scala.jdk.CollectionConverters.*
+
+    form
+      .iterator()
+      .asScala
+      .filter(_ == "file")
+      .flatMap(name => form.get(name).iterator().asScala)
+      .collectFirst {
+        case v if v.isFileItem =>
+          val fi = v.getFileItem
+          val bytes = Using.resource(fi.getInputStream)(_.readAllBytes())
+          val fileName = Option(v.getFileName).filter(_.nonEmpty).getOrElse("")
+          val mimeType = Option(v.getHeaders)
+            .flatMap(h => Option(h.getFirst("Content-Type")))
+            .filter(_.nonEmpty)
+          ExtractedFile(bytes, fileName, mimeType)
       }
-    }
-    None
   }
 
   initialize()
@@ -191,9 +188,9 @@ class ResumeRoutes(
 
 object ResumeRoutes {
   def apply(
-      basePath: String,
-      pipeline: ResumeParsingPipeline,
-      corsConfig: CorsConfig
+    basePath: String,
+    pipeline: ResumeParsingPipeline,
+    corsConfig: CorsConfig,
   ): ResumeRoutes =
     new ResumeRoutes(basePath, pipeline, corsConfig)
 }

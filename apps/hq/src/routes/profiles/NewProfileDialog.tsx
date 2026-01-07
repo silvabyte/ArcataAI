@@ -19,6 +19,37 @@ import { convertToEditorState } from "../../lib/resume-utils";
 import { ImportProgress } from "./ImportProgress";
 import { ResumeFileUpload } from "./ResumeFileUpload";
 
+/** Regex to match file extensions (e.g., ".pdf", ".docx") for removal from filenames */
+const FILE_EXTENSION_REGEX = /\.[^/.]+$/;
+
+/** Progress thresholds for determining which message to display during import */
+const PROGRESS_THRESHOLDS = {
+  UPLOAD: 30,
+  READING: 50,
+  ANALYZING: 70,
+  EXTRACTING: 85,
+} as const;
+
+/**
+ * Returns the appropriate progress message based on the current progress value.
+ * Messages indicate the current stage of resume processing.
+ */
+function getProgressMessage(progress: number): string {
+  if (progress < PROGRESS_THRESHOLDS.UPLOAD) {
+    return "Uploading resume...";
+  }
+  if (progress < PROGRESS_THRESHOLDS.READING) {
+    return "Reading document structure...";
+  }
+  if (progress < PROGRESS_THRESHOLDS.ANALYZING) {
+    return "Analyzing content with AI...";
+  }
+  if (progress < PROGRESS_THRESHOLDS.EXTRACTING) {
+    return "Extracting experience and skills...";
+  }
+  return "Finalizing profile...";
+}
+
 type NewProfileDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -77,15 +108,22 @@ export function NewProfileDialog({
         throw new Error("Not authenticated");
       }
 
-      // Simulate progress for upload
+      // Simulate progress for upload and processing
+      let currentProgress = 0;
+
       const progressInterval = setInterval(() => {
+        // Decaying increment to make it feel continuous but never reach 100% until done
+        // Move 5% of the remaining distance to 95%
+        const remaining = 95 - currentProgress;
+        const increment = Math.max(0.5, remaining * 0.05);
+
         setProgress((prev) => {
-          if (prev >= 90) {
-            return prev;
-          }
-          return prev + 10;
+          const next = Math.min(95, prev + increment);
+          currentProgress = next;
+          setProgressMessage(getProgressMessage(next));
+          return next;
         });
-      }, 500);
+      }, 200);
 
       const result = await parseResume(file, session.access_token);
 
@@ -101,7 +139,7 @@ export function NewProfileDialog({
       const editorState = convertToEditorState(result.data);
 
       await onCreate(
-        file.name.replace(/\.[^/.]+$/, "") || "Imported Profile",
+        file.name.replace(FILE_EXTENSION_REGEX, "") || "Imported Profile",
         editorState
       );
 
@@ -158,9 +196,9 @@ export function NewProfileDialog({
             ) : (
               <ResumeFileUpload onFileSelect={handleFileSelect} />
             )}
-            {error && (
+            {error ? (
               <p className="mt-2 text-center text-red-600 text-sm">{error}</p>
-            )}
+            ) : null}
             {!isLoading && (
               <button
                 className="mt-4 w-full text-center text-gray-500 text-sm hover:text-gray-900"

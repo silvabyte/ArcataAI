@@ -36,6 +36,7 @@
     "env:local": "bun run scripts/switch-env.ts local",
     "env:prod": "bun run scripts/switch-env.ts production",
     "env:status": "bun run scripts/switch-env.ts --status",
+    "deploy:all": "bun deploy:hq && bun deploy:auth",
     "deploy:hq": "godeploy deploy --project=\"ArcataAI HQ\"",
     "deploy:auth": "godeploy deploy --project=\"ArcataAI Auth\"",
     "docker:build:api": "bun run scripts/docker.ts build --app=api",

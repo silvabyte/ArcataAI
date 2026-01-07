@@ -23,10 +23,10 @@ import org.jsoup.Jsoup
  *   ObjectStorage ID (passed through)
  */
 final case class TextExtractorInput(
-    fileBytes: Array[Byte],
-    fileName: String,
-    detectedType: DetectedFileType,
-    objectId: String
+  fileBytes: Array[Byte],
+  fileName: String,
+  detectedType: DetectedFileType,
+  objectId: String,
 )
 
 /**
@@ -42,10 +42,10 @@ final case class TextExtractorInput(
  *   Number of pages (for PDF) or None for other formats
  */
 final case class TextExtractorOutput(
-    text: String,
-    fileName: String,
-    objectId: String,
-    pageCount: Option[Int] = None
+  text: String,
+  fileName: String,
+  objectId: String,
+  pageCount: Option[Int] = None,
 )
 
 /**
@@ -63,8 +63,8 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
   val name = "TextExtractor"
 
   override def execute(
-      input: TextExtractorInput,
-      ctx: PipelineContext
+    input: TextExtractorInput,
+    ctx: PipelineContext,
   ): Either[StepError, TextExtractorOutput] = {
     logger.info(
       s"[${ctx.runId}] Extracting text from ${input.fileName} (${input.detectedType.name})"
@@ -91,19 +91,21 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
       case other =>
         Left(
           StepError.ExtractionError(
-            message = s"Unsupported file type '${input.detectedType.name}' ($other). Supported formats: PDF, DOC, DOCX, RTF, HTML, TXT, Markdown",
-            stepName = name
+            message =
+              s"Unsupported file type '${input.detectedType.name}' ($other). Supported formats: PDF, DOC, DOCX, RTF, HTML, TXT, Markdown",
+            stepName = name,
           )
         )
 
-    result.map { case (text, pageCount) =>
-      logger.info(s"[${ctx.runId}] Extracted ${text.length} characters from ${input.fileName}")
-      TextExtractorOutput(
-        text = text,
-        fileName = input.fileName,
-        objectId = input.objectId,
-        pageCount = pageCount
-      )
+    result.map {
+      case (text, pageCount) =>
+        logger.info(s"[${ctx.runId}] Extracted ${text.length} characters from ${input.fileName}")
+        TextExtractorOutput(
+          text = text,
+          fileName = input.fileName,
+          objectId = input.objectId,
+          pageCount = pageCount,
+        )
     }
   }
 
@@ -111,8 +113,8 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
    * Extract text from PDF using OpenPDF.
    */
   private def extractFromPdf(
-      bytes: Array[Byte],
-      ctx: PipelineContext
+    bytes: Array[Byte],
+    ctx: PipelineContext,
   ): Either[StepError, (String, Option[Int])] = {
     Try {
       val reader = new PdfReader(bytes)
@@ -132,7 +134,7 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
           StepError.ExtractionError(
             message = s"Failed to extract text from PDF: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
   }
@@ -142,9 +144,9 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
    * Pandoc handles DOC, DOCX, RTF, and many other formats.
    */
   private def extractWithPandoc(
-      bytes: Array[Byte],
-      inputFormat: String,
-      ctx: PipelineContext
+    bytes: Array[Byte],
+    inputFormat: String,
+    ctx: PipelineContext,
   ): Either[StepError, (String, Option[Int])] = {
     // Write bytes to temp file, run pandoc, clean up
     val tempFile = Files.createTempFile("resume-", s".$inputFormat")
@@ -161,7 +163,7 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
         Left(
           StepError.ExtractionError(
             message = s"Failed to extract text from $inputFormat: $errorMsg",
-            stepName = name
+            stepName = name,
           )
         )
     catch
@@ -171,7 +173,7 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
           StepError.ExtractionError(
             message = "pandoc is not installed. Please install pandoc to extract text from DOC/DOCX/RTF files.",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
       case e: Exception =>
@@ -180,7 +182,7 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
           StepError.ExtractionError(
             message = s"Failed to extract text from $inputFormat: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
     finally Files.deleteIfExists(tempFile)
@@ -190,8 +192,8 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
    * Extract text from plain text file.
    */
   private def extractFromText(
-      bytes: Array[Byte],
-      ctx: PipelineContext
+    bytes: Array[Byte],
+    ctx: PipelineContext,
   ): Either[StepError, (String, Option[Int])] = {
     Try {
       val text = new String(bytes, "UTF-8")
@@ -204,7 +206,7 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
           StepError.ExtractionError(
             message = s"Failed to read text file: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
   }
@@ -213,8 +215,8 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
    * Extract text from HTML using Jsoup.
    */
   private def extractFromHtml(
-      bytes: Array[Byte],
-      ctx: PipelineContext
+    bytes: Array[Byte],
+    ctx: PipelineContext,
   ): Either[StepError, (String, Option[Int])] = {
     Try {
       val html = new String(bytes, "UTF-8")
@@ -229,7 +231,7 @@ final class TextExtractor extends BaseStep[TextExtractorInput, TextExtractorOutp
           StepError.ExtractionError(
             message = s"Failed to extract text from HTML: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
   }

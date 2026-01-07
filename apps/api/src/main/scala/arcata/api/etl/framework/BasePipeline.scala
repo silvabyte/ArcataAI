@@ -6,10 +6,10 @@ import scribe.Logging
 
 /** Result of a pipeline execution. */
 final case class PipelineResult[O](
-    runId: String,
-    output: Option[O],
-    error: Option[StepError],
-    durationMs: Long
+  runId: String,
+  output: Option[O],
+  error: Option[StepError],
+  durationMs: Long,
 ):
   def isSuccess: Boolean = output.isDefined && error.isEmpty
   def isFailure: Boolean = error.isDefined
@@ -82,7 +82,7 @@ trait BasePipeline[I, O] extends Logging:
           StepError.UnexpectedError(
             message = s"Unexpected error in pipeline $name: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -110,7 +110,7 @@ object BasePipeline:
 
   /** Create a pipeline from a composed step chain. */
   def fromSteps[I, O](pipelineName: String)(
-      buildSteps: => BaseStep[I, O]
+    buildSteps: => BaseStep[I, O]
   ): BasePipeline[I, O] = {
     new BasePipeline[I, O]:
       def name: String = pipelineName

@@ -6,17 +6,17 @@ import arcata.api.etl.framework.*
 
 /** Input for the GreenhouseJobFetcher step. */
 final case class GreenhouseJobFetcherInput(
-    apiUrl: String,
-    sourceUrl: String,
-    companyId: Option[Long]
+  apiUrl: String,
+  sourceUrl: String,
+  companyId: Option[Long],
 )
 
 /** Output from the GreenhouseJobFetcher step. */
 final case class GreenhouseJobFetcherOutput(
-    json: String,
-    apiUrl: String,
-    sourceUrl: String,
-    companyId: Option[Long]
+  json: String,
+  apiUrl: String,
+  sourceUrl: String,
+  companyId: Option[Long],
 )
 
 /**
@@ -30,15 +30,15 @@ final case class GreenhouseJobFetcherOutput(
  * The `pay_transparency=true` parameter includes salary range information when available.
  */
 final class GreenhouseJobFetcher(
-    userAgent: String = "Mozilla/5.0 (compatible; ArcataBot/1.0)",
-    timeoutMs: Int = 10000
+  userAgent: String = "Mozilla/5.0 (compatible; ArcataBot/1.0)",
+  timeoutMs: Int = 10000,
 ) extends BaseStep[GreenhouseJobFetcherInput, GreenhouseJobFetcherOutput]:
 
   val name = "GreenhouseJobFetcher"
 
   override def execute(
-      input: GreenhouseJobFetcherInput,
-      ctx: PipelineContext
+    input: GreenhouseJobFetcherInput,
+    ctx: PipelineContext,
   ): Either[StepError, GreenhouseJobFetcherOutput] = {
     // Add pay_transparency=true to get salary data
     val urlWithParams = {
@@ -53,11 +53,11 @@ final class GreenhouseJobFetcher(
         urlWithParams,
         headers = Map(
           "User-Agent" -> userAgent,
-          "Accept" -> "application/json"
+          "Accept" -> "application/json",
         ),
         readTimeout = timeoutMs,
         connectTimeout = timeoutMs,
-        check = false
+        check = false,
       )
     } match
       case Failure(e: java.net.SocketTimeoutException) =>
@@ -65,7 +65,7 @@ final class GreenhouseJobFetcher(
           StepError.NetworkError(
             message = s"Timeout fetching Greenhouse job: ${input.apiUrl}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -74,7 +74,7 @@ final class GreenhouseJobFetcher(
           StepError.NetworkError(
             message = s"Unknown host: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -83,7 +83,7 @@ final class GreenhouseJobFetcher(
           StepError.ExtractionError(
             message = s"Failed to fetch Greenhouse job: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -91,7 +91,7 @@ final class GreenhouseJobFetcher(
         Left(
           StepError.NetworkError(
             message = s"HTTP ${response.statusCode} when fetching Greenhouse job: ${input.apiUrl}",
-            stepName = name
+            stepName = name,
           )
         )
 
@@ -104,14 +104,14 @@ final class GreenhouseJobFetcher(
             json = json,
             apiUrl = input.apiUrl,
             sourceUrl = input.sourceUrl,
-            companyId = input.companyId
+            companyId = input.companyId,
           )
         )
   }
 
 object GreenhouseJobFetcher:
   def apply(
-      userAgent: String = "Mozilla/5.0 (compatible; ArcataBot/1.0)",
-      timeoutMs: Int = 10000
+    userAgent: String = "Mozilla/5.0 (compatible; ArcataBot/1.0)",
+    timeoutMs: Int = 10000,
   ): GreenhouseJobFetcher =
     new GreenhouseJobFetcher(userAgent, timeoutMs)

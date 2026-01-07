@@ -6,17 +6,17 @@ import arcata.api.etl.framework.*
 
 /** Input for the JobLoader step. */
 final case class JobLoaderInput(
-    extractedData: Transformed[ExtractedJobData],
-    company: Option[Company],
-    url: String,
-    objectId: Option[String],
-    completionState: Option[String] = None
+  extractedData: Transformed[ExtractedJobData],
+  company: Option[Company],
+  url: String,
+  objectId: Option[String],
+  completionState: Option[String] = None,
 )
 
 /** Output from the JobLoader step. */
 final case class JobLoaderOutput(
-    job: Job,
-    company: Option[Company]
+  job: Job,
+  company: Option[Company],
 )
 
 /**
@@ -26,13 +26,13 @@ final case class JobLoaderOutput(
  * Jobs can be created without a company (orphaned jobs) when company resolution fails.
  */
 final class JobLoader(supabaseClient: SupabaseClient)
-    extends BaseStep[JobLoaderInput, JobLoaderOutput]:
+  extends BaseStep[JobLoaderInput, JobLoaderOutput]:
 
   val name = "JobLoader"
 
   override def execute(
-      input: JobLoaderInput,
-      ctx: PipelineContext
+    input: JobLoaderInput,
+    ctx: PipelineContext,
   ): Either[StepError, JobLoaderOutput] = {
     val data = input.extractedData.value
     logger.info(s"[${ctx.runId}] Loading job: ${data.title}")
@@ -44,7 +44,7 @@ final class JobLoader(supabaseClient: SupabaseClient)
         Right(
           JobLoaderOutput(
             job = existingJob,
-            company = input.company
+            company = input.company,
           )
         )
 
@@ -76,7 +76,7 @@ final class JobLoader(supabaseClient: SupabaseClient)
           isRemote = data.isRemote,
           postedDate = data.postedDate,
           closingDate = data.closingDate,
-          completionState = input.completionState
+          completionState = input.completionState,
         )
 
         supabaseClient.insertJob(job) match
@@ -85,7 +85,7 @@ final class JobLoader(supabaseClient: SupabaseClient)
             Right(
               JobLoaderOutput(
                 job = createdJob,
-                company = input.company
+                company = input.company,
               )
             )
 
@@ -93,7 +93,7 @@ final class JobLoader(supabaseClient: SupabaseClient)
             Left(
               StepError.LoadError(
                 message = s"Failed to create job: ${data.title}",
-                stepName = name
+                stepName = name,
               )
             )
   }

@@ -10,16 +10,16 @@ import java.net.URI
 
 /** Input for the HtmlFetcher step. */
 final case class HtmlFetcherInput(
-    url: String,
-    profileId: String
+  url: String,
+  profileId: String,
 )
 
 /** Output from the HtmlFetcher step. */
 final case class HtmlFetcherOutput(
-    url: String,
-    html: String,
-    objectId: Option[String],
-    contentType: String
+  url: String,
+  html: String,
+  objectId: Option[String],
+  contentType: String,
 )
 
 /**
@@ -28,16 +28,16 @@ final case class HtmlFetcherOutput(
  * This is an extraction step that retrieves the raw HTML from a job posting URL.
  */
 final class HtmlFetcher(
-    storageClient: Option[ObjectStorageClient] = None,
-    userAgent: String = "Mozilla/5.0 (compatible; ArcataBot/1.0)",
-    timeoutMs: Int = 30000
+  storageClient: Option[ObjectStorageClient] = None,
+  userAgent: String = "Mozilla/5.0 (compatible; ArcataBot/1.0)",
+  timeoutMs: Int = 30000,
 ) extends BaseStep[HtmlFetcherInput, HtmlFetcherOutput]:
 
   val name = "HtmlFetcher"
 
   override def execute(
-      input: HtmlFetcherInput,
-      ctx: PipelineContext
+    input: HtmlFetcherInput,
+    ctx: PipelineContext,
   ): Either[StepError, HtmlFetcherOutput] = {
     logger.info(s"[${ctx.runId}] Fetching HTML from: ${input.url}")
 
@@ -47,11 +47,11 @@ final class HtmlFetcher(
         headers = Map(
           "User-Agent" -> userAgent,
           "Accept" -> "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language" -> "en-US,en;q=0.5"
+          "Accept-Language" -> "en-US,en;q=0.5",
         ),
         readTimeout = timeoutMs,
         connectTimeout = timeoutMs,
-        check = false // Don't throw on non-2xx
+        check = false, // Don't throw on non-2xx
       )
     } match
       case Failure(e: java.net.SocketTimeoutException) =>
@@ -59,7 +59,7 @@ final class HtmlFetcher(
           StepError.NetworkError(
             message = s"Timeout fetching ${input.url}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -68,7 +68,7 @@ final class HtmlFetcher(
           StepError.NetworkError(
             message = s"Unknown host: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -77,7 +77,7 @@ final class HtmlFetcher(
           StepError.ExtractionError(
             message = s"Failed to fetch HTML: ${e.getMessage}",
             stepName = name,
-            cause = Some(e)
+            cause = Some(e),
           )
         )
 
@@ -85,7 +85,7 @@ final class HtmlFetcher(
         Left(
           StepError.NetworkError(
             message = s"HTTP ${response.statusCode} when fetching ${input.url}",
-            stepName = name
+            stepName = name,
           )
         )
 
@@ -97,15 +97,16 @@ final class HtmlFetcher(
           .getOrElse("text/html")
 
         // Optionally store in object storage
-        val objectId = storageClient.flatMap { client =>
-          val fileName = generateFileName(input.url)
-          client.upload(html.getBytes("UTF-8"), fileName, Some("text/html"), input.profileId) match
-            case Right(stored) =>
-              logger.info(s"[${ctx.runId}] Stored HTML with ID: ${stored.objectId}")
-              Some(stored.objectId)
-            case Left(error) =>
-              logger.warn(s"[${ctx.runId}] Failed to store HTML: $error")
-              None
+        val objectId = storageClient.flatMap {
+          client =>
+            val fileName = generateFileName(input.url)
+            client.upload(html.getBytes("UTF-8"), fileName, Some("text/html"), input.profileId) match
+              case Right(stored) =>
+                logger.info(s"[${ctx.runId}] Stored HTML with ID: ${stored.objectId}")
+                Some(stored.objectId)
+              case Left(error) =>
+                logger.warn(s"[${ctx.runId}] Failed to store HTML: $error")
+                None
         }
 
         Right(
@@ -113,7 +114,7 @@ final class HtmlFetcher(
             url = input.url,
             html = html,
             objectId = objectId,
-            contentType = contentType
+            contentType = contentType,
           )
         )
   }
@@ -126,8 +127,8 @@ final class HtmlFetcher(
 
 object HtmlFetcher:
   def apply(
-      storageClient: Option[ObjectStorageClient] = None,
-      userAgent: String = "Mozilla/5.0 (compatible; ArcataBot/1.0)",
-      timeoutMs: Int = 30000
+    storageClient: Option[ObjectStorageClient] = None,
+    userAgent: String = "Mozilla/5.0 (compatible; ArcataBot/1.0)",
+    timeoutMs: Int = 30000,
   ): HtmlFetcher =
     new HtmlFetcher(storageClient, userAgent, timeoutMs)
